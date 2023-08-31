@@ -1,0 +1,6 @@
+[submodule "imports/z80-assembler-haskell"]
+	path = import/z80-assembler-haskell
+	url = git@github.com:gergoerdi/z80-assembler-haskell.git
+[submodule "import/ZX0"]
+	path = import/ZX0
+	url = https://github.com/einar-saukas/ZX0
