@@ -12,6 +12,7 @@ dependencies:
   - optparse-applicative
   - bytestring
   - split
+  - containers
 
 source-dirs:
   - src
