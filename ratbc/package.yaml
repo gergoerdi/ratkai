@@ -1,0 +1,21 @@
+name: ratbc
+version: 0.1.0
+category: game
+license: MIT
+
+extra-source-files:
+  - README.md
+
+dependencies:
+  - base
+  - binary
+  - optparse-applicative
+  - bytestring
+  - split
+
+source-dirs:
+  - src
+
+executables:
+  ratbc-disasm:
+    main: ratbc-disasm.hs
