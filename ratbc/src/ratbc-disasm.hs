@@ -37,7 +37,7 @@ stripHomeLab = \case
     Chime{} -> Nothing
     Sleep{} -> Nothing
     CopyProtection{} -> Nothing
-    MachineCode addr _ -> Just $ MachineCode addr [0xff]
+    MachineCode addr _ -> Just $ MachineCode addr [0x60]
     -- If00 var body -> If00 var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
     -- IfFF var body -> IfFF var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
     s -> pure s
@@ -148,8 +148,22 @@ main = do
         BL.writeFile (outputPath </> "text2.zscii") bs2
         print $ BL.length bs2
 
-        -- mapM_ putStrLn strings1'
-        -- mapM_ putStrLn strings2'
+        mapM_ (\(i, s) -> printf "%03d: %s\n" i s) $ zip [(1::Int)..] strings1'
+        mapM_ (\(i, s) -> printf "%03d: %s\n" i s) $ zip [(1::Int)..] strings2'
+
+    when True do
+        let minItem = BL.index bs 0x083a
+            maxItem = BL.index bs 0x083b
+        bs <- pure $ deref bs 0x0837
+        let bs' = BL.take (fromIntegral $ maxItem - minItem) bs
+        BL.writeFile (outputPath </> "reset.dat") bs'
+        print $ BL.length bs'
+
+    when True do
+        bs <- pure $ deref bs 0x0835
+        let bs' = BL.take 96 bs
+        BL.writeFile (outputPath </> "help.dat") bs'
+        print $ BL.length bs'
 
 delete :: [Int] -> [a] -> [a]
 delete is = map snd . filter (\(i, _) -> i `notElem` is) . zip [1..]
@@ -163,6 +177,7 @@ zscii = go . concatMap val
         [x, y] -> end (x, y, 0)
         [x] -> end (x, 0, 0)
         [] -> error "zscii: empty string"
+        -- [] -> end (0, 0, 0)
 
     val :: Char -> [Word8]
     -- val c | 'A' <= c, c <= 'Z' = [fromIntegral $ ord c - ord 'A']
@@ -198,15 +213,29 @@ zscii = go . concatMap val
           | c == 'Ü' = val 'U'
           | c == 'Ű' = val 'U'
           | otherwise = error $ show c
+          -- | otherwise = [] -- TODO
 
-    pack :: Word8 -> Word8 -> Word8 -> Bool -> Word8
-    pack x y z end = x `shiftL` 11 .|. y `shiftL` 6 .|. z `shiftL` 1 .|. if end then 1 else 0
+    pack :: Word8 -> Word8 -> Word8 -> Bool -> Word16
+    pack x y z end =
+      fromIntegral x `shiftL` 10 .|.
+      fromIntegral y `shiftL` 5 .|.
+      fromIntegral  z `shiftL` 0 .|.
+      if end then 0x8000 else 0x0000
 
     cons :: (Word8, Word8, Word8) -> [Word8] -> BL.ByteString
-    cons (x, y, z) s = BL.singleton (pack x y z False) <> go s
+    cons (x, y, z) s = BL.pack [lo, hi] <> go s
+      where
+        w = pack x y z False
+        lo = fromIntegral w
+        hi = fromIntegral (w `shiftR` 8)
+
 
     end :: (Word8, Word8, Word8) -> BL.ByteString
-    end (x, y, z) = BL.singleton (pack x y z True)
+    end (x, y, z) = BL.pack [lo, hi]
+      where
+        w = pack x y z True
+        lo = fromIntegral w
+        hi = fromIntegral (w `shiftR` 8)
 
 options :: Parser Options
 options = do
