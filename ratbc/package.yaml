@@ -13,6 +13,8 @@ dependencies:
   - bytestring
   - split
   - containers
+  - filepath
+  - directory
 
 source-dirs:
   - src

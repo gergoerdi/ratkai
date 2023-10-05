@@ -1,5 +1,7 @@
 module RatBC.Words (loadWords) where
 
+import RatBC.Utils
+
 import qualified Data.ByteString.Lazy as BL
 import Control.Applicative
 import Data.Function (on)
@@ -18,15 +20,11 @@ loadWords bs =
     map fromGroup .
     groupBy ((==) `on` fst) .
     sortBy (compare `on` fst) .
+    takeWhile (\(id, _) -> id /= 0) .
     map fromEntry .
-    take numWords .
-    splitInto (wordLen + 1) .
-    BL.drop startAddr $
-    bs
+    splitInto (wordLen + 1) $
+    deref bs 0x0823
   where
-    startAddr = 0x3400
-    numWords = 508
-
     fromGroup is@((id, _):_) = (id, map snd is)
 
 wordLen = 5

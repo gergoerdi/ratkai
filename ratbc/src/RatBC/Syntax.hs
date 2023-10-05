@@ -53,7 +53,8 @@ instance Binary Stmt where
     put = \case
         Ret -> putWord8 0x00
         Assign var val -> putWord8 0x01 *> put var *> put val
-        Message msg -> putWord8 0x02 *> put msg
+        Message msg | msg <= 0x18 -> putWord8 0x02 *> put msg
+                    | otherwise -> putWord8 msg
         Assign00 var -> putWord8 0x03 *> put var
         AssignFF var -> putWord8 0x04 *> put var
         AssignLoc var -> putWord8 0x05 *> put var
