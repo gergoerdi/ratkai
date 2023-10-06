@@ -1,12 +1,18 @@
 {-# LANGUAGE ApplicativeDo, RecordWildCards, TypeApplications #-}
 {-# LANGUAGE BlockArguments, LambdaCase, ViewPatterns #-}
+{-# LANGUAGE OverloadedStrings #-}
 module Main where
 
 import RatBC.Utils
 import RatBC.Syntax
 import RatBC.Words
 import RatBC.Text
+import RatBC.Pretty
 
+import Data.Array (listArray)
+import Prettyprinter
+import Prettyprinter.Render.String
+import Data.String
 import Data.Binary
 import Data.Binary.Get
 import Data.Binary.Put
@@ -60,8 +66,19 @@ main = do
     bs <- pure $ BL.drop 2 $ bs
 
     let (strings1, strings2) = loadMessages bs
+    let msgs1 = listArray (1, fromIntegral $ length strings1) strings1
+        msgs2 = listArray (1, fromIntegral $ length strings2) strings2
     strings1 <- pure $ map (map toUpper) strings1
     strings2 <- pure $ map (map toUpper) strings2
+
+    let dict = loadWords bs
+    printf "Loaded %d words\n" $ M.size dict
+    -- print $ M.keys dict
+    let pprWords bs = hsep
+          [ fromString $ head words
+          | b <- BL.unpack bs
+          , let words = fromMaybe [printf "|%02x|" b] $ M.lookup b dict
+          ]
 
     let test bs = do
             let (_, stmts) = partitionEithers $ runGet `flip` bs $ untilEOF getStmt
@@ -71,66 +88,75 @@ main = do
             --     mapM_ print stmts'
             --     print $ BL.unpack bs
             --     print $ BL.unpack bs'
-            return bs'
+            return (bs', stmts)
 
     -- BC_ENTER_ROOM
     when True do
         bs <- pure $ deref bs 0x0827
         let bss = map BL.pack . splitOn [0x00, 0x00, 0x00] . BL.unpack $ bs
-        bss' <- forM (zip [(1 :: Word8)..] $ take 96 bss) \(room, bs) -> do
-            -- printf "ROOM %d {\n" room
-            bs' <- test bs
-            let len = BL.length bs'
-            -- printf "}\n\n"
-            return bs'
+        (bss', docs) <- fmap unzip $ forM (zip [(1 :: Word8)..] $ take 96 bss) \(room, bs) -> do
+            (bs', stmts) <- test bs
+            let doc = vsep ["ROOM" <+> viaShow room, pprStmts msgs2 stmts]
+            return (bs', doc)
         let bs' = BL.intercalate (BL.pack [0x00, 0x00, 0x00]) bss'
+            doc = vsep docs <> line
         BL.writeFile (outputPath </> "enter.bc") bs'
+        writeFile (outputPath </> "enter.txt") $ show doc
         print $ BL.length bs'
 
     -- BC_AFTER
     when True do
         bs <- pure $ deref bs 0x082b
         let bss = map BL.pack . splitOn [0x00, 0x00, 0x00] . BL.unpack $ bs
-        bs' <- test (head bss)
+        (bs', stmts) <- test (head bss)
+        let doc = pprStmts msgs1 stmts
         BL.writeFile (outputPath </> "after.bc") bs'
+        writeFile (outputPath </> "after.txt") $ show doc
         print $ BL.length bs'
         pure ()
 
     let interactive bs = do
             let bss = map BL.pack . takeWhile (not . null) . splitOn [0x00, 0x00] . BL.unpack $ bs
-            fmap mconcat $ forM bss \bs -> do
+            (bss', docs) <- fmap unzip $ forM bss \bs -> do
                 let (input, action) = BL.break (== 0x00) bs
-                if BL.null action then return (input <> BL.singleton 0x00) else do
-                    bs' <- test (BL.tail action)
-                    return $ input <> BL.singleton 0x00 <> bs' <> BL.pack [0x00, 0x00]
+                if BL.null action then return (input <> BL.singleton 0x00, mempty) else do
+                    action <- pure $ BL.tail action
+                    (bs', stmts) <- test action
+                    let doc = vcat
+                          [ pprBytes input <+> "--" <+> pprWords input
+                          , pprStmts msgs1 stmts
+                          ]
+                    let bs'' = input <> BL.singleton 0x00 <> bs' <> BL.pack [0x00, 0x00]
+                    return (bs'', doc)
+            pure (mconcat bss', vsep docs)
 
     -- BC_INTERACTIVE
     when True do
         bs <- pure $ deref bs 0x082d
         let bss = map BL.pack . takeWhile (not . null) . splitOn [0x00, 0x00] . BL.unpack $ bs
-        bs' <- interactive bs
+        (bs', doc) <- interactive bs
         BL.writeFile (outputPath </> "interactive-global.bc") bs'
+        writeFile (outputPath </> "interactive-global.txt") $ show doc
         print $ BL.length bs'
         pure ()
 
     -- BC_INTERACTIVE_LOCAL
     when True do
-        bs <- pure $ deref bs 0x0829
+        bs <- pure $ BL.tail $ deref bs 0x0829
         let bss = map BL.pack . splitOn [0x00, 0x00, 0x00] . BL.unpack $ bs
-        bss' <- forM (zip [(1 :: Word8)..] $ take 96 bss) \(room, bs) -> do
-            if room `elem` [1] then return mempty else do
-                -- printf "ROOM %d {\n" room
-                interactive bs
-                -- printf "}\n\n"
-            -- print $ sum lengths
+        (bss', docs) <- fmap unzip $ forM (zip [(1 :: Word8)..] $ take 96 bss) \(room, bs) -> do
+            (bs', doc) <- interactive bs
+            let doc' = vsep ["ROOM" <+> viaShow room, doc]
+            pure (bs', doc')
         let bs' = BL.intercalate (BL.pack [0x00, 0x00, 0x00]) bss'
+        let doc = vsep docs <> line
         print $ BL.length bs'
         BL.writeFile (outputPath </> "interactive-local.bc") bs'
+        writeFile (outputPath </> "interactive-local.txt") $ show doc
         pure ()
 
     -- Dictionary
     when True do
-        let dict = loadWords bs
         let bss = [ zscii word | words <- M.elems dict, let word = map toUpper $ mconcat words ]
         let bs = mconcat bss
         BL.writeFile (outputPath </> "dictionary.words") bs
@@ -138,18 +164,18 @@ main = do
         -- mapM_ (putStrLn . concat) $ M.elems dict
 
     when True do
-        let strings1' = delete [158, 159, 192, 196] strings1
+        let strings1' = {-delete [158, 159, 192, 196] -} strings1
         let bs1 = mconcat $ map zscii strings1'
         BL.writeFile (outputPath </> "text1.zscii") bs1
         print $ BL.length bs1
 
-        let strings2' = delete [1, 155, 156, 157, 158, 159, 160, 161, 191, 192] strings2
+        let strings2' = {-delete [1, 155, 156, 157, 158, 159, 160, 161, 191, 192] -} strings2
         let bs2 = mconcat $ map zscii strings2'
         BL.writeFile (outputPath </> "text2.zscii") bs2
         print $ BL.length bs2
 
-        mapM_ (\(i, s) -> printf "%03d: %s\n" i s) $ zip [(1::Int)..] strings1'
-        mapM_ (\(i, s) -> printf "%03d: %s\n" i s) $ zip [(1::Int)..] strings2'
+        -- mapM_ (\(i, s) -> printf "%03d: %s\n" i s) $ zip [(1::Int)..] strings1'
+        -- mapM_ (\(i, s) -> printf "%03d: %s\n" i s) $ zip [(1::Int)..] strings2'
 
     when True do
         let minItem = BL.index bs 0x083a
@@ -212,8 +238,8 @@ zscii = go . concatMap val
           | c == 'Ő' = val 'O'
           | c == 'Ü' = val 'U'
           | c == 'Ű' = val 'U'
-          | otherwise = error $ show c
-          -- | otherwise = [] -- TODO
+          -- | otherwise = error $ show c
+          | otherwise = [] -- TODO
 
     pack :: Word8 -> Word8 -> Word8 -> Bool -> Word16
     pack x y z end =

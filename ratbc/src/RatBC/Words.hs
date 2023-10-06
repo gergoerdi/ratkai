@@ -20,8 +20,8 @@ loadWords bs =
     map fromGroup .
     groupBy ((==) `on` fst) .
     sortBy (compare `on` fst) .
-    takeWhile (\(id, _) -> id /= 0) .
     map fromEntry .
+    takeWhile (\bs -> BL.head bs /= 0x00) .
     splitInto (wordLen + 1) $
     deref bs 0x0823
   where
