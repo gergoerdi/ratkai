@@ -96,10 +96,13 @@ main = do
         let bss = map BL.pack . splitOn [0x00, 0x00, 0x00] . BL.unpack $ bs
         (bss', docs) <- fmap unzip $ forM (zip [(1 :: Word8)..] $ take 96 bss) \(room, bs) -> do
             (bs', stmts) <- test bs
-            let doc = vsep ["ROOM" <+> viaShow room, pprStmts msgs2 stmts]
+            let doc = encloseVSep lparen rparen comma
+                  [ viaShow room <+> "-- ROOM" <+> viaShow room
+                  , pprStmts msgs2 stmts
+                  ]
             return (bs', doc)
         let bs' = BL.intercalate (BL.pack [0x00, 0x00, 0x00]) bss'
-            doc = vsep docs <> line
+            doc = vlist docs <> line
         BL.writeFile (outputPath </> "enter.bc") bs'
         writeFile (outputPath </> "enter.txt") $ show doc
         print $ BL.length bs'
@@ -122,13 +125,14 @@ main = do
                 if BL.null action then return (input <> BL.singleton 0x00, mempty) else do
                     action <- pure $ BL.tail action
                     (bs', stmts) <- test action
-                    let doc = vcat
-                          [ pprBytes input <+> "--" <+> pprWords input
-                          , pprStmts msgs1 stmts
-                          ]
+                    -- let doc = vcat
+                    --       [ pprBytes input <+> "--" <+> pprWords input
+                    --       , pprStmts msgs1 stmts
+                    --       ]
+                    let doc = pprInputDispatch dict msgs1 $ InputDispatch (BL.unpack input) stmts
                     let bs'' = input <> BL.singleton 0x00 <> bs' <> BL.pack [0x00, 0x00]
                     return (bs'', doc)
-            pure (mconcat bss', vsep docs)
+            pure (mconcat bss', vlist docs)
 
     -- BC_INTERACTIVE
     when True do
@@ -136,7 +140,8 @@ main = do
         let bss = map BL.pack . takeWhile (not . null) . splitOn [0x00, 0x00] . BL.unpack $ bs
         (bs', doc) <- interactive bs
         BL.writeFile (outputPath </> "interactive-global.bc") bs'
-        writeFile (outputPath </> "interactive-global.txt") $ show doc
+        writeFile (outputPath </> "interactive-global.txt") $ renderString $
+          layoutPretty defaultLayoutOptions{ layoutPageWidth = Unbounded } doc
         print $ BL.length bs'
         pure ()
 
@@ -146,10 +151,13 @@ main = do
         let bss = map BL.pack . splitOn [0x00, 0x00, 0x00] . BL.unpack $ bs
         (bss', docs) <- fmap unzip $ forM (zip [(1 :: Word8)..] $ take 96 bss) \(room, bs) -> do
             (bs', doc) <- interactive bs
-            let doc' = vsep ["ROOM" <+> viaShow room, doc]
+            let doc' = encloseVSep lparen rparen comma
+                  [ viaShow room <+> "-- ROOM" <+> viaShow room
+                  , doc
+                  ]
             pure (bs', doc')
         let bs' = BL.intercalate (BL.pack [0x00, 0x00, 0x00]) bss'
-        let doc = vsep docs <> line
+        let doc = vlist docs <> line
         print $ BL.length bs'
         BL.writeFile (outputPath </> "interactive-local.bc") bs'
         writeFile (outputPath </> "interactive-local.txt") $ show doc
