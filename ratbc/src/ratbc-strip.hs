@@ -11,6 +11,7 @@ import RatBC.Text
 import RatBC.Pretty
 import RatBC.Game
 import RatBC.Game.Text
+import RatBC.Game.ToHL
 
 import Data.Functor.Const
 import Control.Monad.Identity
@@ -53,31 +54,6 @@ stripHomeLab = \case
     -- IfFF var body -> IfFF var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
     s -> pure s
 
-removeComments :: String -> String
-removeComments = unlines . map (head . endBy "-- ") . lines
-
-parseGame :: Game (Const String) -> Game Identity
-parseGame Game{..} = Game
-    { msgs1 = Identity . parseMessages . getConst $ msgs1
-    , msgs2 = Identity . parseMessages . getConst $ msgs2
-    , dict = Identity . parseWords . getConst $ dict
-    , enterRoom = Identity . fromList . read . getConst $ enterRoom
-    , afterTurn = Identity . read . getConst $ afterTurn
-    , interactiveGlobal = Identity . read . getConst $ interactiveGlobal
-    , interactiveLocal =  Identity . fromList . read . getConst $ interactiveLocal
-    , resetState = Identity . BL.pack . read . getConst $ resetState
-    , helpMap = Identity . fromList . read . getConst $ helpMap
-    }
-  where
-    fromList :: [a] -> Array Word8 a
-    fromList xs = listArray (1, fromIntegral $ length xs) xs
-
-    parseMessages s = listArray (1, fromIntegral $ length ss) $ map (dropWhile (== ' ') . tail . snd . break (== ':')) ss
-      where
-        ss = lines s
-
-    parseWords = M.fromList . read
-
 transformStmts :: ([Stmt] -> [Stmt]) -> (Game Identity -> Game Identity)
 transformStmts f game = game
     { enterRoom = fmap (fmap f) $ enterRoom game
@@ -90,20 +66,7 @@ main :: IO ()
 main = do
     opts@Options{..} <- execParser optionsInfo
 
-    let file fileName = Const . removeComments <$> readFile (inputPath </> fileName <.> "txt")
-
-    game0 <- Game
-      <$> file "text1"
-      <*> file "text2"
-      <*> file "dict"
-      <*> file "enter"
-      <*> file "after"
-      <*> file "interactive-global"
-      <*> file "interactive-local"
-      <*> file "reset"
-      <*> file "help"
-
-    let game = parseGame game0
+    game <- loadTextFiles inputPath
 
     let f = mapMaybe stripHomeLab
 
@@ -111,6 +74,7 @@ main = do
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game'
+    writeHLFiles outputPath game'
 
 options :: Parser Options
 options = do

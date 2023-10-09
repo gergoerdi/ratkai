@@ -17,6 +17,10 @@ import qualified Data.ByteString.Lazy as BL
 import Options.Applicative
 import System.Directory
 import System.FilePath
+import qualified Data.Map as M
+import Data.Word
+import Data.Array (Array, listArray)
+import Data.List.Split
 
 writeTextFiles :: FilePath -> Game Identity -> IO ()
 writeTextFiles outputPath game = do
@@ -33,3 +37,44 @@ writeTextFiles outputPath game = do
     game' = pprGame game
     write fileName = writeFile (outputPath </> fileName <.> "txt") . renderString .
       layoutPretty defaultLayoutOptions{ layoutPageWidth = Unbounded } . getConst
+
+parseGame :: Game (Const String) -> Game Identity
+parseGame Game{..} = Game
+    { msgs1 = Identity . parseMessages . getConst $ msgs1
+    , msgs2 = Identity . parseMessages . getConst $ msgs2
+    , dict = Identity . parseWords . getConst $ dict
+    , enterRoom = Identity . fromList . read . getConst $ enterRoom
+    , afterTurn = Identity . read . getConst $ afterTurn
+    , interactiveGlobal = Identity . read . getConst $ interactiveGlobal
+    , interactiveLocal =  Identity . fromList . read . getConst $ interactiveLocal
+    , resetState = Identity . BL.pack . read . getConst $ resetState
+    , helpMap = Identity . fromList . read . getConst $ helpMap
+    }
+  where
+    fromList :: [a] -> Array Word8 a
+    fromList xs = listArray (1, fromIntegral $ length xs) xs
+
+    parseMessages s = listArray (1, fromIntegral $ length ss) $ map (dropWhile (== ' ') . tail . snd . break (== ':')) ss
+      where
+        ss = lines s
+
+    parseWords = M.fromList . read
+
+removeComments :: String -> String
+removeComments = unlines . map (head . endBy "-- ") . lines
+
+loadTextFiles :: FilePath -> IO (Game Identity)
+loadTextFiles inputPath = do
+    let file fileName = Const . removeComments <$> readFile (inputPath </> fileName <.> "txt")
+
+    game0 <- Game
+      <$> file "text1"
+      <*> file "text2"
+      <*> file "dict"
+      <*> file "enter"
+      <*> file "after"
+      <*> file "interactive-global"
+      <*> file "interactive-local"
+      <*> file "reset"
+      <*> file "help"
+    return $ parseGame game0
