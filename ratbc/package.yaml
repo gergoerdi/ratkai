@@ -17,6 +17,7 @@ dependencies:
   - directory
   - prettyprinter
   - array
+  - mtl
 
 source-dirs:
   - src
@@ -24,3 +25,9 @@ source-dirs:
 executables:
   ratbc-disasm:
     main: ratbc-disasm.hs
+    
+  ratbc-asm:
+    main: ratbc-asm.hs
+
+  ratbc-strip:
+    main: ratbc-strip.hs
