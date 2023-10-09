@@ -15,7 +15,7 @@ import RatBC.Game.ToHL
 
 import Data.Functor.Const
 import Control.Monad.Identity
-import Data.Array (Array, listArray)
+import Data.Array (Array, listArray, elems, assocs, bounds)
 import Prettyprinter
 import Prettyprinter.Render.String
 import Data.String
@@ -28,6 +28,7 @@ import qualified Data.Map as M
 import Options.Applicative
 import Control.Monad
 import Data.List.Split
+import Data.List (nub, sort)
 import Text.Printf
 import Data.Word
 import Data.Maybe
@@ -62,6 +63,41 @@ transformStmts f game = game
     , interactiveLocal = fmap (fmap (fmap (fmap f))) $ interactiveLocal game
     }
 
+both :: (a -> b) -> (a, a) -> (b, b)
+both f (x, y) = (f x, f y)
+
+usedMessages :: Game Identity -> ([Val], [Val])
+usedMessages Game{..} = both (nub . sort) $ mconcat
+    [ bank2 $ elems . runIdentity $ helpMap
+    , bank2 $ foldMap stmtsMessages . runIdentity $ enterRoom
+    , bank1 $ stmtsMessages . runIdentity $ afterTurn
+    , bank1 $ foldMap (foldMap stmtsMessages) . runIdentity $ interactiveGlobal
+    , bank1 $ foldMap (foldMap (foldMap stmtsMessages)) . runIdentity $ interactiveLocal
+    , bank1 [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 16, 17] -- Builtins used by the interpreter
+    , bank2 [minItem..maxItem]
+    ]
+  where
+    bank1 vals = (vals, mempty)
+    bank2 vals = (mempty, vals)
+
+    stmtsMessages = foldMap stmtMessages
+    stmtMessages = \case
+        Message msg -> [msg]
+        Assert00 _ msg -> [msg]
+        AssertFF _ msg -> [msg]
+        AssertHere _ msg -> [msg]
+        _ -> []
+
+
+stripMessages :: [Val] -> [Val] -> Game Identity -> Game Identity
+stripMessages bank1 bank2 game@Game{..} = game
+    { msgs1 = fmap (onlyKeep bank1) msgs1
+    , msgs2 = fmap (onlyKeep bank2) msgs2
+    }
+  where
+    onlyKeep bank msgs = listArray (bounds msgs)
+      [ if i `elem` bank then s else "" | (i, s) <- assocs msgs ]
+
 main :: IO ()
 main = do
     opts@Options{..} <- execParser optionsInfo
@@ -70,11 +106,17 @@ main = do
 
     let f = mapMaybe stripHomeLab
 
-    let game' = transformStmts f game
+    game <- pure $ transformStmts f game
+
+    let (bank1, bank2) = usedMessages game
+    print $ nub . sort $ bank1
+    print $ nub . sort $ bank2
+
+    game <- pure $ stripMessages bank1 bank2 game
 
     createDirectoryIfMissing True outputPath
-    writeTextFiles outputPath game'
-    writeHLFiles outputPath game'
+    writeTextFiles outputPath game
+    writeHLFiles outputPath game
 
 options :: Parser Options
 options = do

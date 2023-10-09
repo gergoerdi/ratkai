@@ -23,4 +23,5 @@ data Game f = Game
     , interactiveLocal :: f (ByRoom [InputDispatch [Stmt]])
     , resetState :: f BL.ByteString
     , helpMap :: f (ByRoom Word8)
+    , minItem, maxItem :: Word8
     }

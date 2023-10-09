@@ -62,8 +62,8 @@ zscii = go . concatMap (val . toUpper)
         [x, y, z] -> end (x, y, z)
         [x, y] -> end (x, y, 0)
         [x] -> end (x, 0, 0)
-        [] -> error "zscii: empty string"
-        -- [] -> end (0, 0, 0)
+        -- [] -> error "zscii: empty string"
+        [] -> end (0, 0, 0)
 
     val :: Char -> [Word8]
     -- val c | 'A' <= c, c <= 'Z' = [fromIntegral $ ord c - ord 'A']

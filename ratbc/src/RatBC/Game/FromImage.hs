@@ -35,16 +35,19 @@ fromImage bs = Game
             bss = take numRooms $ map BL.pack . splitOn [0x00, 0x00, 0x00] . BL.unpack $ bs'
         in listArray (1, fromIntegral numRooms) $ map interactive bss
     , resetState = Identity $
-        let minItem = BL.index bs 0x083a
-            maxItem = BL.index bs 0x083b
-            bs' = deref bs 0x0835
+        let bs' = deref bs 0x0835
         in BL.take (fromIntegral $ maxItem - minItem) bs'
     , helpMap = Identity $
         let bs' = deref bs 0x0837
         in listArray (1, fromIntegral numRooms) $ BL.unpack bs'
+    , minItem = minItem
+    , maxItem = maxItem
     }
   where
     numRooms = 97
+
+    minItem = BL.index bs 0x083a
+    maxItem = BL.index bs 0x083b
 
     (strings1, strings2) = loadMessages bs
 

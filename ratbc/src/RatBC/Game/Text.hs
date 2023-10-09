@@ -49,6 +49,8 @@ parseGame Game{..} = Game
     , interactiveLocal =  Identity . fromList . read . getConst $ interactiveLocal
     , resetState = Identity . BL.pack . read . getConst $ resetState
     , helpMap = Identity . fromList . read . getConst $ helpMap
+    , minItem = minItem
+    , maxItem = maxItem
     }
   where
     fromList :: [a] -> Array Word8 a
@@ -77,4 +79,6 @@ loadTextFiles inputPath = do
       <*> file "interactive-local"
       <*> file "reset"
       <*> file "help"
+      <*> pure 120 -- TODO: minItem
+      <*> pure 160 -- TODO: maxItem
     return $ parseGame game0
