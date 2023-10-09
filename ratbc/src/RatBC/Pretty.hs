@@ -91,8 +91,8 @@ pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, hel
     dict = runIdentity $ Game.dict game
 
     pprMessages msgs = vcat [ fill 4 (viaShow i <> colon) <+> fromString s | (i, s) <- assocs msgs ]
-    pprDict dict = vcat
-      [ fromString (printf "0x%02d" i) <> colon <+> list (map fromString words)
+    pprDict dict = vlist
+      [ tuple [fromString (printf "0x%02x" i), list [dquotes $ fromString word | word <- words]]
       | (i, words) <- M.toList dict
       ]
 
@@ -108,21 +108,3 @@ pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, hel
 
     pprRoom :: Word8 -> Doc ann
     pprRoom room = "ROOM" <+> viaShow room
-
-    -- docs = [ vcat [ "--" <+> pprRoom room, pprStmts msgs2 stmts ] | (room, stmts) <- zip [1..]
-
-
-    --     --   bs <- pure $ deref bs 0x0827
-    --     -- let bss = map BL.pack . splitOn [0x00, 0x00, 0x00] . BL.unpack . BL.tail $ bs
-    --     -- (bss', docs) <- fmap unzip $ forM (zip [(1 :: Word8)..] $ take 96 bss) \(room, bs) -> do
-    --     --     (bs', stmts) <- test bs
-    --     --     let doc = encloseVSep lparen rparen comma
-    --     --           [ viaShow room <+> "-- ROOM" <+> viaShow room
-    --     --           , pprStmts msgs2 stmts
-    --     --           ]
-    --     --     return (bs', doc)
-    --     -- let bs' = BL.intercalate (BL.pack [0x00, 0x00, 0x00]) bss'
-    --     --     doc = vlist docs <> line
-    --     -- BL.writeFile (outputPath </> "enter.bc") bs'
-    --     -- writeFile (outputPath </> "enter.txt") $ show doc
-    --     -- print $ BL.length bs'

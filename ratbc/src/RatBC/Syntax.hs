@@ -16,6 +16,7 @@ type Val = Word8
 type Msg = Val
 
 data InputDispatch = InputDispatch [Word8] [Stmt]
+    deriving (Show, Read)
 
 data Stmt
     = Ret
