@@ -1,4 +1,5 @@
 {-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE DeriveFunctor #-}
 module RatBC.Syntax where
 
 import Data.Word
@@ -15,8 +16,8 @@ type Var = Word8
 type Val = Word8
 type Msg = Val
 
-data InputDispatch = InputDispatch [Word8] [Stmt]
-    deriving (Show, Read)
+data InputDispatch a = InputDispatch [Word8] a
+    deriving (Show, Read, Functor)
 
 data Stmt
     = Ret

@@ -57,7 +57,7 @@ niceStmt msgs = \case
     AssertHere _ msg -> pprMessage msgs msg
     _ -> mempty
 
-pprInputDispatch :: Dict -> Msgs -> InputDispatch -> Doc ann
+pprInputDispatch :: Dict -> Msgs -> InputDispatch [Stmt] -> Doc ann
 pprInputDispatch dict msgs (InputDispatch input stmts) = vcat
     [ hsep
       [ fill 20 $ "InputDispatch" <+> list (map (fromString . printf "0x%02x") input)

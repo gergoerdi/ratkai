@@ -78,6 +78,14 @@ parseGame Game{..} = Game
 
     parseWords = M.fromList . read
 
+transformStmts :: ([Stmt] -> [Stmt]) -> (Game Identity -> Game Identity)
+transformStmts f game = game
+    { enterRoom = fmap (fmap f) $ enterRoom game
+    , afterTurn = fmap f $ afterTurn game
+    , interactiveGlobal = fmap (fmap (fmap f)) $ interactiveGlobal game
+    , interactiveLocal = fmap (fmap (fmap (fmap f))) $ interactiveLocal game
+    }
+
 main :: IO ()
 main = do
     opts@Options{..} <- execParser optionsInfo
@@ -99,9 +107,7 @@ main = do
 
     let f = mapMaybe stripHomeLab
 
-    let game' = game
-          { enterRoom = fmap (fmap f) $ enterRoom game
-          }
+    let game' = transformStmts f game
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game'

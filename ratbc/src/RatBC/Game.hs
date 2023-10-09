@@ -19,8 +19,8 @@ data Game f = Game
     , dict :: f Dict
     , enterRoom :: f (ByRoom [Stmt])
     , afterTurn :: f [Stmt]
-    , interactiveGlobal :: f [InputDispatch]
-    , interactiveLocal :: f (ByRoom [InputDispatch])
+    , interactiveGlobal :: f [InputDispatch [Stmt]]
+    , interactiveLocal :: f (ByRoom [InputDispatch [Stmt]])
     , resetState :: f BL.ByteString
     , helpMap :: f (ByRoom Word8)
     }
