@@ -129,7 +129,10 @@ stripMessages bank1 bank2 game@Game{..} = game
     }
   where
     onlyKeep bank msgs = listArray (bounds msgs)
-      [ if i `elem` bank then s else mempty | (i, s) <- assocs msgs ]
+      [ if i `elem` bank then trimRight s else mempty | (i, s) <- assocs msgs ]
+
+trimRight :: String -> String
+trimRight = reverse . dropWhile (== ' ') . reverse
 
 stripWords :: [Val] -> Game Identity -> Game Identity
 stripWords words game@Game{..} = game

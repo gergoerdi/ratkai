@@ -66,30 +66,17 @@ zscii = go . concatMap (val . toUpper)
         [] -> end (0, 0, 0)
 
     val :: Char -> [Word8]
-    -- val c | 'A' <= c, c <= 'Z' = [fromIntegral $ ord c - ord 'A']
-    --       | '0' <= c, c <= '9' = []
-    --       | c == ' ' = [26]
-    --       | c == '.' = [27]
-    --       | c == '!' = [26] -- XXX
-    --       | c == '?' = [26]
-    --       | c == '\'' = [26] -- XXX
-    --       | c == ':' = [29]
-    --       | c == '-' = [26] -- XXX
-    --       | c == ',' = [30]
-    --       | c == '|' = [] -- TODO: these should have been filtered out earlier...
-    --       | otherwise = error $ show c
-    --       -- | otherwise = []
     val c | 'A' <= c, c <= 'Z' = [fromIntegral $ 6 + ord c - ord 'A']
           | '0' <= c, c <= '9' = [1, fromIntegral $ 6 + ord c - ord '0']
           | c == ' ' = [2]
           | c == '.' = [3]
           | c == ',' = [4]
-          | c == '!' = [1, 6 + 12]
-          | c == '?' = [1, 6 + 13]
-          | c == '\'' = [1, 6 + 14]
-          | c == ':' = [1, 6 + 15]
-          | c == '-' = [1, 6 + 16]
-          | c == '&' = [1, 6 + 17]
+          | c == '!' = [5]
+          | c == '?' = [1, 1]
+          | c == '\'' = [1, 2]
+          | c == ':' = [1, 3]
+          | c == '-' = [1, 4]
+          | c == '&' = [1, 5]
           | c == 'Á' = val 'A'
           | c == 'É' = val 'E'
           | c == 'Í' = val 'I'
