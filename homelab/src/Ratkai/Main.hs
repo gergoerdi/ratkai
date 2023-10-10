@@ -47,8 +47,7 @@ game = do
 
         ld HL inputBuf
         call inputLine
-        ld A 0x0d
-        rst 0x28
+        call paragraph
         ld HL inputBuf
         withLabel \loop -> do
             ld A [HL]
@@ -102,8 +101,52 @@ game = do
                     jr loop
                 pure ()
 
-        printlnZ <- labelled $ do
+        -- -- Parse one word from [IX] into [IY]
+        -- parse1 <- labelled do
+        --     ld HL dict
+
+        --     ret
+
+        -- Match one word from [IX] vs. a dictionary entry at [HL]
+        -- After: NZ iff matched
+        matchWord <- labelled do
+            ldVia A [shiftState] 0
+            -- Unpack word into dictBuf
+            ld DE dictBuf
+            forM [0..4] \i ->
+                ldVia A [dictBuf + i] 0x00
+            withLabel \keepDecoding -> do
+                call unpackZ
+                ld IY unpackBuf
+                replicateM_ 3 $ do
+                    ld A [IY]
+                    inc IY
+                    call decodeZ1
+                    skippable \unprintable -> do
+                        jr Z unprintable
+                        ld [DE] A
+                        inc DE
+                ld A [unpackIsLast]
+                cp 0
+                jr Z keepDecoding
+            -- Note: HL now points to the code of the word we're trying to match
+
+            -- If dictBuf is empty, this is an invalid entry
+            ld A [dictBuf]
+            ret Z
+
+            ld DE dictBuf
+            push HL
+            -- Match the first 5 characters of HL, or until there is a space
+            ld B 5
+            ld A [DE]
+            cp 0x20
+
+
+
+        printlnZ <- labelled do
             call printZ
+        paragraph <- labelled do
             ld A 0x0d
             rst 0x28
             rst 0x28
@@ -121,20 +164,21 @@ game = do
                 bit 7 A
                 jr NZ tryNext
 
-            start <- labelled $ loopForever do
-                call unpackZ
-                ld IX unpackBuf
-                replicateM_ 3 $ do
-                    -- call printZ1
-                    ld A [IX]
-                    inc IX
-                    call decodeZ1
-                    skippable \unprintable -> do
-                        jr Z unprintable
-                        call 0x28
-                ld A [unpackIsLast]
-                cp 0
-                ret NZ
+            start <- labelled $ do
+                ldVia A [shiftState] 0
+                loopForever do
+                    call unpackZ
+                    ld IX unpackBuf
+                    replicateM_ 3 $ do
+                        ld A [IX]
+                        inc IX
+                        call decodeZ1
+                        skippable \unprintable -> do
+                            jr Z unprintable
+                            call 0x28
+                    ld A [unpackIsLast]
+                    cp 0
+                    ret NZ
             pure ()
 
         -- Unpack a ZSCII pair of bytes from [HL] into [unpackBuf], and set [unpackIsLast]
@@ -257,5 +301,7 @@ game = do
         unpackIsLast <- labelled $ db [0]
         shiftState <- labelled $ db [0]
         inputBuf <- labelled $ resb 40
+        parseBuf <- labelled $ resb 5
+        dictBuf <- labelled $ resb 5
 
         pure ()
