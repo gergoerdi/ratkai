@@ -7,29 +7,39 @@ import Z80.Utils
 import HL2
 import qualified Data.ByteString as BS
 import Control.Monad
+import System.FilePath
 
 game :: IO Z80ASM
 game = do
-    text1' <- BS.readFile "/home/cactus/prog/c64/bosszu-disasm/ratbc/_out/text1.zscii"
+    let asset name = BS.readFile $ "/home/cactus/prog/c64/bosszu-disasm/ratbc/_out/hl2-ep1.strip/" </> name <.> "bin"
+    text1' <- asset "text1"
+    text2' <- asset "text2"
+    dict' <- asset "dict"
+    scriptEnter' <- asset "enter"
+    scriptAfter' <- asset "after"
+    scriptGlobal' <- asset "interactive-global"
+    scriptLocal' <- asset "interactive-local"
+    help' <- asset "help"
+    reset' <- asset "reset"
 
     pure $ mdo
         ldVia A [shiftState] 0
-        ld HL text1
-        ld B 29
+        ld HL text2
+        ld B 1
         call printZ
 
         loopForever $ pure ()
         printZ <- labelled $ withLabel \tryNext -> mdo
             -- Is this the word we want?
             dec B
-            jp Z start -- TODO: jr?
+            jr Z start
 
             loopForever do
                 inc HL
                 ld A [HL]
                 inc HL
                 bit 7 A
-                jp NZ tryNext
+                jr NZ tryNext
 
             start <- labelled $ loopForever do
                 ldVia A E [HL]
@@ -72,30 +82,82 @@ game = do
             ld A [shiftState]
             cp 0
             ldVia A [shiftState] 0
-            jp NZ shifted
+            jr NZ shifted
 
             ld A [IX]
             inc IX
-            sub 6
-            jr C shift
+            cp 0
+            ret Z
+            cp 1
+            jr Z shift
 
-            add A 0x41
-            call 0x1fc
-            ret
+            cp 2
+            jr Z space
+            cp 3
+            jr Z period
+            cp 4
+            jr Z comma
+            cp 5
+            jr Z bang
+            add A (0x41 - 6)
 
-            shifted <- labelled do
+            printA <- labelled do
+              call 0x1fc
+              ret
+
+            space <- labelled do
+                ld A 0x20
+                jr printA
+            period <- labelled do
+                ld A 0x2e
+                jr printA
+            comma <- labelled do
+                ld A 0x2c
+                jr printA
+            bang <- labelled do
+                ld A 0x21
+                jr printA
+
+            shifted <- labelled mdo
                 ld A [IX]
                 inc IX
                 -- TODO: it could be something other than space
-                ld A 0x20
-                call 0x1fc
-                ret
+                sub 1
+                ret C
+                cp 5
+                jp C symbol
+                add A (0x30 - 5)
+                jr printA
+
+                symbol <- labelled mdo
+                    push HL
+                    push DE
+                    ld HL symbols
+                    ld D 0
+                    ld E A
+                    add HL DE
+                    ld A [HL]
+                    pop DE
+                    pop HL
+                    jr printA
+                    symbols <- labelled $ db [0x21, 0x3f, 0x27, 0x3a, 0x2d, 0x26]
+                    pure ()
+                pure ()
 
             shift <- labelled do
                 ldVia A [shiftState] 1
             ret
 
         text1 <- labelled $ db text1'
+        text2 <- labelled $ db text2'
+        dict <- labelled $ db dict'
+        scriptEnter <- labelled $ db scriptEnter'
+        scriptAfter <- labelled $ db scriptAfter'
+        scriptGlobal <- labelled $ db scriptGlobal'
+        scriptLocal <-  labelled $ db scriptLocal'
+        help <- labelled $ db help'
+        reset <- labelled $ db reset'
+
         buf <- labelled $ db [0, 0, 0]
         isLast <- labelled $ db [0]
         shiftState <- labelled $ db [0]

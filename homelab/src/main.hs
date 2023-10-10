@@ -10,6 +10,7 @@ import qualified Data.ByteString as BS
 import Data.String (fromString)
 import System.FilePath
 import System.Directory
+import Text.Printf
 
 main :: IO ()
 main = do
@@ -18,7 +19,9 @@ main = do
 emit :: String -> ASMBlock -> IO ()
 emit name block = do
     createDirectoryIfMissing True (takeDirectory name)
-    BS.writeFile (name <.> "obj") $ asmData block
+    let bin = asmData block
+    BS.writeFile (name <.> "obj") bin
+    printf "Raw binary size: %d bytes\n" $ BS.length bin
     BS.writeFile (name <.> "htp") $ htp (fromString $ takeBaseName name) block
 
 htp :: BS.ByteString -> ASMBlock -> BS.ByteString
