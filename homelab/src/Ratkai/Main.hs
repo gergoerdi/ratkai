@@ -48,13 +48,9 @@ game = do
         ld HL inputBuf
         call inputLine
         call paragraph
-        ld HL inputBuf
-        withLabel \loop -> do
-            ld A [HL]
-            rst 0x28
-            inc HL
-            cp 0
-            jp NZ loop
+
+        ld IX inputBuf
+        call parse1
 
         loopForever $ pure ()
 
@@ -70,9 +66,9 @@ game = do
                 ld [HL] 0x00
                 rst 0x18
                 cp 0x0d -- End of line
-                ret Z
+                jr Z enter
                 cp 0x07 -- Backspace
-                jp Z backspace
+                jr Z backspace
 
                 -- Normal character: print and record
                 dec B
@@ -99,22 +95,43 @@ game = do
                     dec HL
                     inc B
                     jr loop
+
+                enter <- labelled do
+                    ld [HL] 0x20
+                    ret
                 pure ()
 
-        -- -- Parse one word from [IX] into [IY]
-        -- parse1 <- labelled do
-        --     ld HL dict
+        -- Parse one word from [IX] into [IY], advancing `IX` as needed
+        parse1 <- labelled mdo
+            ld HL dict
+            loopForever do
+                ld A [HL]
+                cp 0xff
+                jp Z notFound
 
-        --     ret
+                call matchWord
+                cp 0x00
+                jp NZ found
 
-        -- Match one word from [IX] vs. a dictionary entry at [HL]
-        -- After: NZ iff matched
-        matchWord <- labelled do
+            found <- label
+            -- TODO
+            call 0x01a5
+            ret
+
+            notFound <- label
+            -- TODO: emit "syntax" error
+            ret
+
+        -- Match one word from `[IX]` vs. a dictionary entry at `[HL]`
+        -- After: `A` contains the word code (or 0 on non-match), and
+        -- `IX` is the rest of the input
+        -- Clobbers: `BC`
+        matchWord <- labelled mdo
             ldVia A [shiftState] 0
+            ldVia A [unpackIsLast] 0
             -- Unpack word into dictBuf
             ld DE dictBuf
-            forM [0..4] \i ->
-                ldVia A [dictBuf + i] 0x00
+            ldVia A [dictBuf] 0x00
             withLabel \keepDecoding -> do
                 call unpackZ
                 ld IY unpackBuf
@@ -133,16 +150,50 @@ game = do
 
             -- If dictBuf is empty, this is an invalid entry
             ld A [dictBuf]
+            cp 0
             ret Z
 
             ld DE dictBuf
             push HL
+            push IX
             -- Match the first 5 characters of HL, or until there is a space
-            ld B 5
-            ld A [DE]
-            cp 0x20
+            decLoopB 5 do
+                ld A [DE]
+                inc DE
+                ld C [IX]
+                cp C
+                jp NZ noMatch
+                cp 0x20 -- If next char to match is a space, then we're done
+                jr Z match
+                inc IX
 
+            match <- labelled do
+                -- Skip all remaining characters of the current word
+                skippable \end -> loopForever do
+                    ld A [IX]
+                    cp 0x20
+                    jp Z end
+                    inc IX
 
+                -- Skip all trailing spaces
+                skippable \end -> loopForever do
+                    ld A [IX]
+                    cp 0x20
+                    jp NZ end
+                    inc IX
+
+                pop HL -- Discard pushed IX, since we want to "commit" our progress
+                pop HL
+                ld A [HL]
+                ret
+
+            noMatch <- labelled do
+                pop IX
+                pop HL
+                inc HL
+                ld A 0
+                ret
+            pure ()
 
         printlnZ <- labelled do
             call printZ
@@ -166,6 +217,7 @@ game = do
 
             start <- labelled $ do
                 ldVia A [shiftState] 0
+                ldVia A [unpackIsLast] 0
                 loopForever do
                     call unpackZ
                     ld IX unpackBuf
@@ -184,6 +236,7 @@ game = do
         -- Unpack a ZSCII pair of bytes from [HL] into [unpackBuf], and set [unpackIsLast]
         -- HL is incremented by 2 in the process.
         unpackZ <- labelled mdo
+            push DE
             ldVia A E [HL]
             inc HL
 
@@ -212,6 +265,7 @@ game = do
             Z80.and 0b1000_0000
             ld [unpackIsLast] A
 
+            pop DE
             ret
 
         -- Decode a single character in ZSCII codepage in A.
