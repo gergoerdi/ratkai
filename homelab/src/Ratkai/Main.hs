@@ -25,13 +25,13 @@ game = do
     pure $ mdo
         ldVia A [shiftState] 0
 
-        -- ld HL text2
-        -- ld B 1
-        -- call printlnZ
+        ld HL text2
+        ld B 1
+        call printlnZ
 
-        -- ld HL text2
-        -- ld B 160
-        -- call printlnZ
+        ld HL text2
+        ld B 160
+        call printlnZ
 
         -- ld HL text2
         -- ld B 163
@@ -193,7 +193,7 @@ game = do
             cp 4
             jr Z comma
             cp 5
-            jr Z bang
+            jr Z newline
 
             add A (0x41 - 6)
             printable <- labelled do
@@ -209,17 +209,17 @@ game = do
             comma <- labelled do
                 ld A 0x2c
                 jr printable
-            bang <- labelled do
-                ld A 0x21
+            newline <- labelled do
+                ld A 0x0d
                 jr printable
 
             shifted <- labelled mdo
                 pop AF
                 sub 1
                 ret C
-                cp 5
+                cp 22
                 jp C symbol
-                add A (0x30 - 5)
+                add A (0x30 - 22 + 1)
                 jr printable
 
                 symbol <- labelled mdo
@@ -233,7 +233,7 @@ game = do
                     pop DE
                     pop HL
                     jr printable
-                    symbols <- labelled $ db [0x3f, 0x27, 0x3a, 0x2d, 0x26]
+                    symbols <- labelled $ db [0x3f, 0x27, 0x3a, 0x2d, 0x26, 0x21]
                     pure ()
                 pure ()
 
