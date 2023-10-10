@@ -24,4 +24,5 @@ data Game f = Game
     , resetState :: f BL.ByteString
     , helpMap :: f (ByRoom Word8)
     , minItem, maxItem :: Word8
+    , startRoom :: Word8
     }

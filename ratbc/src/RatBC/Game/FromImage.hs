@@ -42,6 +42,7 @@ fromImage bs = Game
         in listArray (1, fromIntegral numRooms) $ BL.unpack bs'
     , minItem = minItem
     , maxItem = maxItem
+    , startRoom = BL.index bs 0x083c
     }
   where
     numRooms = 97

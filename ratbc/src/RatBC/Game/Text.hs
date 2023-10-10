@@ -39,7 +39,7 @@ writeTextFiles outputPath game = do
       layoutPretty defaultLayoutOptions{ layoutPageWidth = Unbounded } . getConst
 
 parseGame :: Game (Const String) -> Game Identity
-parseGame Game{..} = Game
+parseGame game@Game{..} = game
     { msgs1 = Identity . parseMessages . getConst $ msgs1
     , msgs2 = Identity . parseMessages . getConst $ msgs2
     , dict = Identity . parseWords . getConst $ dict
@@ -49,8 +49,6 @@ parseGame Game{..} = Game
     , interactiveLocal =  Identity . fromList . read . getConst $ interactiveLocal
     , resetState = Identity . BL.pack . read . getConst $ resetState
     , helpMap = Identity . fromList . read . getConst $ helpMap
-    , minItem = minItem
-    , maxItem = maxItem
     }
   where
     fromList :: [a] -> Array Word8 a
@@ -81,4 +79,5 @@ loadTextFiles inputPath = do
       <*> file "help"
       <*> pure 120 -- TODO: minItem
       <*> pure 160 -- TODO: maxItem
+      <*> pure 1 -- TODO: startRoom
     return $ parseGame game0
