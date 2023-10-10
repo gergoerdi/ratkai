@@ -13,9 +13,10 @@ import RatBC.Game
 import RatBC.Game.Text
 import RatBC.Game.ToHL
 
+import Control.Monad.State
 import Data.Functor.Const
 import Control.Monad.Identity
-import Data.Array (Array, listArray, elems, assocs, bounds)
+import Data.Array (Array, listArray, elems, assocs, bounds, (!))
 import Prettyprinter
 import Prettyprinter.Render.String
 import Data.String
@@ -25,6 +26,7 @@ import Data.Binary.Put
 import Data.Bits
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as M
+import qualified Data.Set as S
 import Options.Applicative
 import Control.Monad
 import Data.List.Split
@@ -36,6 +38,7 @@ import Data.Either
 import Data.Char
 import System.Directory
 import System.FilePath
+import Data.Foldable (toList)
 
 data Options = Options
     { inputPath :: FilePath
@@ -88,6 +91,36 @@ usedMessages Game{..} = both (nub . sort) $ mconcat
         AssertHere _ msg -> [msg]
         _ -> []
 
+usedWords :: Game Identity -> [Val]
+usedWords Game{..} = nub . sort $ mconcat
+    [ foldMap wordsOf . runIdentity $ interactiveGlobal
+    , foldMap (foldMap wordsOf) . runIdentity $ interactiveLocal
+    ]
+  where
+    wordsOf :: InputDispatch a -> [Val]
+    wordsOf (InputDispatch words _) = words
+
+accessibleRooms :: Game Identity -> [Val]
+accessibleRooms Game{..} = S.toList $ flip execState mempty $ do
+    mapM_ walkStmt $ runIdentity afterTurn
+    go startRoom
+  where
+    walkStmt :: Stmt -> State (S.Set Val) ()
+    walkStmt = \case
+        MoveTo room' -> go room'
+        _ -> pure ()
+
+    go :: Val -> State (S.Set Val) ()
+    go room = do
+        done <- gets (room `S.member`)
+        unless done do
+            modify $ S.insert room
+            let stmts = mconcat
+                  [ runIdentity enterRoom ! fromIntegral room
+                  , mconcat . foldMap toList $ runIdentity interactiveGlobal
+                  , mconcat . foldMap toList $ runIdentity interactiveLocal ! fromIntegral room
+                  ]
+            mapM_ walkStmt stmts
 
 stripMessages :: [Val] -> [Val] -> Game Identity -> Game Identity
 stripMessages bank1 bank2 game@Game{..} = game
@@ -96,7 +129,22 @@ stripMessages bank1 bank2 game@Game{..} = game
     }
   where
     onlyKeep bank msgs = listArray (bounds msgs)
-      [ if i `elem` bank then s else "" | (i, s) <- assocs msgs ]
+      [ if i `elem` bank then s else mempty | (i, s) <- assocs msgs ]
+
+stripWords :: [Val] -> Game Identity -> Game Identity
+stripWords words game@Game{..} = game
+    { dict = fmap (M.filterWithKey (\k _ -> k `elem` words)) dict
+    }
+
+stripRooms :: [Val] -> Game Identity -> Game Identity
+stripRooms rooms game@Game{..} = game
+    { enterRoom = fmap strip enterRoom
+    , interactiveLocal = fmap strip interactiveLocal
+    }
+  where
+    strip :: (Monoid a) => ByRoom a -> ByRoom a
+    strip xs = listArray (bounds xs)
+      [ if i `elem` rooms then x else mempty | (i, x) <- assocs xs ]
 
 main :: IO ()
 main = do
@@ -107,12 +155,17 @@ main = do
     let f = mapMaybe stripHomeLab
 
     game <- pure $ transformStmts f game
+    let rooms = accessibleRooms game
+    print rooms
+    game <- pure $ stripRooms rooms game
 
     let (bank1, bank2) = usedMessages game
+        words = usedWords game
     print $ nub . sort $ bank1
     print $ nub . sort $ bank2
 
     game <- pure $ stripMessages bank1 bank2 game
+    game <- pure $ stripWords words game
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
