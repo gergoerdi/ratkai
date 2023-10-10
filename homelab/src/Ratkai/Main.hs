@@ -25,26 +25,87 @@ game = do
     pure $ mdo
         ldVia A [shiftState] 0
 
-        ld HL text2
-        ld B 1
-        call printlnZ
+        -- ld HL text2
+        -- ld B 1
+        -- call printlnZ
 
-        ld HL text2
-        ld B 160
-        call printlnZ
+        -- ld HL text2
+        -- ld B 160
+        -- call printlnZ
 
-        ld HL text2
-        ld B 163
-        call printlnZ
+        -- ld HL text2
+        -- ld B 163
+        -- call printlnZ
 
-        ld HL text2
-        ld B 175
-        call printlnZ
+        -- ld HL text2
+        -- ld B 175
+        -- call printlnZ
+
+        -- ld HL dict
+        -- ld B 0x30
+        -- call printZ
+
+        ld HL inputBuf
+        call inputLine
+        ld A 0x0d
+        rst 0x28
+        ld HL inputBuf
+        withLabel \loop -> do
+            ld A [HL]
+            rst 0x28
+            inc HL
+            cp 0
+            jp NZ loop
 
         loopForever $ pure ()
+
+        -- Input one line of text (up to 38 characters), store result in [HL]
+        -- Mangles `HL`, `A` and `B`
+        inputLine <- labelled $ mdo
+            ld A 0x29
+            rst 0x28
+            ld A 0x20
+            rst 0x28
+            ld B 38
+            withLabel \loop -> mdo
+                ld [HL] 0x00
+                rst 0x18
+                cp 0x0d -- End of line
+                ret Z
+                cp 0x07 -- Backspace
+                jp Z backspace
+
+                -- Normal character: print and record
+                dec B
+                jr Z noMoreSpace
+                rst 0x28
+                ld [HL] A
+                inc HL
+                jr loop
+
+                noMoreSpace <- labelled do
+                    inc B -- So that next `dec B` will trigger `Z` again
+                    dec HL
+                    ld [HL] A
+                    ld A 0x07 -- Erase previous last character
+                    rst 0x28
+                    ld A [HL] -- Print new last character
+                    inc HL
+                    rst 0x28
+                    jr loop
+
+                backspace <- labelled do
+                    rst 0x28
+                    ld [HL] 0x00
+                    dec HL
+                    inc B
+                    jr loop
+                pure ()
+
         printlnZ <- labelled $ do
             call printZ
             ld A 0x0d
+            rst 0x28
             rst 0x28
             ret
 
@@ -195,5 +256,6 @@ game = do
         unpackBuf <- labelled $ db [0, 0, 0]
         unpackIsLast <- labelled $ db [0]
         shiftState <- labelled $ db [0]
+        inputBuf <- labelled $ resb 40
 
         pure ()
