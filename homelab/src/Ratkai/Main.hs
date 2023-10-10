@@ -61,53 +61,67 @@ game = do
                 jr NZ tryNext
 
             start <- labelled $ loopForever do
-                ldVia A E [HL]
-                inc HL
-
-                -- Third character: lowest 5 bits of E
-                Z80.and 0x1f
-                ld [buf + 2] A
-
-                ldVia A D [HL]
-                inc HL
-
-                -- Second character: lowest 2 bits of D with highest 3 bits of E
-                replicateM_ 5 $ srl E
-                replicateM_ 3 $ sla A
-                Z80.or E
-                Z80.and 0x1f
-                ld [buf + 1] A
-
-                -- first character: bits 6..2 of D
-                ld A D
-                replicateM_ 2 $ srl A
-                Z80.and 0x1f
-                ld [buf + 0] A
-
-                -- Finished: bit 7 of D
-                ld A D
-                Z80.and 0b1000_0000
-                ld [isLast] A
-
-                ld IX buf
+                call unpackZ
+                ld IX unpackBuf
                 replicateM_ 3 $ do
-                    call printZ1
+                    -- call printZ1
+                    ld A [IX]
                     inc IX
-                ld A [isLast]
+                    call decodeZ1
+                    skippable \unprintable -> do
+                        jr Z unprintable
+                        call 0x28
+                ld A [unpackIsLast]
                 cp 0
                 ret NZ
             pure ()
 
-        -- Print a single character in ZSCII codepage from [IX]
-        printZ1 <- labelled mdo
+        -- Unpack a ZSCII pair of bytes from [HL] into [unpackBuf], and set [unpackIsLast]
+        -- HL is incremented by 2 in the process.
+        unpackZ <- labelled mdo
+            ldVia A E [HL]
+            inc HL
+
+            -- Third character: lowest 5 bits of E
+            Z80.and 0x1f
+            ld [unpackBuf + 2] A
+
+            ldVia A D [HL]
+            inc HL
+
+            -- Second character: lowest 2 bits of D with highest 3 bits of E
+            replicateM_ 5 $ srl E
+            replicateM_ 3 $ sla A
+            Z80.or E
+            Z80.and 0x1f
+            ld [unpackBuf + 1] A
+
+            -- first character: bits 6..2 of D
+            ld A D
+            replicateM_ 2 $ srl A
+            Z80.and 0x1f
+            ld [unpackBuf + 0] A
+
+            -- Finished: bit 7 of D
+            ld A D
+            Z80.and 0b1000_0000
+            ld [unpackIsLast] A
+
+            ret
+
+        -- Decode a single character in ZSCII codepage in A.
+        -- Sets Z iff the character is unprintable (i.e. a shift)
+        decodeZ1 <- labelled mdo
+            push AF
             ld A [shiftState]
             cp 0
             ldVia A [shiftState] 0
             jr NZ shifted
+            pop AF
 
-            ld A [IX]
             cp 0
             ret Z
+
             cp 1
             jr Z shift
 
@@ -121,32 +135,31 @@ game = do
             jr Z bang
 
             add A (0x41 - 6)
-            printA <- labelled do
-                rst 0x28
+            printable <- labelled do
+                cp 0 -- Clear Z flag
                 ret
 
             space <- labelled do
                 ld A 0x20
-                jr printA
+                jr printable
             period <- labelled do
                 ld A 0x2e
-                jr printA
+                jr printable
             comma <- labelled do
                 ld A 0x2c
-                jr printA
+                jr printable
             bang <- labelled do
                 ld A 0x21
-                jr printA
+                jr printable
 
             shifted <- labelled mdo
-                ld A [IX]
-                -- TODO: it could be something other than space
+                pop AF
                 sub 1
                 ret C
                 cp 5
                 jp C symbol
                 add A (0x30 - 5)
-                jr printA
+                jr printable
 
                 symbol <- labelled mdo
                     push HL
@@ -158,14 +171,16 @@ game = do
                     ld A [HL]
                     pop DE
                     pop HL
-                    jp 0x01fc
+                    jr printable
                     symbols <- labelled $ db [0x21, 0x3f, 0x27, 0x3a, 0x2d, 0x26]
                     pure ()
                 pure ()
 
             shift <- labelled do
                 ldVia A [shiftState] 1
-            ret
+                setZ
+                ret
+            pure ()
 
         text1 <- labelled $ db text1'
         text2 <- labelled $ db text2'
@@ -177,8 +192,8 @@ game = do
         help <- labelled $ db help'
         reset <- labelled $ db reset'
 
-        buf <- labelled $ db [0, 0, 0]
-        isLast <- labelled $ db [0]
+        unpackBuf <- labelled $ db [0, 0, 0]
+        unpackIsLast <- labelled $ db [0]
         shiftState <- labelled $ db [0]
 
         pure ()
