@@ -24,13 +24,32 @@ game = do
 
     pure $ mdo
         ldVia A [shiftState] 0
+
         ld HL text2
         ld B 1
-        call printZ
+        call printlnZ
+
+        ld HL text2
+        ld B 160
+        call printlnZ
+
+        ld HL text2
+        ld B 163
+        call printlnZ
+
+        ld HL text2
+        ld B 175
+        call printlnZ
 
         loopForever $ pure ()
+        printlnZ <- labelled $ do
+            call printZ
+            ld A 0x0d
+            rst 0x28
+            ret
+
         printZ <- labelled $ withLabel \tryNext -> mdo
-            -- Is this the word we want?
+            -- Is this the message we want?
             dec B
             jr Z start
 
@@ -71,13 +90,15 @@ game = do
                 ld [isLast] A
 
                 ld IX buf
-                replicateM_ 3 $ call printZ1
+                replicateM_ 3 $ do
+                    call printZ1
+                    inc IX
                 ld A [isLast]
                 cp 0
                 ret NZ
             pure ()
 
-
+        -- Print a single character in ZSCII codepage from [IX]
         printZ1 <- labelled mdo
             ld A [shiftState]
             cp 0
@@ -85,7 +106,6 @@ game = do
             jr NZ shifted
 
             ld A [IX]
-            inc IX
             cp 0
             ret Z
             cp 1
@@ -99,11 +119,11 @@ game = do
             jr Z comma
             cp 5
             jr Z bang
-            add A (0x41 - 6)
 
+            add A (0x41 - 6)
             printA <- labelled do
-              call 0x1fc
-              ret
+                rst 0x28
+                ret
 
             space <- labelled do
                 ld A 0x20
@@ -120,7 +140,6 @@ game = do
 
             shifted <- labelled mdo
                 ld A [IX]
-                inc IX
                 -- TODO: it could be something other than space
                 sub 1
                 ret C
@@ -139,7 +158,7 @@ game = do
                     ld A [HL]
                     pop DE
                     pop HL
-                    jr printA
+                    jp 0x01fc
                     symbols <- labelled $ db [0x21, 0x3f, 0x27, 0x3a, 0x2d, 0x26]
                     pure ()
                 pure ()
