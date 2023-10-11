@@ -25,6 +25,12 @@ game = do
     let maxItem = 160 -- TODO
     let startRoom = 1 -- TODO
 
+    let dbgPrintA = do
+            push AF
+            call 0x01a5
+            pop AF
+
+
     pure $ mdo
         call resetGameVars
 
@@ -36,6 +42,11 @@ game = do
 
         -- ld HL text2
         -- ld B 1
+        -- call printlnZ
+
+        -- -- ld HL text2
+        -- ld A 0x00
+        -- ld B 0xa0
         -- call printlnZ
 
         -- ld HL text2
@@ -249,6 +260,13 @@ game = do
             pure ()
 
         printlnZ <- labelled do
+            -- push AF
+            -- ld A B
+            -- dbgPrintA
+            -- ld A 0x0d
+            -- rst 0x28
+            -- pop AF
+
             call printZ
         paragraph <- labelled do
             ld A 0x0d
@@ -404,12 +422,15 @@ game = do
         ratMessage <- labelled do
             ld B A
             push IX
+            push HL
             call printlnZ
+            pop HL
             pop IX
             jp runRatScript
 
         runRatStmt <- labelled mdo
             -- We know `A` is at most 0x18, i.e. a valid stmt opcode
+            -- dbgPrintA
 
             -- Compute jump table address into DE
             ld DE opTable
@@ -432,6 +453,25 @@ game = do
             opRet <- labelled do
                 ret
 
+            opMessage <- labelled do
+                ld A [IX]
+                inc IX
+                jp ratMessage
+
+            let opAssert val = do
+                    ld A [IX]
+                    inc IX
+                    ld B [IX]
+                    inc IX
+                    call getVar
+                    skippable \assertHolds -> do
+                        cp val
+                        jp Z assertHolds
+                        jp printlnZ
+                    jp runRatScript
+            opAssert00 <- labelled $ opAssert 0x00
+            opAssertFF <- labelled $ opAssert 0xff
+
             let unimplemented n = labelled do
                     replicateM_ n $ inc IX
                     jp runRatScript
@@ -441,8 +481,6 @@ game = do
             opAssign00 <- unimplemented 1
             opAssignFF <- unimplemented 1
             opAssignLoc <- unimplemented 1
-            opAssert00 <- unimplemented 2
-            opAssertFF <- unimplemented 2
             opAssertHere <- unimplemented 1
             opSkip <- unimplemented 1
             opIf00 <- unimplemented 2
@@ -460,11 +498,6 @@ game = do
             opIncIfNot0 <- unimplemented 1
             opMachineCode <- unimplemented 1 -- XXX
             opCopyProtection <- unsupported 4
-
-            opMessage <- labelled do
-                ld A [IX]
-                inc IX
-                jp ratMessage
 
             opTable <- labelled $ dw
                 [ opRet             -- 00
@@ -507,6 +540,19 @@ game = do
             decLoopB (maxBound - maxItem) do
                 ldVia A [DE] 0x00
                 inc DE
+            ret
+
+        -- Pre: A is the variable's index
+        -- Post: A is the variable's value
+        -- Clobbers: DE
+        getVar <- labelled do
+            ld DE gameVars
+            add A E
+            ld E A
+            skippable \noCarry -> do
+                jp NC noCarry
+                inc D
+            ld A [DE]
             ret
 
         text1 <- labelled $ db text1'
