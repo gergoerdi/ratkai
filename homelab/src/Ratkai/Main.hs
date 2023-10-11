@@ -21,8 +21,13 @@ game = do
     scriptLocal' <- asset "interactive-local"
     help' <- asset "help"
     reset' <- asset "reset"
+    let minItem = 120 -- TODO
+    let maxItem = 160 -- TODO
+    let startRoom = 1 -- TODO
 
     pure $ mdo
+        call resetGameVars
+
         -- Clear screen
         ld A 0x0c
         rst 0x28
@@ -37,9 +42,14 @@ game = do
         -- ld B 160
         -- call printlnZ
 
-        loopForever do
-            call readLine
-            call dbgPrintParseBuf
+        -- Run "enter" script for room 1
+        ld HL text2
+        ld IX (scriptEnter + 1)
+        call runRatScript
+
+        -- loopForever do
+        --     call readLine
+        --     call dbgPrintParseBuf
 
         loopForever $ pure ()
 
@@ -246,6 +256,7 @@ game = do
             rst 0x28
             ret
 
+        -- Input: HL contains the message bank, B is the message ID
         printZ <- labelled $ withLabel \tryNext -> mdo
             -- Is this the message we want?
             dec B
@@ -384,6 +395,120 @@ game = do
                 ret
             pure ()
 
+        -- Run a Rat script starting at IX, with text bank HL
+        runRatScript <- labelled do
+            ld A [IX]
+            inc IX
+            cp 0x18
+            jp C runRatStmt
+        ratMessage <- labelled do
+            ld B A
+            push IX
+            call printlnZ
+            pop IX
+            jp runRatScript
+
+        runRatStmt <- labelled mdo
+            -- We know `A` is at most 0x18, i.e. a valid stmt opcode
+
+            -- Compute jump table address into DE
+            ld DE opTable
+            sla A
+            add A E
+            ld E A
+            skippable \noCarry -> do
+                jp NC noCarry
+                inc D
+
+            -- Load jump destination
+            ldVia A [trampoline + 1] [DE]
+            inc DE
+            ldVia A [trampoline + 2] [DE]
+
+            -- Do the jump
+            trampoline <- labelled do
+                jp 0x0000
+
+            opRet <- labelled do
+                ret
+
+            let unimplemented n = labelled do
+                    replicateM_ n $ inc IX
+                    jp runRatScript
+                unsupported n = pure 0x0000
+
+            opAssign <- unimplemented 2
+            opAssign00 <- unimplemented 1
+            opAssignFF <- unimplemented 1
+            opAssignLoc <- unimplemented 1
+            opAssert00 <- unimplemented 2
+            opAssertFF <- unimplemented 2
+            opAssertHere <- unimplemented 1
+            opSkip <- unimplemented 1
+            opIf00 <- unimplemented 2
+            opIfFF <- unimplemented 2
+            opMoveTo <- unimplemented 1
+            opSetPlayerStatus <- unimplemented 1
+            opHeal <- unimplemented 1
+            opHurt <- unimplemented 1
+            opAddScore <- unimplemented 1
+            opSetScreen <- unsupported 3
+            opSpriteOn <- unsupported 5
+            opSpriteOff <- unsupported 1
+            opChime <- unsupported 1
+            opSleep <- unimplemented 1
+            opIncIfNot0 <- unimplemented 1
+            opMachineCode <- unimplemented 1 -- XXX
+            opCopyProtection <- unsupported 4
+
+            opMessage <- labelled do
+                ld A [IX]
+                inc IX
+                jp ratMessage
+
+            opTable <- labelled $ dw
+                [ opRet             -- 00
+                , opAssign          -- 01
+                , opMessage         -- 02
+                , opAssign00        -- 03
+                , opAssignFF        -- 04
+                , opAssignLoc       -- 05
+                , opAssert00        -- 06
+                , opAssertFF        -- 07
+                , opAssertHere      -- 08
+                , opSkip            -- 09
+                , opIf00            -- 0a
+                , opIfFF            -- 0b
+                , opMoveTo          -- 0c
+                , opSetPlayerStatus -- 0d
+                , opHeal            -- 0e
+                , opHurt            -- 0f
+                , opAddScore        -- 10
+                , opSetScreen       -- 11
+                , opSpriteOn        -- 12
+                , opSpriteOff       -- 13
+                , opChime           -- 14
+                , opSleep           -- 15
+                , opIncIfNot0       -- 16
+                , opMachineCode     -- 17
+                , opCopyProtection  -- 18
+                ]
+            pure ()
+
+
+        resetGameVars <- labelled do
+            ld DE gameVars
+            decLoopB minItem do
+                ldVia A [DE] 0x00
+                inc DE
+            ld HL resetVars
+            ld BC $ fromIntegral $ (maxItem - minItem + 1)
+            ldir
+            decLoopB (maxBound - maxItem) do
+                ldVia A [DE] 0x00
+                inc DE
+            ret
+
         text1 <- labelled $ db text1'
         text2 <- labelled $ db text2'
         dict <- labelled $ db dict'
@@ -392,7 +517,7 @@ game = do
         scriptGlobal <- labelled $ db scriptGlobal'
         scriptLocal <-  labelled $ db scriptLocal'
         help <- labelled $ db help'
-        reset <- labelled $ db reset'
+        resetVars <- labelled $ db reset'
 
         unpackBuf <- labelled $ db [0, 0, 0]
         unpackIsLast <- labelled $ db [0]
@@ -400,5 +525,6 @@ game = do
         inputBuf <- labelled $ resb 40
         parseBuf <- labelled $ resb 5
         dictBuf <- labelled $ resb 5
+        gameVars <- labelled $ resb 256
 
         pure ()
