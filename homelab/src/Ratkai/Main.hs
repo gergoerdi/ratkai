@@ -23,15 +23,37 @@ game = do
     reset' <- asset "reset"
 
     pure $ mdo
+        -- Clear screen
+        ld A 0x0c
+        rst 0x28
+
         ldVia A [shiftState] 0
 
-        ld HL text2
-        ld B 1
-        call printlnZ
+        -- ld HL text2
+        -- ld B 1
+        -- call printlnZ
 
-        ld HL text2
-        ld B 160
-        call printlnZ
+        -- ld HL text2
+        -- ld B 160
+        -- call printlnZ
+
+        ld HL inputBuf
+        call inputLine
+        call paragraph
+
+        ld IX inputBuf
+        ld IY parseBuf
+        skippable \end -> loopForever do
+            -- exx
+            ld A [IX]
+            cp 0xff
+            jp Z end
+            call parse1
+            -- exx
+
+        forM_ [0..4] \i -> do
+            ld A [parseBuf + i]
+            call 0x01a5
 
         -- ld HL text2
         -- ld B 163
@@ -44,13 +66,6 @@ game = do
         -- ld HL dict
         -- ld B 0x30
         -- call printZ
-
-        ld HL inputBuf
-        call inputLine
-        call paragraph
-
-        ld IX inputBuf
-        call parse1
 
         loopForever $ pure ()
 
@@ -67,18 +82,21 @@ game = do
                 rst 0x18
                 cp 0x0d -- End of line
                 jr Z enter
+                -- push AF
+                -- call 0x01a5
+                -- pop AF
                 cp 0x07 -- Backspace
                 jr Z backspace
 
                 -- Normal character: print and record
                 dec B
-                jr Z noMoreSpace
+                jr Z noMoreRoom
                 rst 0x28
                 ld [HL] A
                 inc HL
                 jr loop
 
-                noMoreSpace <- labelled do
+                noMoreRoom <- labelled do
                     inc B -- So that next `dec B` will trigger `Z` again
                     dec HL
                     ld [HL] A
@@ -90,14 +108,25 @@ game = do
                     jr loop
 
                 backspace <- labelled do
+                    -- Try to increase B
+                    inc B
+                    skippable \inRange -> do
+                        ld A B
+                        cp 39
+                        jr NZ inRange
+                        dec B
+                        jr loop
+
+                    ld A 0x07
                     rst 0x28
                     ld [HL] 0x00
                     dec HL
-                    inc B
                     jr loop
 
                 enter <- labelled do
                     ld [HL] 0x20
+                    inc HL
+                    ld [HL] 0xff
                     ret
                 pure ()
 
@@ -107,19 +136,23 @@ game = do
             loopForever do
                 ld A [HL]
                 cp 0xff
-                jp Z notFound
+                jr Z notFound
 
                 call matchWord
                 cp 0x00
-                jp NZ found
+                jr NZ found
 
             found <- label
-            -- TODO
-            call 0x01a5
+            ld [IY] A
+            inc IY
             ret
 
             notFound <- label
-            -- TODO: emit "syntax" error
+            ld HL text1
+            ld B 1
+            call printlnZ
+
+            -- TODO: signal error somehow
             ret
 
         -- Match one word from `[IX]` vs. a dictionary entry at `[HL]`
