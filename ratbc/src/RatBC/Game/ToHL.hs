@@ -22,7 +22,7 @@ assemble :: Game Identity -> Game (Const BL.ByteString)
 assemble Game{..} = Game
     { msgs1 = Const . mconcat . map zscii . elems . runIdentity $ msgs1
     , msgs2 = Const . mconcat . map zscii {-(mconcat . map (BL.singleton . fromIntegral . ord)) -} . elems . runIdentity $ msgs2
-    , dict = Const . mconcat . map (zscii . map toUpper . mconcat) . M.elems . runIdentity $ dict
+    , dict = Const . (<> BL.singleton 0xff) . foldMap putDictEntry . M.toList . runIdentity $ dict
     , enterRoom = Const . roomwise putStmts . runIdentity $ enterRoom
     , afterTurn = Const . putStmts . runIdentity $ afterTurn
     , interactiveGlobal = Const . putInteractive . runIdentity $ interactiveGlobal
@@ -35,6 +35,11 @@ assemble Game{..} = Game
 
     putInteractive :: [InputDispatch [Stmt]] -> BL.ByteString
     putInteractive = runPut . mapM_ (\(InputDispatch input action) -> mapM_ putWord8 input *> putWord8 0x00 *> mapM_ put action)
+
+    putDictEntry (k, ws) = mconcat
+        [ zscii (map toUpper w) <> BL.singleton k
+        | w <- ws
+        ]
 
     roomwise :: (a -> BL.ByteString) -> Array Word8 a -> BL.ByteString
     roomwise f = mconcat . map (<> BL.pack [0x00, 0x00, 0x00]) . elems . fmap f
