@@ -8,6 +8,7 @@ import HL2
 import qualified Data.ByteString as BS
 import Control.Monad
 import System.FilePath
+import Data.Word
 
 game :: IO Z80ASM
 game = do
@@ -53,10 +54,7 @@ game = do
         -- ld B 160
         -- call printlnZ
 
-        -- Run "enter" script for room 1
-        ld HL text2
-        ld IX (scriptEnter + 1)
-        call runRatScript
+        call runEnter
 
         -- loopForever do
         --     call readLine
@@ -77,9 +75,6 @@ game = do
                 rst 0x18
                 cp 0x0d -- End of line
                 jr Z enter
-                -- push AF
-                -- call 0x01a5
-                -- pop AF
                 cp 0x07 -- Backspace
                 jr Z backspace
 
@@ -413,6 +408,40 @@ game = do
                 ret
             pure ()
 
+        -- Find data corresponding to the current room, starting at DE
+        -- Afterwards, DE points to the *length* of the current room's data,
+        -- and the actual data starts afterwards
+        findRoomData <- labelled do
+            ldVia A B [gameVars + 0xff]
+            withLabel \loop -> do
+                dec B
+                ret Z
+                ld A [DE]
+                skippable \noCarry -> do
+                    add A E
+                    ld E A
+                    jp NC loop
+                    inc D
+                jp loop
+
+        -- Run "enter" script for current room
+        runEnter <- labelled do
+            ld DE scriptEnter
+            call findRoomData
+            inc DE
+            push DE
+            pop IX
+            ld HL text2
+            jp runRatScript
+
+        runAfter <- labelled do
+            ld IX scriptAfter
+            ld HL text1
+            jp runRatScript
+
+        runInteractiveGlobal <- labelled do
+            pure ()
+
         -- Run a Rat script starting at IX, with text bank HL
         runRatScript <- labelled do
             ld A [IX]
@@ -454,14 +483,14 @@ game = do
                 ret
 
             opMessage <- labelled do
-                ld A [IX]
+                ld A [IX] -- Message to print
                 inc IX
                 jp ratMessage
 
             let opAssert val = do
-                    ld A [IX]
+                    ld A [IX] -- Variable to check
                     inc IX
-                    ld B [IX]
+                    ld B [IX] -- Message to print if assertion fails
                     inc IX
                     call getVar
                     skippable \assertHolds -> do
@@ -472,30 +501,124 @@ game = do
             opAssert00 <- labelled $ opAssert 0x00
             opAssertFF <- labelled $ opAssert 0xff
 
+            opAssign <- labelled do
+                ld A [IX] -- Variable
+                inc IX
+                ld B [IX] -- Value
+                inc IX
+                call putVar
+                jp runRatScript
+
+            opSetPlayerStatus <- labelled do
+                ld A [IX] -- Value
+                inc IX
+                ld [playerStatus] A
+                jp runRatScript
+
+            let opAssignConst val = do
+                    ld A [IX] -- Variable
+                    inc IX
+                    ld B val
+                    call putVar
+                    jp runRatScript
+            opAssignFF <- labelled $ opAssignConst 0xff
+            opAssign00 <- labelled $ opAssignConst 0x00
+
+            opAssignLoc <- labelled do
+                ldVia A B [gameVars + 0xff]
+                ld A [IX] -- Variable
+                inc IX
+                call putVar
+                jp runRatScript
+
+            opSkip <- labelled do
+                ld E [IX] -- Number of bytes to skip
+                ld D 0
+                add IX DE
+                jp runRatScript
+
+            let opIf val = do
+                    ld A [IX] -- Variable to check
+                    inc IX
+                    call getVar
+                    cp val
+                    jp NZ opSkip -- Number of bytes to skip if check fails
+                    inc IX
+                    jp runRatScript
+            opIf00 <- labelled $ opIf 0x00
+            opIfFF <- labelled $ opIf 0xff
+
+            opMoveTo <- labelled do
+                ld A [IX]
+                inc IX
+                ld [gameVars + 0xff] A
+                jp runEnter
+
+            let opAddToCounter var = do
+                    ldVia A B [var]
+                    ld A [IX] -- Value to add
+                    inc IX
+                    add A B
+                    skippable \noOverflow -> do
+                        cp 99
+                        jp C noOverflow
+                        ld A 99
+                    ld [var] A
+                    jp runRatScript
+
+            opHeal <- labelled $ opAddToCounter playerHealth
+            opAddScore <- labelled $ opAddToCounter playerScore
+
+            opHurt <- labelled do
+                ldVia A B [playerHealth]
+                ld A [IX] -- Value to subtract
+                inc IX
+                skippable \noUnderflow -> do
+                    cp B
+                    jp NC noUnderflow
+                    ldVia A [playerHealth] 0
+                    jp runRatScript
+                sub B
+                ld [playerHealth] A
+                jp runRatScript
+
+            opIncIfNot0 <- labelled do
+                ld A [IX] -- Variable
+                inc IX
+                ld C A
+                call getVar
+                cp 0
+                jp Z runRatScript
+                inc A
+                ld B A
+                ld A C
+                call putVar
+                jp runRatScript
+
+            opAssertHere <- labelled do
+                ld A [IX] -- Item to check
+                inc IX
+                ld B [IX] -- Message to print when item is not here
+                inc IX
+                call getVar
+                cp 0x00   -- Item is in the player's posession
+                jp Z runRatScript
+                ld C A
+                ld A [playerLoc]
+                cp C
+                jp Z runRatScript
+                jp printlnZ
+
             let unimplemented n = labelled do
                     replicateM_ n $ inc IX
                     jp runRatScript
                 unsupported n = pure 0x0000
 
-            opAssign <- unimplemented 2
-            opAssign00 <- unimplemented 1
-            opAssignFF <- unimplemented 1
-            opAssignLoc <- unimplemented 1
-            opAssertHere <- unimplemented 1
-            opSkip <- unimplemented 1
-            opIf00 <- unimplemented 2
-            opIfFF <- unimplemented 2
-            opMoveTo <- unimplemented 1
-            opSetPlayerStatus <- unimplemented 1
-            opHeal <- unimplemented 1
-            opHurt <- unimplemented 1
-            opAddScore <- unimplemented 1
             opSetScreen <- unsupported 3
             opSpriteOn <- unsupported 5
             opSpriteOff <- unsupported 1
             opChime <- unsupported 1
             opSleep <- unimplemented 1
-            opIncIfNot0 <- unimplemented 1
             opMachineCode <- unimplemented 1 -- XXX
             opCopyProtection <- unsupported 4
 
@@ -540,19 +663,38 @@ game = do
             decLoopB (maxBound - maxItem) do
                 ldVia A [DE] 0x00
                 inc DE
+            ldVia A [playerLoc] startRoom
+            ldVia A [playerHealth] 50
+            ret
+
+        -- Pre: A is the variable's index
+        -- Post: DE is the variable's address
+        -- Clobbers: A
+        varDE <- labelled do
+            ld DE gameVars
+            add A E
+            ld E A
+            ret NC
+            inc D
             ret
 
         -- Pre: A is the variable's index
         -- Post: A is the variable's value
         -- Clobbers: DE
         getVar <- labelled do
-            ld DE gameVars
-            add A E
-            ld E A
-            skippable \noCarry -> do
-                jp NC noCarry
-                inc D
+            call varDE
             ld A [DE]
+            ret
+
+        -- Pre: A is the variable's index, B is its value-to-be
+        -- Clobbers: A, B, DE
+        putVar <- labelled do
+            call varDE
+            ldVia A [DE] B
+            ret
+
+        getLocation <- labelled do
+            ld A [playerLoc]
             ret
 
         text1 <- labelled $ db text1'
@@ -572,5 +714,8 @@ game = do
         parseBuf <- labelled $ resb 5
         dictBuf <- labelled $ resb 5
         gameVars <- labelled $ resb 256
-
+        let playerScore = gameVars + 0xfc
+            playerHealth = gameVars + 0xfd
+            playerStatus = gameVars + 0xfe
+            playerLoc = gameVars + 0xff
         pure ()
