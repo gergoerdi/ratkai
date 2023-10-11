@@ -37,35 +37,9 @@ game = do
         -- ld B 160
         -- call printlnZ
 
-        ld HL inputBuf
-        call inputLine
-        call paragraph
-
-        ld IX inputBuf
-        ld IY parseBuf
-        skippable \end -> loopForever do
-            -- exx
-            ld A [IX]
-            cp 0xff
-            jp Z end
-            call parse1
-            -- exx
-
-        forM_ [0..4] \i -> do
-            ld A [parseBuf + i]
-            call 0x01a5
-
-        -- ld HL text2
-        -- ld B 163
-        -- call printlnZ
-
-        -- ld HL text2
-        -- ld B 175
-        -- call printlnZ
-
-        -- ld HL dict
-        -- ld B 0x30
-        -- call printZ
+        loopForever do
+            call readLine
+            call dbgPrintParseBuf
 
         loopForever $ pure ()
 
@@ -130,35 +104,71 @@ game = do
                     ret
                 pure ()
 
+        readLine <- labelled do
+            ld HL inputBuf
+            call inputLine
+            call paragraph
+            jp parseLine
+
+        parseLine <- labelled do
+            ld IX inputBuf
+            ld IY parseBuf
+            decLoopB 5 do
+                ldVia A [IY] 0x00
+                inc IY
+            ld IY parseBuf
+            -- Parse up to 5 words
+            skippable \end -> decLoopB 5 do
+                ld A [IX]
+                cp 0xff
+                jr Z end
+                push BC
+                call parse1
+                pop BC
+                jr Z parseError
+            ret
+
+        parseError <- labelled do
+            ld HL text1
+            ld B 1
+            call printlnZ
+            jp readLine
+
+        dbgPrintParseBuf <- labelled do
+            -- DEBUG: print parse buffer
+            ld IY parseBuf
+            replicateM_ 5 do
+                ld A [IY]
+                inc IY
+                call 0x01a5
+            ld A 0x0d
+            rst 0x28
+            ret
+
         -- Parse one word from [IX] into [IY], advancing `IX` as needed
+        -- Post: flag Z iff parse error
         parse1 <- labelled mdo
             ld HL dict
             loopForever do
                 ld A [HL]
                 cp 0xff
-                jr Z notFound
+                ret Z
 
+                push IY
                 call matchWord
+                pop IY
                 cp 0x00
-                jr NZ found
+                jp NZ found
 
             found <- label
             ld [IY] A
             inc IY
             ret
 
-            notFound <- label
-            ld HL text1
-            ld B 1
-            call printlnZ
-
-            -- TODO: signal error somehow
-            ret
-
         -- Match one word from `[IX]` vs. a dictionary entry at `[HL]`
         -- After: `A` contains the word code (or 0 on non-match), and
         -- `IX` is the rest of the input
-        -- Clobbers: `BC`
+        -- Clobbers: `BC`, `IY`
         matchWord <- labelled mdo
             ldVia A [shiftState] 0
             ldVia A [unpackIsLast] 0
@@ -173,12 +183,12 @@ game = do
                     inc IY
                     call decodeZ1
                     skippable \unprintable -> do
-                        jr Z unprintable
+                        jp Z unprintable
                         ld [DE] A
                         inc DE
                 ld A [unpackIsLast]
                 cp 0
-                jr Z keepDecoding
+                jp Z keepDecoding
             -- Note: HL now points to the code of the word we're trying to match
 
             -- If dictBuf is empty, this is an invalid entry
@@ -197,7 +207,7 @@ game = do
                 cp C
                 jp NZ noMatch
                 cp 0x20 -- If next char to match is a space, then we're done
-                jr Z match
+                jp Z match
                 inc IX
 
             match <- labelled do
