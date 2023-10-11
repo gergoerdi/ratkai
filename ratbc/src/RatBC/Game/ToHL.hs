@@ -17,14 +17,15 @@ import qualified Data.Map as M
 import Data.Bits
 import Data.Char
 import System.FilePath
+import Text.Printf
 
 assemble :: Game Identity -> Game (Const BL.ByteString)
 assemble Game{..} = Game
     { msgs1 = Const . mconcat . map zscii . elems . runIdentity $ msgs1
     , msgs2 = Const . mconcat . map zscii {-(mconcat . map (BL.singleton . fromIntegral . ord)) -} . elems . runIdentity $ msgs2
     , dict = Const . (<> BL.singleton 0xff) . foldMap putDictEntry . M.toList . runIdentity $ dict
-    , enterRoom = Const . roomwise putStmts . runIdentity $ enterRoom
-    , afterTurn = Const . putStmts . runIdentity $ afterTurn
+    , enterRoom = Const . roomwise (putStmts . ensureRet) . runIdentity $ enterRoom
+    , afterTurn = Const . putStmts . ensureRet . runIdentity $ afterTurn
     , interactiveGlobal = Const . putInteractive . runIdentity $ interactiveGlobal
     , interactiveLocal = Const . roomwise putInteractive . runIdentity $ interactiveLocal
     , resetState = Const . runIdentity $ resetState
@@ -42,7 +43,19 @@ assemble Game{..} = Game
         ]
 
     roomwise :: (a -> BL.ByteString) -> Array Word8 a -> BL.ByteString
-    roomwise f = mconcat . map (<> BL.pack [0x00, 0x00, 0x00]) . elems . fmap f
+    roomwise f = mconcat . map withLength . elems . fmap f
+
+    withLength :: BL.ByteString -> BL.ByteString
+    withLength bs | n > 255 = error $ printf "withLength: %d" n
+                  | otherwise = BL.singleton (fromIntegral n) <> bs
+      where
+        n = BL.length bs + 1
+
+ensureRet :: [Stmt] -> [Stmt]
+ensureRet stmts = case reverse stmts of
+    Ret:_ -> stmts
+    MoveTo{}:_ -> stmts
+    stmts' -> reverse (Ret : stmts')
 
 writeHLFiles :: FilePath -> Game Identity -> IO ()
 writeHLFiles outputPath game = do
