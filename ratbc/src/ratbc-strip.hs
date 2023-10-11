@@ -95,6 +95,7 @@ usedWords :: Game Identity -> [Val]
 usedWords Game{..} = nub . sort $ mconcat
     [ foldMap wordsOf . runIdentity $ interactiveGlobal
     , foldMap (foldMap wordsOf) . runIdentity $ interactiveLocal
+    , [0x00..0x1c] -- Builtin commands
     ]
   where
     wordsOf :: InputDispatch a -> [Val]
