@@ -52,7 +52,7 @@ game = do
             rst 0x28
             ld B 38
             withLabel \loop -> mdo
-                ld [HL] 0x00
+                ld [HL] 0xff
                 rst 0x18
                 cp 0x0d -- End of line
                 jr Z enter
@@ -111,14 +111,21 @@ game = do
             jp parseLine
 
         parseLine <- labelled do
-            ld IX inputBuf
             ld IY parseBuf
             decLoopB 5 do
                 ldVia A [IY] 0x00
                 inc IY
             ld IY parseBuf
             -- Parse up to 5 words
+            ld IX inputBuf
             skippable \end -> decLoopB 5 do
+                -- Skip all leading spaces
+                skippable \end -> loopForever do
+                    ld A [IX]
+                    cp 0x20
+                    jp NZ end
+                    inc IX
+
                 ld A [IX]
                 cp 0xff
                 jr Z end
@@ -216,13 +223,6 @@ game = do
                     ld A [IX]
                     cp 0x20
                     jp Z end
-                    inc IX
-
-                -- Skip all trailing spaces
-                skippable \end -> loopForever do
-                    ld A [IX]
-                    cp 0x20
-                    jp NZ end
                     inc IX
 
                 pop HL -- Discard pushed IX, since we want to "commit" our progress
