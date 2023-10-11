@@ -67,16 +67,17 @@ zscii = go . concatMap (val . toUpper)
 
     val :: Char -> [Word8]
     val c | 'A' <= c, c <= 'Z' = [fromIntegral $ 6 + ord c - ord 'A']
-          | '0' <= c, c <= '9' = [1, fromIntegral $ 6 + ord c - ord '0']
+          | '0' <= c, c <= '9' = [1, fromIntegral $ 22 + ord c - ord '0']
           | c == ' ' = [2]
           | c == '.' = [3]
           | c == ',' = [4]
-          | c == '!' = [5]
+          | c == '\n' = [5]
           | c == '?' = [1, 1]
           | c == '\'' = [1, 2]
           | c == ':' = [1, 3]
           | c == '-' = [1, 4]
           | c == '&' = [1, 5]
+          | c == '!' = [1, 6]
           | c == 'Á' = val 'A'
           | c == 'É' = val 'E'
           | c == 'Í' = val 'I'

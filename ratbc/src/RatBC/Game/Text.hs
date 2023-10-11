@@ -19,7 +19,7 @@ import System.Directory
 import System.FilePath
 import qualified Data.Map as M
 import Data.Word
-import Data.Array (Array, listArray)
+import Data.Array (Array, array, listArray)
 import Data.List.Split
 
 writeTextFiles :: FilePath -> Game Identity -> IO ()
@@ -54,9 +54,8 @@ parseGame game@Game{..} = game
     fromList :: [a] -> Array Word8 a
     fromList xs = listArray (1, fromIntegral $ length xs) xs
 
-    parseMessages s = listArray (1, fromIntegral $ length ss) $ map (dropWhile (== ' ') . tail . snd . break (== ':')) ss
-      where
-        ss = lines s
+    parseMessages s = let xs = read s
+      in array (1, fromIntegral $ length xs) xs
 
     parseWords = M.fromList . read
 

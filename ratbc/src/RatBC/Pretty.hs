@@ -90,7 +90,10 @@ pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, hel
     msgs2 = runIdentity $ Game.msgs2 game
     dict = runIdentity $ Game.dict game
 
-    pprMessages msgs = vcat [ fill 4 (viaShow i <> colon) <+> fromString s | (i, s) <- assocs msgs ]
+    pprMessages msgs = vlist
+      [ tuple [fill 4 (viaShow i), dquotes $ fromString msg ]
+      | (i, msg) <- assocs msgs
+      ]
     pprDict dict = vlist
       [ tuple [fromString (printf "0x%02x" i), list [dquotes $ fromString word | word <- words]]
       | (i, words) <- M.toList dict
