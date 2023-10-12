@@ -1,5 +1,6 @@
 {-# LANGUAGE RecordWildCards, RecursiveDo, BlockArguments #-}
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
+{-# LANGUAGE FlexibleContexts #-}
 module Ratkai.Main (game) where
 
 import Z80
@@ -416,10 +417,14 @@ game = do
         runInteractiveGlobal <- labelled do
             pure ()
 
+        let fetch :: (Load r [RegIx]) => r -> Z80ASM
+            fetch r = do
+                ld r [IX]
+                inc IX
+
         -- Run a Rat script starting at IX, with text bank HL
         runRatScript <- labelled do
-            ld A [IX]
-            inc IX
+            fetch A
             cp 0x18
             jp C runRatStmt
         ratMessage <- labelled do
@@ -457,15 +462,12 @@ game = do
                 ret
 
             opMessage <- labelled do
-                ld A [IX] -- Message to print
-                inc IX
+                fetch A -- Message to print
                 jp ratMessage
 
             let opAssert val = do
-                    ld E [IX] -- Variable to check
-                    inc IX
-                    ld B [IX] -- Message to print if assertion fails
-                    inc IX
+                    fetch E -- Variable to check
+                    fetch B -- Message to print if assertion fails
                     call getVar
                     skippable \assertHolds -> do
                         cp val
@@ -476,22 +478,18 @@ game = do
             opAssertFF <- labelled $ opAssert 0xff
 
             opAssign <- labelled do
-                ld E [IX] -- Variable
-                inc IX
-                ld A [IX] -- Value
-                inc IX
+                fetch E -- Variable
+                fetch A -- Value
                 call putVar
                 jp runRatScript
 
             opSetPlayerStatus <- labelled do
-                ld A [IX] -- Value
-                inc IX
+                fetch A -- Value
                 ld [playerStatus] A
                 jp runRatScript
 
             let opAssignConst val = do
-                    ld E [IX] -- Variable
-                    inc IX
+                    fetch E -- Variable
                     ld A val
                     call putVar
                     jp runRatScript
@@ -499,8 +497,7 @@ game = do
             opAssign00 <- labelled $ opAssignConst 0x00
 
             opAssignLoc <- labelled do
-                ld E [IX] -- Variable
-                inc IX
+                fetch E -- Variable
                 ld A [gameVars + 0xff] -- Value
                 call putVar
                 jp runRatScript
@@ -512,8 +509,7 @@ game = do
                 jp runRatScript
 
             let opIf val = do
-                    ld E [IX] -- Variable to check
-                    inc IX
+                    fetch E -- Variable to check
                     call getVar
                     cp val
                     jp NZ opSkip -- Number of bytes to skip if check fails
@@ -523,15 +519,13 @@ game = do
             opIfFF <- labelled $ opIf 0xff
 
             opMoveTo <- labelled do
-                ld A [IX]
-                inc IX
+                fetch A
                 ld [gameVars + 0xff] A
                 jp runEnter
 
             let opAddToCounter var = do
                     ldVia A B [var]
-                    ld A [IX] -- Value to add
-                    inc IX
+                    fetch A -- Value to add
                     add A B
                     skippable \noOverflow -> do
                         cp 99
@@ -545,8 +539,7 @@ game = do
 
             opHurt <- labelled do
                 ldVia A B [playerHealth]
-                ld A [IX] -- Value to subtract
-                inc IX
+                fetch A -- Value to subtract
                 skippable \noUnderflow -> do
                     cp B
                     jp NC noUnderflow
@@ -557,8 +550,7 @@ game = do
                 jp runRatScript
 
             opIncIfNot0 <- labelled do
-                ld E [IX] -- Variable
-                inc IX
+                fetch E -- Variable
                 call getVar
                 cp 0
                 jp Z runRatScript
@@ -567,10 +559,8 @@ game = do
                 jp runRatScript
 
             opAssertHere <- labelled do
-                ld E [IX] -- Item to check
-                inc IX
-                ld B [IX] -- Message to print when item is not here
-                inc IX
+                fetch E -- Item to check
+                fetch B -- Message to print when item is not here
                 call getVar
                 cp 0x00   -- Item is in the player's posession
                 jp Z runRatScript
@@ -643,7 +633,7 @@ game = do
         -- Clobbers: D, A, IY
         varIY <- labelled do
             ld IY gameVars
-            ld E 0
+            ld D 0
             add IY DE
             ret
 
