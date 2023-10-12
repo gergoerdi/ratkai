@@ -132,13 +132,17 @@ game = do
             jp parseLine
 
         parseLine <- labelled do
+            -- For a bit of extra zoom-zoom
             videoOff
+
+            -- Clear out `parseBuf`
             ld IY parseBuf
             decLoopB 5 do
                 ldVia A [IY] 0x00
                 inc IY
+
+            -- Parse up to 5 words from inputBuf into parseBuf
             ld IY parseBuf
-            -- Parse up to 5 words
             ld IX inputBuf
             skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
                 -- Skip all leading spaces
