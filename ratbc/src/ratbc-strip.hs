@@ -150,6 +150,17 @@ stripRooms rooms game@Game{..} = game
     strip xs = listArray (bounds xs)
       [ if i `elem` rooms then x else mempty | (i, x) <- assocs xs ]
 
+stripInteractive :: Game Identity -> Game Identity
+stripInteractive game@Game{..} = game
+    { interactiveGlobal = fmap (fmap strip) interactiveGlobal
+    , interactiveLocal = fmap (fmap (fmap strip)) interactiveLocal
+    }
+  where
+    strip :: InputDispatch a -> InputDispatch a
+    strip (InputDispatch words x) = InputDispatch (filter isValidWord words) x
+
+    isValidWord = (`M.member` runIdentity dict)
+
 main :: IO ()
 main = do
     opts@Options{..} <- execParser optionsInfo
@@ -170,6 +181,7 @@ main = do
 
     game <- pure $ stripMessages bank1 bank2 game
     game <- pure $ stripWords words game
+    game <- pure $ stripInteractive game
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
