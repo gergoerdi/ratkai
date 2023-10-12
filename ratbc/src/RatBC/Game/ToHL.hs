@@ -1,4 +1,4 @@
-{-# LANGUAGE LambdaCase, RecordWildCards #-}
+{-# LANGUAGE LambdaCase, RecordWildCards, TypeApplications #-}
 module RatBC.Game.ToHL where
 
 import RatBC.Utils
@@ -18,37 +18,53 @@ import Data.Bits
 import Data.Char
 import System.FilePath
 import Text.Printf
+import Data.Foldable (traverse_)
 
 assemble :: Game Identity -> Game (Const BL.ByteString)
 assemble Game{..} = Game
     { msgs1 = Const . mconcat . map zscii . elems . runIdentity $ msgs1
     , msgs2 = Const . mconcat . map zscii {-(mconcat . map (BL.singleton . fromIntegral . ord)) -} . elems . runIdentity $ msgs2
     , dict = Const . (<> BL.singleton 0xff) . foldMap putDictEntry . M.toList . runIdentity $ dict
-    , enterRoom = Const . roomwise (putStmts . ensureRet) . runIdentity $ enterRoom
-    , afterTurn = Const . putStmts . ensureRet . runIdentity $ afterTurn
-    , interactiveGlobal = Const . putInteractive . runIdentity $ interactiveGlobal
-    , interactiveLocal = Const . roomwise putInteractive . runIdentity $ interactiveLocal
+    , enterRoom = Const . runPut . roomwise putStmts . runIdentity $ enterRoom
+    , afterTurn = Const . runPut . putStmts . runIdentity $ afterTurn
+    , interactiveGlobal = Const . runPut . putInteractive . runIdentity $ interactiveGlobal
+    , interactiveLocal = Const . runPut . roomwise putInteractive . runIdentity $ interactiveLocal
     , resetState = Const . runIdentity $ resetState
     , helpMap = Const . BL.pack . elems . runIdentity $ helpMap
     }
   where
-    putStmts = runPut . mapM_ put
+    putStmts = mapM_ put . ensureRet
 
-    putInteractive :: [InputDispatch [Stmt]] -> BL.ByteString
-    putInteractive = runPut . mapM_ (\(InputDispatch input action) -> mapM_ putWord8 input *> putWord8 0x00 *> mapM_ put action)
+    putInteractive :: [InputDispatch [Stmt]] -> Put
+    putInteractive = traverse_ (withLength8 . putDispatch)
+      where
+        putDispatch (InputDispatch input action) = do
+            mapM_ putWord8 input
+            putWord8 0x00
+            putStmts action
 
     putDictEntry (k, ws) = mconcat
         [ zscii (map toUpper w) <> BL.singleton k
         | w <- ws
         ]
 
-    roomwise :: (a -> BL.ByteString) -> Array Word8 a -> BL.ByteString
-    roomwise f = mconcat . map withLength . elems . fmap f
+    roomwise :: (a -> Put) -> Array Word8 a -> Put
+    roomwise f = traverse_ (withLength8 . f)
 
-    withLength :: BL.ByteString -> BL.ByteString
-    withLength bs | n > 255 = error $ printf "withLength: %d" n
-                  | otherwise = BL.singleton (fromIntegral n) <> bs
+    withLength8 :: Put -> Put
+    withLength8 body
+        | n > fromIntegral (maxBound @Word8) = error $ printf "withLength8: %d" n
+        | otherwise = putWord8 (fromIntegral n) *> putLazyByteString bs
       where
+        bs = runPut body
+        n = BL.length bs + 1
+
+    withLength16 :: Put -> Put
+    withLength16 body
+        | n > fromIntegral (maxBound @Word16) = error $ printf "withLength16: %d" n
+        | otherwise = putWord16le (fromIntegral n) *> putLazyByteString bs
+      where
+        bs = runPut body
         n = BL.length bs + 1
 
 ensureRet :: [Stmt] -> [Stmt]
