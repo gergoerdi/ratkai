@@ -83,7 +83,7 @@ pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, hel
   , interactiveGlobal = Const $ vlist $ map (pprInputDispatch dict msgs1) . runIdentity $ interactiveGlobal
   , interactiveLocal = Const . perRoom (vlist . map (pprInputDispatch dict msgs1)) . runIdentity $ interactiveLocal
   , helpMap = Const . perRoom (pprHelp msgs2) . runIdentity $ helpMap
-  , resetState = Const . viaShow . BL.unpack . runIdentity $ resetState
+  , resetState = Const . pprBytes . runIdentity $ resetState
   }
   where
     msgs1 = runIdentity $ Game.msgs1 game
@@ -111,3 +111,6 @@ pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, hel
 
     pprRoom :: Word8 -> Doc ann
     pprRoom room = "ROOM" <+> viaShow room
+
+    pprBytes :: BL.ByteString -> Doc ann
+    pprBytes bs = list [fromString (printf "0x%02x" b) | b <- BL.unpack bs]
