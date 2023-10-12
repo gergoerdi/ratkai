@@ -58,9 +58,7 @@ game = do
                 call findByWords
                 jp Z noGlobal
 
-                push HL
-                pop IX
-                ld HL text1
+                ld IX text1
                 call runRatScript
 
                 jp loop
@@ -142,17 +140,17 @@ game = do
                 inc IY
 
             -- Parse up to 5 words from inputBuf into parseBuf
+            ld HL inputBuf
             ld IY parseBuf
-            ld IX inputBuf
             skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
                 -- Skip all leading spaces
                 skippable \end -> loopForever do
-                    ld A [IX]
+                    ld A [HL]
                     cp 0x20
                     jp NZ end
-                    inc IX
+                    inc HL
 
-                ld A [IX]
+                ld A [HL]
                 cp 0xff
                 jr Z end
                 push BC
@@ -173,7 +171,7 @@ game = do
 
         parseError <- labelled do
             videoOn
-            ld HL text1
+            ld IX text1
             ld B 1
             call printlnZ
             jp readLine
@@ -189,12 +187,12 @@ game = do
             rst 0x28
             ret
 
-        -- Parse one word from [IX] into [IY], advancing `IX` as needed
+        -- Parse one word from [HL] into [IY], advancing `HL` as needed
         -- Post: flag Z iff parse error
         parse1 <- labelled mdo
-            ld HL dict
+            ld IX dict
             loopForever do
-                ld A [HL]
+                ld A [IX]
                 cp 0xff
                 ret Z
 
@@ -208,9 +206,9 @@ game = do
             ld [IY] A
             ret
 
-        -- Match one word from `[IX]` vs. a dictionary entry at `[HL]`
+        -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
         -- After: `A` contains the word code (or 0 on non-match), and
-        -- `IX` is the rest of the input
+        -- `HL` is the rest of the input
         -- Clobbers: `BC`, `IY`
         matchWord <- labelled mdo
             ldVia A [shiftState] 0
@@ -232,7 +230,7 @@ game = do
                 ld A [unpackIsLast]
                 cp 0
                 jp Z keepDecoding
-            -- Note: HL now points to the code of the word we're trying to match
+            -- Note: IX now points to the code of the word we're trying to match
 
             -- If dictBuf is empty, this is an invalid entry
             ld A [dictBuf]
@@ -240,40 +238,41 @@ game = do
             ret Z
 
             ld DE dictBuf
-            push HL
             push IX
+            push HL
             -- Match the first 5 characters of HL, or until there is a space
             decLoopB 5 do
                 ld A [DE]
                 inc DE
-                ld C [IX]
+                ld C [HL]
                 cp C
                 jp NZ noMatch
                 cp 0x20 -- If next char to match is a space, then we're done
                 jp Z match
-                inc IX
+                inc HL
 
             match <- labelled do
                 -- Skip all remaining characters of the current word
                 skippable \end -> loopForever do
-                    ld A [IX]
+                    ld A [HL]
                     cp 0x20
                     jp Z end
-                    inc IX
+                    inc HL
 
-                pop HL -- Discard pushed IX, since we want to "commit" our progress
-                pop HL
-                ld A [HL]
+                pop IX -- Discard pushed IX, since we want to "commit" our progress
+                pop IX
+                ld A [IX]
                 ret
 
             noMatch <- labelled do
-                pop IX
                 pop HL
-                inc HL
+                pop IX
+                inc IX
                 ld A 0
                 ret
             pure ()
 
+        -- Input: IX contains the message bank, B is the message ID
         printlnZ <- labelled do
             call printZ
         paragraph <- labelled do
@@ -282,16 +281,16 @@ game = do
             rst 0x28
             ret
 
-        -- Input: HL contains the message bank, B is the message ID
+        -- Input: IX contains the message bank, B is the message ID
         printZ <- labelled $ withLabel \tryNext -> mdo
             -- Is this the message we want?
             dec B
             jr Z start
 
             loopForever do
-                inc HL
-                ld A [HL]
-                inc HL
+                inc IX
+                ld A [IX]
+                inc IX
                 bit 7 A
                 jr NZ tryNext
 
@@ -300,10 +299,10 @@ game = do
                 ldVia A [unpackIsLast] 0
                 loopForever do
                     call unpackZ
-                    ld IX unpackBuf
+                    ld HL unpackBuf
                     replicateM_ 3 $ do
-                        ld A [IX]
-                        inc IX
+                        ld A [HL]
+                        inc HL
                         call decodeZ1
                         skippable \unprintable -> do
                             jr Z unprintable
@@ -313,19 +312,19 @@ game = do
                     ret NZ
             pure ()
 
-        -- Unpack a ZSCII pair of bytes from [HL] into [unpackBuf], and set [unpackIsLast]
+        -- Unpack a ZSCII pair of bytes from [IX] into [unpackBuf], and set [unpackIsLast]
         -- HL is incremented by 2 in the process.
         unpackZ <- labelled mdo
             push DE
-            ldVia A E [HL]
-            inc HL
+            ldVia A E [IX]
+            inc IX
 
             -- Third character: lowest 5 bits of E
             Z80.and 0x1f
             ld [unpackBuf + 2] A
 
-            ldVia A D [HL]
-            inc HL
+            ldVia A D [IX]
+            inc IX
 
             -- Second character: lowest 2 bits of D with highest 3 bits of E
             replicateM_ 5 $ srl E
@@ -401,15 +400,15 @@ game = do
                 jr printable
 
                 symbol <- labelled mdo
-                    push HL
+                    push IX
                     push DE
-                    ld HL symbols
+                    ld IX symbols
                     ld D 0
                     ld E A
-                    add HL DE
-                    ld A [HL]
+                    add IX DE
+                    ld A [IX]
                     pop DE
-                    pop HL
+                    pop IX
                     jr printable
                     symbols <- labelled $ db [0x3f, 0x27, 0x3a, 0x2d, 0x26, 0x21]
                     pure ()
@@ -421,8 +420,8 @@ game = do
                 ret
             pure ()
 
-        -- Find data corresponding to the current room, starting at IX
-        -- Afterwards, IX points to the *length* of the current room's data,
+        -- Find data corresponding to the current room, starting at HL
+        -- Afterwards, HL points to the *length* of the current room's data,
         -- and the actual data starts afterwards
         findByRoom <- labelled do
             ld A [gameVars + 0xff]
@@ -430,8 +429,8 @@ game = do
             loopForever do
                 dec A
                 ret Z
-                ld C [IX]
-                add IX BC
+                ld C [HL]
+                add HL BC
 
         -- Find data corresponding to the current input in parseBuf, starting at HL
         -- Afterwards: Z iff no mach
@@ -479,24 +478,24 @@ game = do
 
         -- Run "enter" script for current room
         runEnter <- labelled do
-            ld IX scriptEnter
+            ld HL scriptEnter
             call findByRoom
-            inc IX
-            ld HL text2
+            inc HL
+            ld IX text2
             jp runRatScript
 
         runAfter <- labelled do
-            ld IX scriptAfter
-            ld HL text1
+            ld HL scriptAfter
+            ld IX text1
             jp runRatScript
 
         runInteractiveGlobal <- labelled do
             pure ()
 
-        let fetch :: (Load r [RegIx]) => r -> Z80ASM
+        let fetch :: (Load r [HL]) => r -> Z80ASM
             fetch r = do
-                ld r [IX]
-                inc IX
+                ld r [HL]
+                inc HL
 
         -- Run a Rat script starting at IX, with text bank HL
         runRatScript <- labelled do
@@ -579,9 +578,9 @@ game = do
                 jp runRatScript
 
             opSkip <- labelled do
-                ld E [IX] -- Number of bytes to skip
+                ld E [HL] -- Number of bytes to skip
                 ld D 0
-                add IX DE
+                add HL DE
                 jp runRatScript
 
             let opIf val = do
@@ -589,7 +588,7 @@ game = do
                     call getVar
                     cp val
                     jp NZ opSkip -- Number of bytes to skip if check fails
-                    inc IX
+                    inc HL
                     jp runRatScript
             opIf00 <- labelled $ opIf 0x00
             opIfFF <- labelled $ opIf 0xff
