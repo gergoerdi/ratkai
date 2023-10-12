@@ -439,7 +439,7 @@ game = do
         -- Afterwards, HL points to the *length* of the current room's data,
         -- and the actual data starts afterwards
         findByRoom <- labelled do
-            ld A [gameVars + 0xff]
+            ld A [playerLoc]
             ld B 0
             loopForever do
                 dec A
@@ -491,13 +491,50 @@ game = do
             savedHL <- labelled $ dw [0]
             pure ()
 
+        -- Are there any items at location `D`? If yes, set Z
+        -- Clobbers `IY`, `A`, `B`
+        anyItemsAtD <- labelled do
+            ld IY $ gameVars + fromIntegral maxItem
+            decLoopB (maxItem - minItem) $ skippable \notHere -> do
+                dec IY
+                ld A [IY]
+                cp D
+                ret Z
+            ld A 0
+            cp 1
+            ret
+
+        -- Print all items at location `D`.
+        -- Clobbers `IY`, `A`, `B`
+        printItemsAtD <- labelled do
+            ld IY $ gameVars + fromIntegral maxItem
+            decLoopB (maxItem - minItem) $ skippable \notCarried -> do
+                dec IY
+                ld A [IY]
+                cp D
+                jp NZ notCarried
+                ld IX text2
+                push BC
+                ld A B
+                add A $ minItem - 1
+                ld B A
+                call printlnZ
+                pop BC
+            ret
+
         -- Run "enter" script for current room
         runEnter <- labelled do
             ld HL scriptEnter
             call findByRoom
             inc HL
             ld IX text2
-            jp runRatScript
+            call runRatScript
+
+            ldVia A D [playerLoc]
+            call anyItemsAtD
+            ret NZ
+            message1 0x0b
+            jp printItemsAtD
 
         runAfter <- labelled do
             ld HL scriptAfter
@@ -505,7 +542,7 @@ game = do
             jp runRatScript
 
         -- Returns Z iff there was a matching command
-        runInteractiveBuiltin <- labelled do
+        runInteractiveBuiltin <- labelled mdo
             ld A [parseBuf]
             skippable \notMove -> do
                 cp 0x0c
@@ -513,15 +550,28 @@ game = do
                 message1 3
                 setZ
                 ret
-            skippable \notLook -> do
-                cp 0x0d
-                jp NZ notLook
+
+            let builtin val body = skippable \skip -> do
+                    cp val
+                    jp NZ skip
+                    body
+
+            builtin 0x0d do -- Look
                 ldVia A [moved] 1
                 ret
-
-            skippable \notTake -> mdo
-                cp 0x0e
-                jp NZ notTake
+            builtin 0x10 mdo -- Inventory
+                ld D 0
+                call anyItemsAtD
+                skippable \haveItems -> do
+                    jr Z haveItems
+                    message1 8
+                    setZ
+                    ret
+                message1 7
+                call printItemsAtD
+                setZ
+                ret
+            builtin 0x0e mdo -- Take
                 ld A [parseBuf + 1]
                 cp 0x00
                 jp Z takeAll -- No nouns
@@ -529,7 +579,7 @@ game = do
                 -- Is it an item?
                 cp minItem
                 jr C notItem
-                cp (maxItem + 1)
+                cp maxItem
                 jr NC notItem
 
                 -- Is it here?
@@ -547,9 +597,6 @@ game = do
                 notHere <- labelled do
                     message1 5
                     jr finish
-                notItem <- labelled do
-                    message1 2
-                    jr finish
 
                 takeAll <- label
                 message1 16
@@ -557,10 +604,7 @@ game = do
                 finish <- label
                 setZ
                 ret
-
-            skippable \notDrop -> mdo
-                cp 0x0f
-                jp NZ notDrop
+            builtin 0x0f mdo -- Drop
                 ld A [parseBuf + 1]
                 cp 0x00
                 jp Z dropAll -- No nouns
@@ -568,7 +612,7 @@ game = do
                 -- Is it an item?
                 cp minItem
                 jr C notItem
-                cp (maxItem + 1)
+                cp maxItem
                 jr NC notItem
 
                 -- Does the player have it?
@@ -586,9 +630,6 @@ game = do
                 notHere <- labelled do
                     message1 6
                     jr finish
-                notItem <- labelled do
-                    message1 2
-                    jr finish
 
                 dropAll <- label
                 message1 8
@@ -598,6 +639,12 @@ game = do
                 ret
 
             ret
+
+            notItem <- labelled do
+                message1 2
+                setZ
+                ret
+            pure ()
 
 
         -- Returns NZ iff there was a matching command
