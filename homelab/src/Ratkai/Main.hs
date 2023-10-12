@@ -56,20 +56,23 @@ game = do
 
             call readLine
             -- call dbgPrintParseBuf
-            skippable \noInput -> do
-                ld A [parseBuf]
-                cp 0x00
-                jp Z noInput
 
+            ld A [parseBuf]
+            cp 0x00
+            jp Z loop
+
+            skippable \processed -> do
                 call runInteractiveLocal
-                jp NZ loop
+                jp NZ processed
                 call runInteractiveGlobal
-                jp NZ loop
+                jp NZ processed
+                call runInteractiveBuiltin
+                jp Z processed
 
-                ld IX text1
-                ld B 2
-                call printlnZ
+                message1 2
+                jp loop
 
+            -- call runAfter
             jp loop
 
         loopForever $ pure ()
@@ -180,9 +183,7 @@ game = do
 
         parseError <- labelled do
             videoOn
-            ld IX text1
-            ld B 1
-            call printlnZ
+            message1 1
             jp readLine
 
         dbgPrintParseBuf <- labelled do
@@ -280,6 +281,11 @@ game = do
                 ld A 0
                 ret
             pure ()
+
+        let message1 msg = do
+                ld IX text1
+                ld B msg
+                call printlnZ
 
         -- Input: IX contains the message bank, B is the message ID
         printlnZ <- labelled do
@@ -498,6 +504,102 @@ game = do
             ld IX text1
             jp runRatScript
 
+        -- Returns Z iff there was a matching command
+        runInteractiveBuiltin <- labelled do
+            ld A [parseBuf]
+            skippable \notMove -> do
+                cp 0x0c
+                jp NC notMove
+                message1 3
+                setZ
+                ret
+            skippable \notLook -> do
+                cp 0x0d
+                jp NZ notLook
+                ldVia A [moved] 1
+                ret
+
+            skippable \notTake -> mdo
+                cp 0x0e
+                jp NZ notTake
+                ld A [parseBuf + 1]
+                cp 0x00
+                jp Z takeAll -- No nouns
+
+                -- Is it an item?
+                cp minItem
+                jr C notItem
+                cp (maxItem + 1)
+                jr NC notItem
+
+                -- Is it here?
+                ld E A
+                call varIY
+                ld A [playerLoc]
+                cp [IY]
+                jp NZ notHere
+
+                -- Finally, all good
+                ld [IY] 0
+                message1 4
+                jr finish
+
+                notHere <- labelled do
+                    message1 5
+                    jr finish
+                notItem <- labelled do
+                    message1 2
+                    jr finish
+
+                takeAll <- label
+                message1 16
+
+                finish <- label
+                setZ
+                ret
+
+            skippable \notDrop -> mdo
+                cp 0x0f
+                jp NZ notDrop
+                ld A [parseBuf + 1]
+                cp 0x00
+                jp Z dropAll -- No nouns
+
+                -- Is it an item?
+                cp minItem
+                jr C notItem
+                cp (maxItem + 1)
+                jr NC notItem
+
+                -- Does the player have it?
+                ld E A
+                call varIY
+                ld A 0
+                cp [IY]
+                jp NZ notHere
+
+                -- Finally, all good
+                ldVia A [IY] [playerLoc]
+                message1 4
+                jr finish
+
+                notHere <- labelled do
+                    message1 6
+                    jr finish
+                notItem <- labelled do
+                    message1 2
+                    jr finish
+
+                dropAll <- label
+                message1 8
+
+                finish <- label
+                setZ
+                ret
+
+            ret
+
+
         -- Returns NZ iff there was a matching command
         runInteractiveLocal <- labelled do
             ld HL scriptLocal
@@ -638,7 +740,8 @@ game = do
                     jp runRatScript
 
             opHeal <- labelled $ opAddToCounter playerHealth
-            opAddScore <- labelled $ opAddToCounter playerScore
+            opAddScore <- labelled $ do
+                opAddToCounter playerScore
 
             opHurt <- labelled do
                 ldVia A B [playerHealth]
