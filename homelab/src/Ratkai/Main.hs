@@ -923,6 +923,7 @@ game = do
         unpackBuf <- labelled $ db [0, 0, 0]
         unpackIsLast <- labelled $ db [0]
         shiftState <- labelled $ db [0]
+
         inputBuf <- labelled $ resb 40
         parseBuf <- labelled $ resb 5
         dictBuf <- labelled $ resb 5
@@ -931,4 +932,7 @@ game = do
             playerHealth = gameVars + 0xfd
             playerStatus = gameVars + 0xfe
             playerLoc = gameVars + 0xff
+        savedVars <- labelled $ resb 256
+        undoVars <- labelled $ resb 256
+        nop -- To see real memory usage instead of just image size
         pure ()
