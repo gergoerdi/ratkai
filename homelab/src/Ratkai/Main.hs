@@ -23,6 +23,7 @@ game = do
     scriptLocal' <- asset "interactive-local"
     help' <- asset "help"
     reset' <- asset "reset"
+    let connective = 100 -- TODO
     let minItem = 120 -- TODO
     let maxItem = 160 -- TODO
     let startRoom = 1 -- TODO
@@ -44,9 +45,9 @@ game = do
 
         call runEnter
 
-        -- loopForever do
-        --     call readLine
-        --     call dbgPrintParseBuf
+        loopForever do
+            call readLine
+            call dbgPrintParseBuf
 
         loopForever $ pure ()
 
@@ -122,7 +123,7 @@ game = do
             ld IY parseBuf
             -- Parse up to 5 words
             ld IX inputBuf
-            skippable \end -> decLoopB 5 do
+            skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
                 -- Skip all leading spaces
                 skippable \end -> loopForever do
                     ld A [IX]
@@ -137,6 +138,15 @@ game = do
                 call parse1
                 pop BC
                 jr Z parseError
+
+                -- Is this a connective? If so, it doesn't count
+                skippable \notConnective -> do
+                    ld A [IY]
+                    cp connective
+                    jp NZ notConnective
+                    ld [IY] 0x00
+                    jp doesntCount
+                inc IY
             ret
 
         parseError <- labelled do
@@ -173,7 +183,6 @@ game = do
 
             found <- label
             ld [IY] A
-            inc IY
             ret
 
         -- Match one word from `[IX]` vs. a dictionary entry at `[HL]`
