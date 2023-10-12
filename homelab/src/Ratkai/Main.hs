@@ -33,6 +33,8 @@ game = do
             call 0x01a5
             pop AF
 
+    let videoOn = ld [0x3f00] A
+        videoOff = ld [0x3e00] A
 
     pure $ mdo
         call resetGameVars
@@ -116,6 +118,7 @@ game = do
             jp parseLine
 
         parseLine <- labelled do
+            videoOff
             ld IY parseBuf
             decLoopB 5 do
                 ldVia A [IY] 0x00
@@ -147,9 +150,11 @@ game = do
                     ld [IY] 0x00
                     jp doesntCount
                 inc IY
+            videoOn
             ret
 
         parseError <- labelled do
+            videoOn
             ld HL text1
             ld B 1
             call printlnZ
