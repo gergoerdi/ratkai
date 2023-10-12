@@ -41,18 +41,6 @@ game = do
 
         ldVia A [shiftState] 0
 
-        -- ld HL text2
-        -- ld B 1
-        -- call printlnZ
-
-        -- -- ld HL text2
-        -- ld A 0x00
-        -- ld B 0xa0
-        -- call printlnZ
-
-        -- ld HL text2
-        -- ld B 160
-        -- call printlnZ
         call runEnter
 
         -- loopForever do
@@ -254,13 +242,6 @@ game = do
             pure ()
 
         printlnZ <- labelled do
-            -- push AF
-            -- ld A B
-            -- dbgPrintA
-            -- ld A 0x0d
-            -- rst 0x28
-            -- pop AF
-
             call printZ
         paragraph <- labelled do
             ld A 0x0d
