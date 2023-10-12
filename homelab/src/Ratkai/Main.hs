@@ -53,7 +53,6 @@ game = do
         -- ld HL text2
         -- ld B 160
         -- call printlnZ
-
         call runEnter
 
         -- loopForever do
@@ -488,7 +487,7 @@ game = do
                 jp ratMessage
 
             let opAssert val = do
-                    ld A [IX] -- Variable to check
+                    ld E [IX] -- Variable to check
                     inc IX
                     ld B [IX] -- Message to print if assertion fails
                     inc IX
@@ -502,9 +501,9 @@ game = do
             opAssertFF <- labelled $ opAssert 0xff
 
             opAssign <- labelled do
-                ld A [IX] -- Variable
+                ld E [IX] -- Variable
                 inc IX
-                ld B [IX] -- Value
+                ld A [IX] -- Value
                 inc IX
                 call putVar
                 jp runRatScript
@@ -516,18 +515,18 @@ game = do
                 jp runRatScript
 
             let opAssignConst val = do
-                    ld A [IX] -- Variable
+                    ld E [IX] -- Variable
                     inc IX
-                    ld B val
+                    ld A val
                     call putVar
                     jp runRatScript
             opAssignFF <- labelled $ opAssignConst 0xff
             opAssign00 <- labelled $ opAssignConst 0x00
 
             opAssignLoc <- labelled do
-                ldVia A B [gameVars + 0xff]
-                ld A [IX] -- Variable
+                ld E [IX] -- Variable
                 inc IX
+                ld A [gameVars + 0xff] -- Value
                 call putVar
                 jp runRatScript
 
@@ -538,7 +537,7 @@ game = do
                 jp runRatScript
 
             let opIf val = do
-                    ld A [IX] -- Variable to check
+                    ld E [IX] -- Variable to check
                     inc IX
                     call getVar
                     cp val
@@ -583,20 +582,17 @@ game = do
                 jp runRatScript
 
             opIncIfNot0 <- labelled do
-                ld A [IX] -- Variable
+                ld E [IX] -- Variable
                 inc IX
-                ld C A
                 call getVar
                 cp 0
                 jp Z runRatScript
                 inc A
-                ld B A
-                ld A C
-                call putVar
+                ld [IY] A
                 jp runRatScript
 
             opAssertHere <- labelled do
-                ld A [IX] -- Item to check
+                ld E [IX] -- Item to check
                 inc IX
                 ld B [IX] -- Message to print when item is not here
                 inc IX
@@ -667,30 +663,28 @@ game = do
             ldVia A [playerHealth] 50
             ret
 
-        -- Pre: A is the variable's index
-        -- Post: DE is the variable's address
-        -- Clobbers: A
-        varDE <- labelled do
-            ld DE gameVars
-            add A E
-            ld E A
-            ret NC
-            inc D
+        -- Pre: E is the variable's index
+        -- Post: IY is the variable's address
+        -- Clobbers: D, A, IY
+        varIY <- labelled do
+            ld IY gameVars
+            ld E 0
+            add IY DE
             ret
 
-        -- Pre: A is the variable's index
+        -- Pre: E is the variable's index
         -- Post: A is the variable's value
-        -- Clobbers: DE
+        -- Clobbers: D, IY
         getVar <- labelled do
-            call varDE
-            ld A [DE]
+            call varIY
+            ld A [IY]
             ret
 
-        -- Pre: A is the variable's index, B is its value-to-be
-        -- Clobbers: A, B, DE
+        -- Pre: E is the variable's index, A is its value-to-be
+        -- Clobbers: D, IY
         putVar <- labelled do
-            call varDE
-            ldVia A [DE] B
+            call varIY
+            ld [IY] A
             ret
 
         getLocation <- labelled do
