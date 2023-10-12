@@ -388,29 +388,23 @@ game = do
                 ret
             pure ()
 
-        -- Find data corresponding to the current room, starting at DE
-        -- Afterwards, DE points to the *length* of the current room's data,
+        -- Find data corresponding to the current room, starting at IX
+        -- Afterwards, IX points to the *length* of the current room's data,
         -- and the actual data starts afterwards
         findRoomData <- labelled do
-            ldVia A B [gameVars + 0xff]
-            withLabel \loop -> do
-                dec B
+            ld A [gameVars + 0xff]
+            ld B 0
+            loopForever do
+                dec A
                 ret Z
-                ld A [DE]
-                skippable \noCarry -> do
-                    add A E
-                    ld E A
-                    jp NC loop
-                    inc D
-                jp loop
+                ld C [IX]
+                add IX BC
 
         -- Run "enter" script for current room
         runEnter <- labelled do
-            ld DE scriptEnter
+            ld IX scriptEnter
             call findRoomData
-            inc DE
-            push DE
-            pop IX
+            inc IX
             ld HL text2
             jp runRatScript
 
