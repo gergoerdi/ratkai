@@ -44,24 +44,33 @@ game = do
         rst 0x28
 
         ldVia A [shiftState] 0
+        ldVia A [moved] 1
 
-        call runEnter
+        withLabel \loop -> do
+            skippable \notMoved -> do
+                ld A [moved]
+                dec A
+                jp NZ notMoved
+                ld [moved] A
+                call runEnter
 
-        loopForever $ withLabel \loop -> do
             call readLine
-            skippable \noGlobal -> do
+            -- call dbgPrintParseBuf
+            skippable \noInput -> do
                 ld A [parseBuf]
                 cp 0x00
-                jp Z noGlobal
+                jp Z noInput
 
-                ld HL scriptGlobal
-                call findByWords
-                jp Z noGlobal
+                call runInteractiveLocal
+                jp NZ loop
+                call runInteractiveGlobal
+                jp NZ loop
 
                 ld IX text1
-                call runRatScript
+                ld B 2
+                call printlnZ
 
-                jp loop
+            jp loop
 
         loopForever $ pure ()
 
@@ -489,8 +498,26 @@ game = do
             ld IX text1
             jp runRatScript
 
+        -- Returns NZ iff there was a matching command
+        runInteractiveLocal <- labelled do
+            ld HL scriptLocal
+            call findByRoom
+            inc HL
+            jp runInteractive
+
+        -- Returns NZ iff there was a matching command
         runInteractiveGlobal <- labelled do
-            pure ()
+            ld HL scriptGlobal
+        runInteractive <- labelled do
+            call findByWords
+            ret Z
+
+            ld IX text1
+            call runRatScript
+            -- Clear NZ flag
+            ld A 0
+            cp 1
+            ret
 
         let fetch :: (Load r [HL]) => r -> Z80ASM
             fetch r = do
@@ -596,7 +623,8 @@ game = do
             opMoveTo <- labelled do
                 fetch A
                 ld [gameVars + 0xff] A
-                jp runEnter
+                ldVia A [moved] 1
+                ret
 
             let opAddToCounter var = do
                     ldVia A B [var]
@@ -741,6 +769,7 @@ game = do
         help <- labelled $ db help'
         resetVars <- labelled $ db reset'
 
+        moved <- labelled $ db [0]
         unpackBuf <- labelled $ db [0, 0, 0]
         unpackIsLast <- labelled $ db [0]
         shiftState <- labelled $ db [0]
