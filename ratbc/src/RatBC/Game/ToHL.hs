@@ -36,7 +36,9 @@ assemble Game{..} = Game
     putStmts = mapM_ put . ensureRet
 
     putInteractive :: [InputDispatch [Stmt]] -> Put
-    putInteractive = traverse_ (withLength8 . putDispatch)
+    putInteractive responses = do
+        traverse_ (withLength8 . putDispatch) responses
+        putWord8 0x00
       where
         putDispatch (InputDispatch input action) = do
             mapM_ putWord8 input
@@ -71,6 +73,7 @@ ensureRet :: [Stmt] -> [Stmt]
 ensureRet stmts = case reverse stmts of
     Ret:_ -> stmts
     MoveTo{}:_ -> stmts
+    Skip{}:_ -> stmts
     stmts' -> reverse (Ret : stmts')
 
 writeHLFiles :: FilePath -> Game Identity -> IO ()
