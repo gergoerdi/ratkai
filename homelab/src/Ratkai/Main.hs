@@ -47,9 +47,23 @@ game = do
 
         call runEnter
 
-        loopForever do
+        loopForever $ withLabel \loop -> do
             call readLine
-            call dbgPrintParseBuf
+            skippable \noGlobal -> do
+                ld A [parseBuf]
+                cp 0x00
+                jp Z noGlobal
+
+                ld HL scriptGlobal
+                call findByWords
+                jp Z noGlobal
+
+                push HL
+                pop IX
+                ld HL text1
+                call runRatScript
+
+                jp loop
 
         loopForever $ pure ()
 
@@ -406,7 +420,7 @@ game = do
         -- Find data corresponding to the current room, starting at IX
         -- Afterwards, IX points to the *length* of the current room's data,
         -- and the actual data starts afterwards
-        findRoomData <- labelled do
+        findByRoom <- labelled do
             ld A [gameVars + 0xff]
             ld B 0
             loopForever do
@@ -415,10 +429,54 @@ game = do
                 ld C [IX]
                 add IX BC
 
+        -- Find data corresponding to the current input in parseBuf, starting at HL
+        -- Afterwards: Z iff no mach
+        findByWords <- labelled mdo
+            ld D 0 -- We'll use DE as an offset to add to HL
+
+            loopForever mdo
+                ld [savedHL] HL
+
+                ld A [HL] -- Load skip amount, needed later if no match
+                inc HL
+
+                -- No more entries?
+                cp 0
+                ret Z
+                ld E A
+
+                -- Compare with parseBuf
+                ld IX parseBuf
+                loopForever do
+                    ld B [IX] -- The next input token
+                    inc IX
+                    ld A [HL] -- The pattern from the set of responses
+                    inc HL
+
+                    cp B -- Are they the same word?
+                    jp NZ noMatch
+
+                    cp 0 -- If this is the last word, we're done
+                    jp Z match
+
+                match <- labelled do
+                    -- Clear Z flag
+                    ld A 1
+                    cp 0
+                    ret
+
+                noMatch <- label
+                -- No match, so skip (based on original origin!)
+                ld HL [savedHL]
+                add HL DE
+
+            savedHL <- labelled $ dw [0]
+            pure ()
+
         -- Run "enter" script for current room
         runEnter <- labelled do
             ld IX scriptEnter
-            call findRoomData
+            call findByRoom
             inc IX
             ld HL text2
             jp runRatScript
