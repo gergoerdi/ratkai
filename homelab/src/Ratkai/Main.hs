@@ -37,11 +37,11 @@ game = do
         videoOff = ld [0x3e00] A
 
     pure $ mdo
-        call resetGameVars
-
         -- Clear screen
         ld A 0x0c
         rst 0x28
+
+        call resetGameVars
 
         ldVia A [shiftState] 0
         ldVia A [moved] 1
@@ -818,18 +818,18 @@ game = do
                 ]
             pure ()
 
-
         resetGameVars <- labelled do
             ld DE gameVars
-            decLoopB minItem do
-                ldVia A [DE] 0x00
+            ld A 0x00
+            decLoopB 256 do
+                ld [DE] A
                 inc DE
+
+            ld DE $ gameVars + fromIntegral minItem
             ld HL resetVars
-            ld BC $ fromIntegral $ (maxItem - minItem + 1)
+            ld BC $ fromIntegral (maxItem - minItem)
             ldir
-            decLoopB (maxBound - maxItem) do
-                ldVia A [DE] 0x00
-                inc DE
+
             ldVia A [playerLoc] startRoom
             ldVia A [playerHealth] 50
             ret
