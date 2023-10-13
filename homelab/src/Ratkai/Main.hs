@@ -1,6 +1,7 @@
 {-# LANGUAGE RecordWildCards, RecursiveDo, BlockArguments #-}
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
 {-# LANGUAGE FlexibleContexts #-}
+{-# OPTIONS_GHC -Wno-unused-do-bind #-}
 module Ratkai.Main (game) where
 
 import Z80
@@ -43,7 +44,7 @@ game = do
     let maxItem = 160 -- TODO
     let startRoom = 1 -- TODO
 
-    let dbgPrintA = do
+    let dbgPrintA = unless release do
             push AF
             call 0x01a5
             pop AF
@@ -901,33 +902,15 @@ game = do
                 ldVia A [moved] 1
                 ret
 
-            let opAddToCounter var = do
-                    ld A [var]
-                    fetch B -- Value to add
-                    add A B
-                    skippable \noOverflow -> do
-                        cp 99
-                        jp C noOverflow
-                        ld A 99
-                    ld [var] A
-                    jp runRatScript
-
-            opHeal <- labelled $ opAddToCounter playerHealth
+            opHeal <- labelled $ do
+                ld IY playerHealth
+                jp opAddToCounter
             opAddScore <- labelled $ do
-                opAddToCounter playerScore
-
-            opHurt <- labelled mdo
-                ld A [playerHealth]
-                fetch B -- Value to subtract
-                skippable \noUnderflow -> do
-                    cp B
-                    jp NC noUnderflow
-                    ld A 0
-                    jr done
-                sub B
-                done <- label
-                ld [playerHealth] A
-                jp runRatScript
+                ld IY playerScore
+                jp opAddToCounter
+            opHurt <- labelled do
+                ld IY playerHealth
+                call opSubFromCounter
 
             opIncIfNot0 <- labelled do
                 fetch E -- Variable
@@ -963,6 +946,8 @@ game = do
             let unimplemented n = labelled do
                     replicateM_ n $ inc IX
                     jp runRatScript
+
+                unsupported :: Int -> Z80 Location
                 unsupported n = pure 0x0000
 
             opSetScreen <- unsupported 3
@@ -999,6 +984,30 @@ game = do
                 , opMachineCode     -- 17
                 , opCopyProtection  -- 18
                 ]
+
+            -- Add to counter in `[IY]`
+            opAddToCounter <- labelled do
+                ld A [IY]
+                fetch B -- Value to add
+                add A B
+                daa
+                skippable \noOverflow -> do
+                    jp NC noOverflow
+                    ld A 0x99
+                ld [IY] A
+                jp runRatScript
+
+            -- Subtract from counter in `[IY]`
+            opSubFromCounter <- labelled do
+                ld A [IY]
+                fetch B -- Value to add
+                sub B
+                daa
+                skippable \noOverflow -> do
+                    jp NC noOverflow
+                    ld A 0
+                ld [IY] A
+                jp runRatScript
             pure ()
 
         resetGameVars <- labelled do
