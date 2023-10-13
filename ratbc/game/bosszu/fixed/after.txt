@@ -23,12 +23,11 @@
 , If00 127 5                     -- 0a 7f 05
 , AssignFF 18                    -- 04 12
 , SpriteOff 4                    -- 13 04
-, IfFF 28 12                     -- 0b 1c 0c
-, If00 36 5                      -- 0a 24 05
-, AssignFF 36                    -- 04 24
-, Skip 5                         -- 09 05
+, IfFF 28 10                     -- 0b 1c 0c
+, IfFF 36 5                      -- 0a 24 05
 , Message 61                     -- 02 3d                -- "Egy shuriken fúródik be a fejedbe... "
 , SetPlayerStatus 255            -- 0d ff
+, AssignFF 36                    -- 04 24
 , IfFF 49 8                      -- 0b 31 08
 , IncIfNot0 50                   -- 16 32
 , IfFF 50 3                      -- 0b 32 03

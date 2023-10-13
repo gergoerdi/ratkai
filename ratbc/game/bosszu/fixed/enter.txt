@@ -290,7 +290,7 @@
   ]
 , -- ROOM 44
   [ Message 34                     -- 02 22                -- "Zsákutcába jutottál. Egy magas kerítés zárja el az utat. A sikátor nyugat felé vezet. "
-  , If00 49 13                     -- 0a 31 0d
+  , If00 49 14                     -- 0a 31 0d
   , IfFF 25 11                     -- 0b 19 0b
   , SetScreen 2 10 45              -- 11 02 0a 2d
   , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
@@ -324,8 +324,8 @@
   ]
 , -- ROOM 49
   [ Message 36                     -- 02 24                -- "Egy lepény-árus pultja előtt állsz, a piacon. "
-  , IfFF 25 17                     -- 0b 19 11
-  , IfFF 41 25                     -- 0b 29 19
+  , IfFF 25 22                     -- 0b 19 11
+  , IfFF 41 14                     -- 0b 29 19
   , SetScreen 2 10 45              -- 11 02 0a 2d
   , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
   , Sleep 5                        -- 15 05
@@ -333,9 +333,9 @@
   , SetPlayerStatus 255            -- 0d ff
   , Ret                            -- 00
   , SetScreen 8 7 16               -- 11 08 07 10
-  , SpriteOn 4 36 1 120 116        -- 12 04 24 01 78 74
   , Ret                            -- 00
   , SetScreen 8 7 16               -- 11 08 07 10
+  , SpriteOn 4 36 1 120 116        -- 12 04 24 01 78 74
   ]
 , -- ROOM 50
   [ Message 37                     -- 02 25                -- "A városba vezető úton állsz. Utak vezetnek észak és nyugat felé is. "
@@ -414,14 +414,18 @@
   , Message 96                     -- 02 60                -- "Egy őr van itt. "
   ]
 , -- ROOM 62
-  [ If00 147 6                     -- 0a 93 06
-  , If00 54 3                      -- 0a 36 03
-  , Skip 7                         -- 09 07
-  , If00 148 11                    -- 0a 94 0b
-  , IfFF 62 8                      -- 0b 3e 08
-  , Message 49                     -- 02 31                -- "Egy dohos és homályos északnyugat-délkeleti folyosón vagy. "
-  , SetScreen 15 12 47             -- 11 0f 0c 2f
-  , Ret                            -- 00
+  [ When00 147
+      [ When00 54
+        [ Message 49                     -- 02 31                -- "Egy dohos és homályos északnyugat-délkeleti folyosón vagy. "
+        , SetScreen 15 12 47             -- 11 0f 0c 2f
+        , Ret
+        ]
+      ]
+  , When00 148
+      [ Message 49                     -- 02 31                -- "Egy dohos és homályos északnyugat-délkeleti folyosón vagy. "
+      , SetScreen 15 12 47             -- 11 0f 0c 2f
+      , Ret
+      ]
   , Message 184                    -- 02 b8                -- "Sötét van. "
   , Message 202                    -- 02 ca                -- "Bevered a fejed valamibe..."
   , SetScreen 12 11 255            -- 11 0c 0b ff
@@ -442,12 +446,13 @@
 , -- ROOM 65
   [ Message 52                     -- 02 34                -- "Keresztfolyosóhoz értél. Északra, keletre, délre és nyugatra mehetsz. "
   , SetScreen 2 4 9                -- 11 02 04 09
-  , IfFF 61 4                      -- 0b 3d 04
+  , IfFF 61 11                      -- 0b 3d 04
   , IfFF 54 2                      -- 0b 36 02
   , Ret                            -- 00
   , Message 180                    -- 02 b4                -- "Egy üvöltést hallasz a pince felől. Katonák vesznek körül és megölnek... "
   , SetPlayerStatus 255            -- 0d ff
   , Sleep 5                        -- 15 05
+  , Ret
   ]
 , -- ROOM 66
   [ Message 53                     -- 02 35                -- "A katonák hálószobájában vagy. Egy asztalt látsz a sarokban üvegekkel és poharakkal. "
