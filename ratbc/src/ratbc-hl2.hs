@@ -43,10 +43,11 @@ import Data.Foldable (toList)
 data Options = Options
     { inputPath :: FilePath
     , outputPath :: FilePath
+    , block :: Bool
     }
 
-stripHomeLab :: Stmt -> Maybe Stmt
-stripHomeLab = \case
+toHomeLab :: Stmt -> Maybe Stmt
+toHomeLab = \case
     SetScreen{} -> Nothing
     SpriteOn{} -> Nothing
     SpriteOff{} -> Nothing
@@ -54,8 +55,9 @@ stripHomeLab = \case
     Sleep n -> Just $ Sleep $ min 10 n
     CopyProtection{} -> Nothing
     MachineCode addr _ -> Just $ MachineCode addr [0x60]
-    When00 var body -> When00 var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
-    WhenFF var body -> WhenFF var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
+    When00 var body -> When00 var <$> let body' = mapMaybe toHomeLab body in body' <$ guard (not . null $ body')
+    WhenFF var body -> WhenFF var <$> let body' = mapMaybe toHomeLab body in body' <$ guard (not . null $ body')
+    Message msg -> Just $ CompactMessage msg
     s -> pure s
 
 transformStmts :: ([Stmt] -> [Stmt]) -> (Game Identity -> Game Identity)
@@ -86,6 +88,7 @@ usedMessages Game{..} = both (nub . sort) $ mconcat
     stmtsMessages = foldMap stmtMessages
     stmtMessages = \case
         Message msg -> [msg]
+        CompactMessage msg -> [msg]
         Assert00 _ msg -> [msg]
         AssertFF _ msg -> [msg]
         AssertHere _ msg -> [msg]
@@ -170,9 +173,7 @@ main = do
 
     game <- loadTextFiles inputPath
 
-    let f = mapMaybe stripHomeLab
-
-    game <- pure $ transformStmts f game
+    game <- pure $ transformStmts (mapMaybe toHomeLab) game
     let rooms = accessibleRooms game
     print rooms
     game <- pure $ stripRooms rooms game
@@ -205,9 +206,13 @@ options = do
         , help "Output directory"
         , value "."
         ]
+    block <- switch $ mconcat
+        [ long "blocks"
+        , short 'b'
+        ]
     pure Options{..}
 
 optionsInfo = info (options <**> helper) $ mconcat
     [ fullDesc
-    , header "RatBC disassembler"
+    , header "RatBC HomeLab2 compiler"
     ]

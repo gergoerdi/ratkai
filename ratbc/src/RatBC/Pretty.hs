@@ -38,6 +38,10 @@ pprStmt msgs (When00 val body) = vsep
   [ "When00" <+> viaShow val
   , indent 2 $ pprStmts msgs body
   ]
+pprStmt msgs (WhenFF val body) = vsep
+  [ "WhenFF" <+> viaShow val
+  , indent 2 $ pprStmts msgs body
+  ]
 pprStmt msgs stmt = hsep
   [ fill 30 $ viaShow stmt
   , "--"
@@ -78,7 +82,7 @@ pprInputDispatch dict msgs (InputDispatch input stmts) = vcat
        ]
 
 pprGame :: Game Identity -> Game (Const (Doc ann))
-pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, helpMap, resetState} = Game
+pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, helpMap, resetState} = game
   { msgs1 = Const . pprMessages $ msgs1
   , msgs2 = Const . pprMessages $ msgs2
   , dict = Const . pprDict $ dict

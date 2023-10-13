@@ -1,3 +1,4 @@
+{-# LANGUAGE RecordWildCards #-}
 module RatBC.Game where
 
 import RatBC.Utils
@@ -5,6 +6,7 @@ import RatBC.Syntax
 import RatBC.Words
 import RatBC.Text
 
+import Control.Monad.Identity
 import Data.Word
 import Data.Array
 import qualified Data.ByteString.Lazy as BL
@@ -26,3 +28,11 @@ data Game f = Game
     , minItem, maxItem :: Word8
     , startRoom :: Word8
     }
+
+mapStmts :: ([Stmt] -> [Stmt]) -> Game Identity -> Game Identity
+mapStmts f game@Game{..} = game
+  { enterRoom = fmap (fmap f) enterRoom
+  , afterTurn = fmap f afterTurn
+  , interactiveGlobal = fmap (fmap (fmap f)) interactiveGlobal
+  , interactiveLocal = fmap (fmap (fmap (fmap f))) interactiveLocal
+  }

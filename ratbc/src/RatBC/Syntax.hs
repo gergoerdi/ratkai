@@ -30,8 +30,6 @@ data Stmt
     | AssertFF Var Msg
     | AssertHere Var Msg
     | Skip Val
-    | When00 Var [Stmt]
-    | WhenFF Var [Stmt]
     | If00 Var Val
     | IfFF Var Val
     | MoveTo Val
@@ -47,6 +45,10 @@ data Stmt
     | IncIfNot0 Var
     | MachineCode Addr [Word8]
     | CopyProtection Val Val Val Val
+
+    | When00 Var [Stmt]
+    | WhenFF Var [Stmt]
+    | CompactMessage Msg
     deriving (Show, Read)
 
 instance Binary Stmt where
@@ -57,8 +59,9 @@ instance Binary Stmt where
     put = \case
         Ret -> putWord8 0x00
         Assign var val -> putWord8 0x01 *> put var *> put val
-        Message msg | msg <= 0x18 -> putWord8 0x02 *> put msg
-                    | otherwise -> putWord8 msg
+        CompactMessage msg | msg <= 0x18 -> putWord8 0x02 *> put msg
+                           | otherwise -> putWord8 msg
+        Message msg -> putWord8 0x02 *> put msg
         Assign00 var -> putWord8 0x03 *> put var
         AssignFF var -> putWord8 0x04 *> put var
         AssignLoc var -> putWord8 0x05 *> put var
@@ -160,3 +163,30 @@ whileValid = do
 
 getStmts :: Get [Stmt]
 getStmts = untilEOF get
+
+restoreBlocks :: [Stmt] -> [Stmt]
+restoreBlocks [] = []
+restoreBlocks (stmt:stmts) = case stmt of
+    If00 var len -> restoreBlock (When00 var) len stmts
+    IfFF var len -> restoreBlock (WhenFF var) len stmts
+    _ -> stmt : restoreBlocks stmts
+  where
+    restoreBlock :: ([Stmt] -> Stmt) -> Word8 -> [Stmt] -> [Stmt]
+    restoreBlock mkBlock len stmts =
+        let (stmt', stmts') = go [] (len - 1) stmts
+        in stmt' : restoreBlocks stmts'
+      where
+        go :: [Stmt] -> Word8 -> [Stmt] -> (Stmt, [Stmt])
+        go acc 0 stmts = success acc stmts
+        go acc len [] = failure
+        go acc len (stmt:stmts)
+          | this <= len = go (stmt:acc) (len - this) stmts
+          | otherwise = failure
+          where
+            this = fromIntegral . BL.length $ runPut . put $ stmt
+
+        failure :: (Stmt, [Stmt])
+        failure = (stmt, stmts)
+
+        success :: [Stmt] -> [Stmt] -> (Stmt, [Stmt])
+        success acc rest = (mkBlock (restoreBlocks $ reverse acc), rest)

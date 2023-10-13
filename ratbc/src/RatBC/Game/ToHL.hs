@@ -21,7 +21,7 @@ import Text.Printf
 import Data.Foldable (traverse_)
 
 assemble :: Game Identity -> Game (Const BL.ByteString)
-assemble Game{..} = Game
+assemble game@Game{..} = game
     { msgs1 = Const . mconcat . map zscii . elems . runIdentity $ msgs1
     , msgs2 = Const . mconcat . map zscii {-(mconcat . map (BL.singleton . fromIntegral . ord)) -} . elems . runIdentity $ msgs2
     , dict = Const . (<> BL.singleton 0xff) . foldMap putDictEntry . M.toList . runIdentity $ dict

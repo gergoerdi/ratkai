@@ -29,5 +29,5 @@ executables:
   ratbc-asm:
     main: ratbc-asm.hs
 
-  ratbc-strip:
-    main: ratbc-strip.hs
+  ratbc-hl2:
+    main: ratbc-hl2.hs

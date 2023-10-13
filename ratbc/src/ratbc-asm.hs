@@ -1,20 +1,17 @@
 {-# LANGUAGE ApplicativeDo, RecordWildCards, TypeApplications #-}
 {-# LANGUAGE BlockArguments, LambdaCase, ViewPatterns #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module Main where
 
 import RatBC.Utils
 import RatBC.Syntax
 import RatBC.Words
 import RatBC.Text
-import RatBC.Game
 import RatBC.Pretty
-import RatBC.Game.FromImage
+import RatBC.Game
 import RatBC.Game.Text
 
-import Prettyprinter
-import Prettyprinter.Render.String
-import qualified Data.ByteString.Lazy as BL
 import Options.Applicative
 import System.Directory
 import System.FilePath
@@ -27,14 +24,10 @@ data Options = Options
 
 main :: IO ()
 main = do
-    Options{..} <- execParser optionsInfo
+    opts@Options{..} <- execParser optionsInfo
 
-    bs <- BL.readFile inputPath
-    bs <- pure $ BL.drop 2 bs
-
-    let game = fromImage bs
+    game <- loadTextFiles inputPath
     game <- pure $ if block then mapStmts restoreBlocks game else game
-
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
 
@@ -43,8 +36,8 @@ options = do
     inputPath <- strOption $ mconcat
         [ long "input"
         , short 'i'
-        , metavar "FILENAME"
-        , help "Memory dump"
+        , metavar "DIR"
+        , help "Input directory"
         ]
     outputPath <- strOption $ mconcat
         [ long "output"
@@ -61,5 +54,5 @@ options = do
 
 optionsInfo = info (options <**> helper) $ mconcat
     [ fullDesc
-    , header "RatBC disassembler"
+    , header "RatBC assembler"
     ]
