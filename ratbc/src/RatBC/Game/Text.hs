@@ -60,7 +60,11 @@ parseGame game@Game{..} = game
     parseWords = M.fromList . read
 
 removeComments :: String -> String
-removeComments = unlines . map (head . endBy "-- ") . lines
+removeComments = unlines . map removeComment . lines
+  where
+    removeComment s = case endBy "-- " s of
+        [] -> ""
+        (s:ss) -> s
 
 loadTextFiles :: FilePath -> IO (Game Identity)
 loadTextFiles inputPath = do

@@ -172,16 +172,17 @@ main = do
     opts@Options{..} <- execParser optionsInfo
 
     game <- loadTextFiles inputPath
+    game <- pure $ if block then mapStmts restoreBlocks game else game
 
     game <- pure $ transformStmts (mapMaybe toHomeLab) game
     let rooms = accessibleRooms game
-    print rooms
+    -- print rooms
     game <- pure $ stripRooms rooms game
 
     let (bank1, bank2) = usedMessages game
         words = usedWords game
-    print $ nub . sort $ bank1
-    print $ nub . sort $ bank2
+    -- print $ nub . sort $ bank1
+    -- print $ nub . sort $ bank2
 
     game <- pure $ stripMessages bank1 bank2 game
     game <- pure $ stripWords words game
