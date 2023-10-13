@@ -63,6 +63,11 @@ game = do
                 ld [moved] A
                 call runEnter
 
+            -- check player status
+            ld A [playerStatus]
+            cp 0
+            jp NZ gameOver
+
             call readLine
             -- call dbgPrintParseBuf
 
@@ -81,10 +86,22 @@ game = do
                 message1 2
                 jp loop
 
+            -- check health
+            skippable \healthy -> do
+                ld A [playerHealth]
+                cp 0
+                jp NZ healthy
+                ldVia A [playerStatus] 1
+
             -- call runAfter
             jp loop
 
-        loopForever $ pure ()
+        gameOver <- labelled do
+            -- `A` contains the player's status:
+            -- 1: Dead
+            -- 2: Won the game
+            message1 0x0c
+            loopForever $ pure ()
 
         -- Input one line of text (up to 38 characters), store result in [HL]
         -- Mangles `HL`, `A` and `B`
@@ -852,8 +869,8 @@ game = do
                 ret
 
             let opAddToCounter var = do
-                    ldVia A B [var]
-                    fetch A -- Value to add
+                    ld A [var]
+                    fetch B -- Value to add
                     add A B
                     skippable \noOverflow -> do
                         cp 99
@@ -866,15 +883,16 @@ game = do
             opAddScore <- labelled $ do
                 opAddToCounter playerScore
 
-            opHurt <- labelled do
-                ldVia A B [playerHealth]
-                fetch A -- Value to subtract
+            opHurt <- labelled mdo
+                ld A [playerHealth]
+                fetch B -- Value to subtract
                 skippable \noUnderflow -> do
                     cp B
                     jp NC noUnderflow
-                    ldVia A [playerHealth] 0
-                    jp runRatScript
+                    ld A 0
+                    jr done
                 sub B
+                done <- label
                 ld [playerHealth] A
                 jp runRatScript
 
