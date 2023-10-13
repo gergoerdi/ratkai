@@ -1,35 +1,35 @@
 -- -*- haskell -*-
-[ InputDispatch [0x33] -- úszik
+[ InputDispatch [0x33] -- "úszik"
     [ Message 2                      -- 02 02                -- "Nem teheted meg. "
     ]
-, InputDispatch [0x29] -- alszi
+, InputDispatch [0x29] -- "alszi"
     [ Message 20                     -- 02 14                -- "Nincs idő pihenésre! "
     ]
-, InputDispatch [0x28] -- vár  
+, InputDispatch [0x28] -- "vár"
     [ Message 22                     -- 02 16                -- "Telik az idő... "
     , Sleep 5                        -- 15 05
     ]
-, InputDispatch [0x1d] -- felad
+, InputDispatch [0x1d] -- "felad"
     [ SetPlayerStatus 255            -- 0d ff
     ]
-, InputDispatch [0x38, 0x09] -- ad    fel  
+, InputDispatch [0x38, 0x09] -- "ad fel"
     [ SetPlayerStatus 255            -- 0d ff
     ]
-, InputDispatch [0x15, 0x78] -- v     vödör
+, InputDispatch [0x15, 0x78] -- "v vödör"
     [ AssertHere 120 5               -- 08 78 05             -- "Nem látom itt azt a tárgyat. "
     , AssertFF 10 25                 -- 07 0a 19             -- "A vödör üres. "
     , Message 41                     -- 02 29                -- "Tele van vízzel. "
     ]
-, InputDispatch [0x36, 0x78] -- önt   vödör
+, InputDispatch [0x36, 0x78] -- "önt vödör"
     [ Skip 6                         -- 09 06
     ]
-, InputDispatch [0x36, 0xa9] -- önt   víz  
+, InputDispatch [0x36, 0xa9] -- "önt víz"
     [ AssertHere 120 2               -- 08 78 02             -- "Nem teheted meg. "
     , AssertFF 10 25                 -- 07 0a 19             -- "A vödör üres. "
     , Assign00 10                    -- 03 0a
     , Message 4                      -- 02 04                -- "OK. "
     ]
-, InputDispatch [0x43, 0x82] -- nyit  láda 
+, InputDispatch [0x43, 0x82] -- "nyit láda"
     [ AssertHere 130 6               -- 08 82 06             -- "Nincs nálad az a tárgy. "
     , Assert00 35 82                 -- 06 23 52             -- "Már megtetted. "
     , AssignFF 35                    -- 04 23
@@ -39,17 +39,17 @@
     , Assign00 131                   -- 03 83
     , Message 87                     -- 02 57                -- "Pénzt találtál benne! "
     ]
-, InputDispatch [0x44, 0x7d] -- visel gyűrű
+, InputDispatch [0x44, 0x7d] -- "visel gyűrű"
     [ Assert00 31 82                 -- 06 1f 52             -- "Már megtetted. "
     , Assert00 125 6                 -- 06 7d 06             -- "Nincs nálad az a tárgy. "
     , AssignFF 31                    -- 04 1f
     , AssignFF 125                   -- 04 7d
     , Message 4                      -- 02 04                -- "OK. "
     ]
-, InputDispatch [0x1e, 0x85] -- haszn füstb
+, InputDispatch [0x1e, 0x85] -- "haszn füstb"
     [ Skip 6                         -- 09 06
     ]
-, InputDispatch [0x0e, 0x85] -- f     füstb
+, InputDispatch [0x0e, 0x85] -- "f füstb"
     [ Assert00 133 6                 -- 06 85 06             -- "Nincs nálad az a tárgy. "
     , AssignFF 133                   -- 04 85
     , Message 95                     -- 02 5f                -- "Sűrű, fehér füst csap fel. "
@@ -59,7 +59,7 @@
     , AddScore 1                     -- 10 01
     , Chime 4                        -- 14 04
     ]
-, InputDispatch [0x47, 0x8e] -- eszik kígyó
+, InputDispatch [0x47, 0x8e] -- "eszik kígyó"
     [ AssertHere 142 6               -- 08 8e 06             -- "Nincs nálad az a tárgy. "
     , AssignFF 142                   -- 04 8e
     , Message 4                      -- 02 04                -- "OK. "
@@ -68,20 +68,20 @@
     , AddScore 1                     -- 10 01
     , Chime 13                       -- 14 0d
     ]
-, InputDispatch [0x47, 0x8b] -- eszik lepén
+, InputDispatch [0x47, 0x8b] -- "eszik lepén"
     [ AssertHere 139 6               -- 08 8b 06             -- "Nincs nálad az a tárgy. "
     , AssignFF 139                   -- 04 8b
     , Message 4                      -- 02 04                -- "OK. "
     , Heal 30                        -- 0e 1e
     , Message 102                    -- 02 66                -- "Nagyon finom. "
     ]
-, InputDispatch [0x4d, 0x91] -- csiná szigo
+, InputDispatch [0x4d, 0x91] -- "csiná szigo"
     [ Skip 8                         -- 09 08
     ]
-, InputDispatch [0x4e, 0x79, 0x66, 0x8a] -- köt   kés   |66| bot  
+, InputDispatch [0x4e, 0x79, 0x66, 0x8a] -- "köt kés |66| bot"
     [ Skip 10                        -- 09 0a
     ]
-, InputDispatch [0x4e, 0x79, 0x66, 0x8a, 0x6a, 0x8c] -- köt   kés   |66| bot   |6a| madza
+, InputDispatch [0x4e, 0x79, 0x66, 0x8a, 0x6a, 0x8c] -- "köt kés |66| bot |6a| madza"
     [ AssertHere 121 2               -- 08 79 02             -- "Nem teheted meg. "
     , AssertHere 138 2               -- 08 8a 02             -- "Nem teheted meg. "
     , AssertHere 140 2               -- 08 8c 02             -- "Nem teheted meg. "
@@ -93,7 +93,7 @@
     , Assign00 145                   -- 03 91
     , Chime 4                        -- 14 04
     ]
-, InputDispatch [0x49, 0x93] -- gyújt gyert
+, InputDispatch [0x49, 0x93] -- "gyújt gyert"
     [ AssertHere 147 6               -- 08 93 06             -- "Nincs nálad az a tárgy. "
     , AssertFF 54 2                  -- 07 36 02             -- "Nem teheted meg. "
     , AssertHere 148 2               -- 08 94 02             -- "Nem teheted meg. "
@@ -101,7 +101,7 @@
     , Assign00 54                    -- 03 36
     , Message 4                      -- 02 04                -- "OK. "
     ]
-, InputDispatch [0x49, 0x94] -- gyújt fákly
+, InputDispatch [0x49, 0x94] -- "gyújt fákly"
     [ AssertHere 148 6               -- 08 94 06             -- "Nincs nálad az a tárgy. "
     , Assert00 62 2                  -- 06 3e 02             -- "Nem teheted meg. "
     , AssertHere 147 2               -- 08 93 02             -- "Nem teheted meg. "
@@ -109,19 +109,19 @@
     , AssignFF 62                    -- 04 3e
     , Message 4                      -- 02 04                -- "OK. "
     ]
-, InputDispatch [0x4a, 0x93] -- elolt gyert
+, InputDispatch [0x4a, 0x93] -- "elolt gyert"
     [ AssertHere 147 6               -- 08 93 06             -- "Nincs nálad az a tárgy. "
     , Assert00 54 2                  -- 06 36 02             -- "Nem teheted meg. "
     , AssignFF 54                    -- 04 36
     , Message 4                      -- 02 04                -- "OK. "
     ]
-, InputDispatch [0x4a, 0x94] -- elolt fákly
+, InputDispatch [0x4a, 0x94] -- "elolt fákly"
     [ AssertHere 148 6               -- 08 94 06             -- "Nincs nálad az a tárgy. "
     , AssertFF 62 2                  -- 07 3e 02             -- "Nem teheted meg. "
     , Assign00 62                    -- 03 3e
     , Message 4                      -- 02 04                -- "OK. "
     ]
-, InputDispatch [0x0f, 0x84, 0x67, 0x87] -- rak   pirul |67| üveg 
+, InputDispatch [0x0f, 0x84, 0x67, 0x87] -- "rak pirul |67| üveg"
     [ AssertHere 132 6               -- 08 84 06             -- "Nincs nálad az a tárgy. "
     , AssertHere 135 6               -- 08 87 06             -- "Nincs nálad az a tárgy. "
     , AssignFF 132                   -- 04 84
@@ -130,40 +130,40 @@
     , Message 4                      -- 02 04                -- "OK. "
     , AssignFF 85                    -- 04 55
     ]
-, InputDispatch [0x49, 0x96] -- gyújt hordó
+, InputDispatch [0x49, 0x96] -- "gyújt hordó"
     [ Skip 6                         -- 09 06
     ]
-, InputDispatch [0x49, 0xc9] -- gyújt puska
+, InputDispatch [0x49, 0xc9] -- "gyújt puska"
     [ AssertHere 150 6               -- 08 96 06             -- "Nincs nálad az a tárgy. "
     , Assert00 148 2                 -- 06 94 02             -- "Nem teheted meg. "
     , Assert00 62 2                  -- 06 3e 02             -- "Nem teheted meg. "
     , SetPlayerStatus 255            -- 0d ff
     , Message 177                    -- 02 b1                -- "Booooommmmmm!!! "
     ]
-, InputDispatch [0x3c] -- fasz 
+, InputDispatch [0x3c] -- "fasz"
     [ Message 208                    -- 02 d0                -- "Te meg egy kétbalkezes, mocskosszájú, fantáziátlan, billentyűzetkoptató vagy!!! "
     ]
-, InputDispatch [0x55, 0x7e] -- olvas levél
+, InputDispatch [0x55, 0x7e] -- "olvas levél"
     [ AssertHere 126 6               -- 08 7e 06             -- "Nincs nálad az a tárgy. "
     , Message 209                    -- 02 d1                -- "Analfabéta vagy! "
     ]
-, InputDispatch [0x2b] -- üvölt
+, InputDispatch [0x2b] -- "üvölt"
     [ Message 110                    -- 02 6e                -- "Mi van? Szögbe léptél? "
     ]
-, InputDispatch [0x2a] -- ugrik
+, InputDispatch [0x2a] -- "ugrik"
     [ Message 210                    -- 02 d2                -- "Ugrándozás helyett inkább játszd végig ezt az adventure-t! "
     ]
-, InputDispatch [0x15, 0x96] -- v     hordó
+, InputDispatch [0x15, 0x96] -- "v hordó"
     [ AssertHere 150 6               -- 08 96 06             -- "Nincs nálad az a tárgy. "
     , Message 189                    -- 02 bd                -- "Puskaporos hordónak látszik. "
     ]
-, InputDispatch [0x54] -- bújik
+, InputDispatch [0x54] -- "bújik"
     [ Message 213                    -- 02 d5                -- "Ez nem segít! "
     ]
-, InputDispatch [0x56] -- miért
+, InputDispatch [0x56] -- "miért"
     [ Skip 6                         -- 09 06
     ]
-, InputDispatch [0x56, 0x57] -- miért nem  
+, InputDispatch [0x56, 0x57] -- "miért nem"
     [ Message 212                    -- 02 d4                -- "Csak! "
     ]
 ]

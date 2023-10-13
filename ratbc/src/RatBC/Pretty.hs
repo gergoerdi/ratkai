@@ -71,6 +71,9 @@ pprStmtExtra msgs = \case
 niceStmt :: Msgs -> Stmt -> Doc ann
 niceStmt msgs = fromMaybe mempty . pprStmtExtra msgs
 
+trimRight :: String -> String
+trimRight = reverse . dropWhile (== ' ') . reverse
+
 pprInputDispatch :: Dict -> Msgs -> InputDispatch [Stmt] -> Doc ann
 pprInputDispatch dict msgs (InputDispatch input stmts) = vcat
     [ hsep
@@ -81,8 +84,8 @@ pprInputDispatch dict msgs (InputDispatch input stmts) = vcat
     , indent 2 $ pprStmts msgs stmts
     ]
   where
-     pprWords bs = hsep
-       [ fromString $ head words
+     pprWords bs = dquotes $ hsep
+       [ fromString . trimRight $ head words
        | b <- bs
        , let words = fromMaybe [printf "|%02x|" b] $ M.lookup b dict
        ]
