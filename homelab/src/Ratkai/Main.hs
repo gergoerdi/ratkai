@@ -570,9 +570,18 @@ game = do
                     jp NZ skip
                     body
 
+            let finishWith :: (Load Reg8 msg) => Word16 -> msg -> Z80ASM
+                finishWith bank msg = do
+                    ld IX bank
+                    ld B msg
+                    jp finish
+
             builtin 0x0d do -- Look
                 ldVia A [moved] 1
                 ret
+
+            builtin 0x15 do -- Examine
+                finishWith text1 9
 
             builtin 0x10 mdo -- Inventory
                 ld D 0
@@ -607,12 +616,10 @@ game = do
 
                 -- Finally, all good
                 ld [IY] 0
-                message1 4
-                jr finish
+                finishWith text1 4
 
                 notHere <- labelled do
-                    message1 5
-                    jr finish
+                    finishWith text1 5
 
                 takeAll <- labelled mdo
                     ldVia A D [playerLoc]
@@ -623,13 +630,13 @@ game = do
                     ld A C
                     cp 0
                     jr Z noItems
-                    message1 4
-                    jr finish
+                    finishWith text1 4
 
                     noItems <- label
-                    message1 16
+                    finishWith text1 16
 
                 finish <- label
+                call printlnZ
                 setZ
                 ret
 
@@ -653,12 +660,10 @@ game = do
 
                 -- Finally, all good
                 ldVia A [IY] [playerLoc]
-                message1 4
-                jr finish
+                finishWith text1 4
 
                 notHere <- labelled do
-                    message1 6
-                    jr finish
+                    finishWith text1 6
 
                 dropAll <- labelled mdo
                     ldVia A D 0x00
@@ -669,22 +674,28 @@ game = do
                     ld A C
                     cp 0
                     jr Z noItems
-                    message1 4
-                    jr finish
+                    finishWith text1 4
 
                     noItems <- label
-                    message1 8
+                    finishWith text1 8
 
                 finish <- label
+                call printlnZ
                 setZ
                 ret
 
             ret
 
             notItem <- labelled do
-                message1 2
+                ld IX text1
+                ld B 2
+                -- Fall through to `finish`
+
+            finish <- labelled do
+                call printlnZ
                 setZ
                 ret
+
             pure ()
 
 
