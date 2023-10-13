@@ -52,6 +52,8 @@ game = do
         -- Clear screen
         ld A 0x0c
         rst 0x28
+        ld A 0x0d
+        rst 0x28
 
         call resetGameVars
 
@@ -64,6 +66,12 @@ game = do
                 dec A
                 jp NZ notMoved
                 ld [moved] A
+
+                when False do -- Clear screen for each new location?
+                    ld A 0x0c
+                    rst 0x28
+                    ld A 0x0d
+                    replicateM_ 3 $ rst 0x28
                 call runEnter
 
             -- check player status
