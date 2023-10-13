@@ -14,6 +14,12 @@ import Data.Word
 supportHelp :: Bool
 supportHelp = True
 
+supportUndo :: Bool
+supportUndo = False
+
+supportQSave :: Bool
+supportQSave = False
+
 game :: IO Z80ASM
 game = do
     let asset name = BS.readFile $ "/home/cactus/prog/c64/bosszu-disasm/ratbc/_out/hl2-ep1.strip/" </> name <.> "bin"
@@ -1002,7 +1008,7 @@ game = do
             playerHealth = gameVars + 0xfd
             playerStatus = gameVars + 0xfe
             playerLoc = gameVars + 0xff
-        savedVars <- labelled $ resb 256
-        undoVars <- labelled $ resb 256
+        savedVars <- labelled $ when supportQSave $ resb 256
+        undoVars <- labelled $ when supportUndo $ resb 256
         nop -- To see real memory usage instead of just image size
         pure ()
