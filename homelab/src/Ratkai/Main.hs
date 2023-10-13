@@ -11,6 +11,9 @@ import Control.Monad
 import System.FilePath
 import Data.Word
 
+supportHelp :: Bool
+supportHelp = True
+
 game :: IO Z80ASM
 game = do
     let asset name = BS.readFile $ "/home/cactus/prog/c64/bosszu-disasm/ratbc/_out/hl2-ep1.strip/" </> name <.> "bin"
@@ -583,6 +586,21 @@ game = do
             builtin 0x15 do -- Examine
                 finishWith text1 9
 
+            builtin 0x16 do -- Help
+                if not supportHelp then do
+                    finishWith text1 10
+                  else mdo
+                    ld D 0
+                    ldVia A E [playerLoc]
+                    ld HL help
+                    add HL DE
+                    ld A [HL]
+                    skippable \noHelp -> do
+                        cp 0
+                        jr Z noHelp
+                        finishWith text2 A
+                    finishWith text1 10
+
             builtin 0x10 mdo -- Inventory
                 ld D 0
                 call anyItemsAtD
@@ -968,7 +986,7 @@ game = do
         scriptAfter <- labelled $ db scriptAfter'
         scriptGlobal <- labelled $ db scriptGlobal'
         scriptLocal <-  labelled $ db scriptLocal'
-        help <- labelled $ db help'
+        help <- labelled $ when supportHelp $ db help'
         resetVars <- labelled $ db reset'
 
         moved <- labelled $ db [0]
