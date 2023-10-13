@@ -917,6 +917,15 @@ game = do
                 jp Z runRatScript
                 jp printlnZ
 
+            opSleep <- labelled do
+                fetch B
+                withLabel \loop -> do
+                    exx
+                    decLoopB 14 halt
+                    exx
+                    djnz loop
+                jp runRatScript
+
             let unimplemented n = labelled do
                     replicateM_ n $ inc IX
                     jp runRatScript
@@ -926,7 +935,6 @@ game = do
             opSpriteOn <- unsupported 5
             opSpriteOff <- unsupported 1
             opChime <- unsupported 1
-            opSleep <- unimplemented 1
             opMachineCode <- unimplemented 1 -- XXX
             opCopyProtection <- unsupported 4
 
