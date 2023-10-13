@@ -664,9 +664,7 @@ game = do
                 call anyItemsAtD
                 skippable \haveItems -> do
                     jr Z haveItems
-                    message1 8
-                    setZ
-                    ret
+                    finishWith text1 8
                 message1 7
                 call printItemsAtD
                 setZ
