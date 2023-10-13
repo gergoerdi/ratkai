@@ -43,27 +43,33 @@ pprStmt msgs (WhenFF val body) = vsep
   , indent 2 $ pprStmts msgs body
   ]
 pprStmt msgs stmt = hsep
-  [ fill 30 $ viaShow stmt
-  , "--"
-  , fill 20 $ pprBytes $ runPut $ put stmt
-  , niceStmt msgs stmt
-  ]
+    [ fill 30 $ viaShow stmt
+    , "--"
+    , case pprStmtExtra msgs stmt of
+          Nothing -> bytesDoc
+          Just extra -> fill 20 bytesDoc <+> extra
+    ]
+  where
+    bytesDoc = pprBytes $ runPut $ put stmt
 
 pprBytes :: BL.ByteString -> Doc ann
 pprBytes bs = hsep [ fromString $ printf "%02x" b | b <- BL.unpack bs ]
 
 pprMessage :: Msgs -> Val -> Doc ann
 pprMessage msgs msg
-  | inRange (bounds msgs) msg = "--" <+> fromString (msgs ! msg)
+  | inRange (bounds msgs) msg = "--" <+> dquotes (fromString (msgs ! msg))
   | otherwise = mempty
 
+pprStmtExtra :: Msgs -> Stmt -> Maybe (Doc ann)
+pprStmtExtra msgs = \case
+    Message msg -> Just $ pprMessage msgs msg
+    Assert00 _ msg -> Just $ pprMessage msgs msg
+    AssertFF _ msg -> Just $ pprMessage msgs msg
+    AssertHere _ msg -> Just $ pprMessage msgs msg
+    _ -> Nothing
+
 niceStmt :: Msgs -> Stmt -> Doc ann
-niceStmt msgs = \case
-    Message msg -> pprMessage msgs msg
-    Assert00 _ msg -> pprMessage msgs msg
-    AssertFF _ msg -> pprMessage msgs msg
-    AssertHere _ msg -> pprMessage msgs msg
-    _ -> mempty
+niceStmt msgs = fromMaybe mempty . pprStmtExtra msgs
 
 pprInputDispatch :: Dict -> Msgs -> InputDispatch [Stmt] -> Doc ann
 pprInputDispatch dict msgs (InputDispatch input stmts) = vcat
