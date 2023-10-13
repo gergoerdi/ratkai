@@ -454,7 +454,7 @@ game = do
                     pop DE
                     pop IX
                     jr printable
-                    symbols <- labelled $ db [0x3f, 0x27, 0x3a, 0x2d, 0x26, 0x21]
+                    symbols <- labelled $ db [0x3f, 0x27, 0x3a, 0x2d, 0x26, 0x21, 0x0c]
                     pure ()
                 pure ()
 
