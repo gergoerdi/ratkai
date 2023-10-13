@@ -11,6 +11,9 @@ import Control.Monad
 import System.FilePath
 import Data.Word
 
+release :: Bool
+release = False
+
 supportHelp :: Bool
 supportHelp = True
 
@@ -951,11 +954,12 @@ game = do
 
             opSleep <- labelled do
                 fetch B
-                withLabel \loop -> do
-                    exx
-                    decLoopB 14 halt
-                    exx
-                    djnz loop
+                when release do
+                    withLabel \loop -> do
+                        exx
+                        decLoopB 14 halt
+                        exx
+                        djnz loop
                 jp runRatScript
 
             let unimplemented n = labelled do
@@ -1068,5 +1072,5 @@ game = do
             playerLoc = gameVars + 0xff
         savedVars <- labelled $ when supportQSave $ resb 256
         undoVars <- labelled $ when supportUndo $ resb 256
-        nop -- To see real memory usage instead of just image size
+        unless release nop -- To see real memory usage instead of just image size
         pure ()
