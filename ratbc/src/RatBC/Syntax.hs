@@ -30,8 +30,8 @@ data Stmt
     | AssertFF Var Msg
     | AssertHere Var Msg
     | Skip Val
-    -- | If00 Var [Stmt]
-    -- | IfFF Var [Stmt]
+    | When00 Var [Stmt]
+    | WhenFF Var [Stmt]
     | If00 Var Val
     | IfFF Var Val
     | MoveTo Val
@@ -66,8 +66,8 @@ instance Binary Stmt where
         AssertFF var msg -> putWord8 0x07 *> put var *> put msg
         AssertHere var msg -> putWord8 0x08 *> put var *> put msg
         Skip len -> putWord8 0x09 *> put len
-        -- If00 var body -> putWord8 0x0a *> put var *> putBlock body
-        -- IfFF var body -> putWord8 0x0b *> put var *> putBlock body
+        When00 var body -> putWord8 0x0a *> put var *> putBlock body
+        WhenFF var body -> putWord8 0x0b *> put var *> putBlock body
         If00 var len -> putWord8 0x0a *> put var *> put len
         IfFF var len -> putWord8 0x0b *> put var *> put len
         MoveTo loc -> putWord8 0x0c *> put loc

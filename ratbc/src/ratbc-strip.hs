@@ -54,8 +54,8 @@ stripHomeLab = \case
     Sleep n -> Just $ Sleep $ min 10 n
     CopyProtection{} -> Nothing
     MachineCode addr _ -> Just $ MachineCode addr [0x60]
-    -- If00 var body -> If00 var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
-    -- IfFF var body -> IfFF var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
+    When00 var body -> When00 var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
+    WhenFF var body -> WhenFF var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
     s -> pure s
 
 transformStmts :: ([Stmt] -> [Stmt]) -> (Game Identity -> Game Identity)
@@ -89,6 +89,8 @@ usedMessages Game{..} = both (nub . sort) $ mconcat
         Assert00 _ msg -> [msg]
         AssertFF _ msg -> [msg]
         AssertHere _ msg -> [msg]
+        When00 _ body -> stmtsMessages body
+        WhenFF _ body -> stmtsMessages body
         _ -> []
 
 usedWords :: Game Identity -> [Val]

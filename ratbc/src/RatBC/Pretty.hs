@@ -34,6 +34,10 @@ pprStmts :: Msgs -> [Stmt] -> Doc ann
 pprStmts msgs = vlist . map (pprStmt msgs)
 
 pprStmt :: Msgs -> Stmt -> Doc ann
+pprStmt msgs (When00 val body) = vsep
+  [ "When00" <+> viaShow val
+  , indent 2 $ pprStmts msgs body
+  ]
 pprStmt msgs stmt = hsep
   [ fill 30 $ viaShow stmt
   , "--"
