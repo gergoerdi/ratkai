@@ -14,6 +14,9 @@ import Data.Word
 supportHelp :: Bool
 supportHelp = True
 
+supportScore :: Bool
+supportScore = True
+
 supportUndo :: Bool
 supportUndo = False
 
@@ -608,6 +611,27 @@ game = do
 
             builtin 0x15 do -- Examine
                 finishWith text1 9
+
+            when supportScore do
+                builtin 0x14 do -- Score
+                    -- TODO
+                    ret
+
+            when supportQSave do
+                forM_ [0x12, 0x1c] \op -> do -- Load
+                    builtin op do -- Load
+                        -- TODO
+                        ret
+
+                forM_ [0x13, 0x1b] \op -> do -- Save
+                    builtin op do
+                        -- TODO
+                        ret
+
+            when supportUndo do
+                builtin 0x1a do -- Undo
+                    -- TODO
+                    ret
 
             builtin 0x16 do -- Help
                 if not supportHelp then do
