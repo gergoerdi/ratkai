@@ -11,6 +11,7 @@ import qualified Data.ByteString as BS
 import Control.Monad
 import System.FilePath
 import Data.Word
+import Data.Char (ord)
 
 release :: Bool
 release = False
@@ -625,9 +626,41 @@ game = do
                 finishWith text1 9
 
             when supportScore do
-                builtin 0x14 do -- Score
-                    -- TODO
+                builtin 0x14 mdo -- Score
+                    let labelledString s = do
+                            l <- labelled $ db $ map (fromIntegral . ord) s
+                            pure (l, s)
+
+                    ld IY lbl1
+                    decLoopB (fromIntegral $ length s1) do
+                        ld A [IY]
+                        inc IY
+                        rst 0x28
+                    ld A [playerScore]
+                    call printBCDPercent
+
+                    ld IY lbl2
+                    decLoopB (fromIntegral $ length s2) do
+                        ld A [IY]
+                        inc IY
+                        rst 0x28
+                    ld A [playerHealth]
+                    call printBCDPercent
+                    ld A $ fromIntegral . ord $ '\r'
+                    rst 0x28
+                    setZ
                     ret
+
+                    (lbl1, s1) <- labelledString "PONTSZAM: "
+                    (lbl2, s2) <- labelledString "ERONLET:  "
+                    printBCDPercent <- labelled do
+                        call 0x01a5
+                        ld A $ fromIntegral . ord $ '%'
+                        rst 0x28
+                        ld A $ fromIntegral . ord $ '\r'
+                        rst 0x28
+                        ret
+                    pure ()
 
             when supportQSave do
                 forM_ [0x12, 0x1c] \op -> do -- Load
@@ -1023,7 +1056,7 @@ game = do
             ldir
 
             ldVia A [playerLoc] startRoom
-            ldVia A [playerHealth] 50
+            ldVia A [playerHealth] 0x50 -- in BCD!
             ret
 
         -- Pre: E is the variable's index
