@@ -51,7 +51,7 @@ stripHomeLab = \case
     SpriteOn{} -> Nothing
     SpriteOff{} -> Nothing
     Chime{} -> Nothing
-    Sleep{} -> Nothing
+    Sleep n -> Just $ Sleep $ min 10 n
     CopyProtection{} -> Nothing
     MachineCode addr _ -> Just $ MachineCode addr [0x60]
     -- If00 var body -> If00 var <$> let body' = mapMaybe stripHomeLab body in body' <$ guard (not . null $ body')
