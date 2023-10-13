@@ -115,6 +115,7 @@ zscii = go . concatMap (val . toUpper)
           | c == '-' = [1, 4]
           | c == '&' = [1, 5]
           | c == '!' = [1, 6]
+          | c == '\r' = [1, 7]
           | c == 'Á' = val 'A'
           | c == 'É' = val 'E'
           | c == 'Í' = val 'I'
