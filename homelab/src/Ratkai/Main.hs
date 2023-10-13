@@ -508,11 +508,11 @@ game = do
         -- Clobbers `IY`, `A`, `B`
         printItemsAtD <- labelled do
             ld IY $ gameVars + fromIntegral maxItem
-            decLoopB (maxItem - minItem) $ skippable \notCarried -> do
+            decLoopB (maxItem - minItem) $ skippable \next -> do
                 dec IY
                 ld A [IY]
                 cp D
-                jp NZ notCarried
+                jp NZ next
                 ld IX text2
                 push BC
                 ld A B
@@ -520,6 +520,20 @@ game = do
                 ld B A
                 call printlnZ
                 pop BC
+            ret
+
+        -- Move all items at location `D` to location `E`. `C` is number of items moved.
+        -- Clobbers `IY`, `A`, `B`
+        moveItemsDE <- labelled do
+            ld IY $ gameVars + fromIntegral maxItem
+            ld C 0
+            decLoopB (maxItem - minItem) $ skippable \next -> do
+                dec IY
+                ld A [IY]
+                cp D
+                jp NZ next
+                inc C
+                ld [IY] E
             ret
 
         -- Run "enter" script for current room
@@ -559,6 +573,7 @@ game = do
             builtin 0x0d do -- Look
                 ldVia A [moved] 1
                 ret
+
             builtin 0x10 mdo -- Inventory
                 ld D 0
                 call anyItemsAtD
@@ -571,6 +586,7 @@ game = do
                 call printItemsAtD
                 setZ
                 ret
+
             builtin 0x0e mdo -- Take
                 ld A [parseBuf + 1]
                 cp 0x00
@@ -578,16 +594,16 @@ game = do
 
                 -- Is it an item?
                 cp minItem
-                jr C notItem
+                jp C notItem
                 cp maxItem
-                jr NC notItem
+                jp NC notItem
 
                 -- Is it here?
                 ld E A
                 call varIY
                 ld A [playerLoc]
                 cp [IY]
-                jp NZ notHere
+                jr NZ notHere
 
                 -- Finally, all good
                 ld [IY] 0
@@ -598,12 +614,25 @@ game = do
                     message1 5
                     jr finish
 
-                takeAll <- label
-                message1 16
+                takeAll <- labelled mdo
+                    ldVia A D [playerLoc]
+                    ldVia A E 0x00
+                    call moveItemsDE
+
+                    -- Did we take anything after all?
+                    ld A C
+                    cp 0
+                    jr Z noItems
+                    message1 4
+                    jr finish
+
+                    noItems <- label
+                    message1 16
 
                 finish <- label
                 setZ
                 ret
+
             builtin 0x0f mdo -- Drop
                 ld A [parseBuf + 1]
                 cp 0x00
@@ -611,16 +640,16 @@ game = do
 
                 -- Is it an item?
                 cp minItem
-                jr C notItem
+                jp C notItem
                 cp maxItem
-                jr NC notItem
+                jp NC notItem
 
                 -- Does the player have it?
                 ld E A
                 call varIY
                 ld A 0
                 cp [IY]
-                jp NZ notHere
+                jr NZ notHere
 
                 -- Finally, all good
                 ldVia A [IY] [playerLoc]
@@ -631,8 +660,20 @@ game = do
                     message1 6
                     jr finish
 
-                dropAll <- label
-                message1 8
+                dropAll <- labelled mdo
+                    ldVia A D 0x00
+                    ldVia A E [playerLoc]
+                    call moveItemsDE
+
+                    -- Did we drop anything after all?
+                    ld A C
+                    cp 0
+                    jr Z noItems
+                    message1 4
+                    jr finish
+
+                    noItems <- label
+                    message1 8
 
                 finish <- label
                 setZ
