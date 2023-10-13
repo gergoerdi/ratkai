@@ -88,18 +88,20 @@ pprInputDispatch dict msgs (InputDispatch input stmts) = vcat
        ]
 
 pprGame :: Game Identity -> Game (Const (Doc ann))
-pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, helpMap, resetState} = game
-  { msgs1 = Const . pprMessages $ msgs1
-  , msgs2 = Const . pprMessages $ msgs2
-  , dict = Const . pprDict $ dict
-  , enterRoom = Const . perRoom (pprStmts msgs2) . runIdentity $ enterRoom
-  , afterTurn = Const $ pprStmts msgs1 . runIdentity $ afterTurn
-  , interactiveGlobal = Const $ vlist $ map (pprInputDispatch dict msgs1) . runIdentity $ interactiveGlobal
-  , interactiveLocal = Const . perRoom (vlist . map (pprInputDispatch dict msgs1)) . runIdentity $ interactiveLocal
-  , helpMap = Const . perRoom (pprHelp msgs2) . runIdentity $ helpMap
-  , resetState = Const . pprBytes . runIdentity $ resetState
-  }
+pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, helpMap, resetState} = mapGameF withEmacsHeader game'
   where
+    game' = game
+        { msgs1 = Const . pprMessages $ msgs1
+        , msgs2 = Const . pprMessages $ msgs2
+        , dict = Const . pprDict $ dict
+        , enterRoom = Const . perRoom (pprStmts msgs2) . runIdentity $ enterRoom
+        , afterTurn = Const $ pprStmts msgs1 . runIdentity $ afterTurn
+        , interactiveGlobal = Const $ vlist $ map (pprInputDispatch dict msgs1) . runIdentity $ interactiveGlobal
+        , interactiveLocal = Const . perRoom (vlist . map (pprInputDispatch dict msgs1)) . runIdentity $ interactiveLocal
+        , helpMap = Const . perRoom (pprHelp msgs2) . runIdentity $ helpMap
+        , resetState = Const . pprBytes . runIdentity $ resetState
+        }
+
     msgs1 = runIdentity $ Game.msgs1 game
     msgs2 = runIdentity $ Game.msgs2 game
     dict = runIdentity $ Game.dict game
@@ -128,3 +130,6 @@ pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, hel
 
     pprBytes :: BL.ByteString -> Doc ann
     pprBytes bs = list [fromString (printf "0x%02x" b) | b <- BL.unpack bs]
+
+    withEmacsHeader :: Const (Doc ann) a -> Const (Doc ann) a
+    withEmacsHeader = Const . (("-- -*- haskell -*-" <> line) <>) . getConst

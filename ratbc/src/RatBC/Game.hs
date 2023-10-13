@@ -1,4 +1,4 @@
-{-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE RecordWildCards, RankNTypes #-}
 module RatBC.Game where
 
 import RatBC.Utils
@@ -31,8 +31,21 @@ data Game f = Game
 
 mapStmts :: ([Stmt] -> [Stmt]) -> Game Identity -> Game Identity
 mapStmts f game@Game{..} = game
-  { enterRoom = fmap (fmap f) enterRoom
-  , afterTurn = fmap f afterTurn
-  , interactiveGlobal = fmap (fmap (fmap f)) interactiveGlobal
-  , interactiveLocal = fmap (fmap (fmap (fmap f))) interactiveLocal
-  }
+    { enterRoom = fmap (fmap f) enterRoom
+    , afterTurn = fmap f afterTurn
+    , interactiveGlobal = fmap (fmap (fmap f)) interactiveGlobal
+    , interactiveLocal = fmap (fmap (fmap (fmap f))) interactiveLocal
+    }
+
+mapGameF :: (forall a. f a -> g a) -> Game f -> Game g
+mapGameF f game@Game{..} = game
+    { msgs1 = f msgs1
+    , msgs2 = f msgs2
+    , dict = f dict
+    , enterRoom = f enterRoom
+    , afterTurn = f afterTurn
+    , interactiveGlobal = f interactiveGlobal
+    , interactiveLocal = f interactiveLocal
+    , resetState = f resetState
+    , helpMap = f helpMap
+    }
