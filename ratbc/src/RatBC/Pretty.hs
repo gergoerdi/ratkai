@@ -63,6 +63,7 @@ pprMessage msgs msg
 pprStmtExtra :: Msgs -> Stmt -> Maybe (Doc ann)
 pprStmtExtra msgs = \case
     Message msg -> Just $ pprMessage msgs msg
+    CompactMessage msg -> Just $ pprMessage msgs msg
     Assert00 _ msg -> Just $ pprMessage msgs msg
     AssertFF _ msg -> Just $ pprMessage msgs msg
     AssertHere _ msg -> Just $ pprMessage msgs msg
