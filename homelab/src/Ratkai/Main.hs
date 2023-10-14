@@ -190,8 +190,9 @@ game = do
 
             -- Clear out `parseBuf`
             ld IY parseBuf
+            ld A 0x00
             decLoopB 5 do
-                ldVia A [IY] 0x00
+                ld [IY] A
                 inc IY
 
             -- Parse up to 5 words from inputBuf into parseBuf
@@ -199,9 +200,9 @@ game = do
             ld IY parseBuf
             skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
                 -- Skip all leading spaces
+                ld A 0x20
                 skippable \end -> loopForever do
-                    ld A [HL]
-                    cp 0x20
+                    cp [HL]
                     jp NZ end
                     inc HL
 
@@ -981,15 +982,15 @@ game = do
                     replicateM_ n $ inc IX
                     jp runRatScript
 
-                unsupported :: Int -> Z80 Location
-                unsupported n = pure 0x0000
+                unsupported :: Z80 Location
+                unsupported = pure 0x0000
 
-            opSetScreen <- unsupported 3
-            opSpriteOn <- unsupported 5
-            opSpriteOff <- unsupported 1
-            opChime <- unsupported 1
-            opMachineCode <- unimplemented 1 -- XXX
-            opCopyProtection <- unsupported 4
+            opSetScreen <- unsupported
+            opSpriteOn <- unsupported
+            opSpriteOff <- unsupported
+            opChime <- unsupported
+            opMachineCode <- unsupported
+            opCopyProtection <- unsupported
 
             opTable <- labelled $ dw
                 [ opRet             -- 00
