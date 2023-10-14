@@ -14,7 +14,7 @@ import Text.Printf
 
 main :: IO ()
 main = do
-    emit "_build/ratkai" . org 20000 =<< Ratkai.game
+    emit "_build/ratkai" . org 16700 =<< Ratkai.game
 
 emit :: String -> ASMBlock -> IO ()
 emit name block = do

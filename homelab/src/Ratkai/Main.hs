@@ -30,7 +30,8 @@ supportQSave = False
 
 game :: IO Z80ASM
 game = do
-    let asset name = BS.readFile $ "/home/cactus/prog/c64/bosszu-disasm/ratbc/_out/hl2-ep1.strip/" </> name <.> "bin"
+    -- let asset name = BS.readFile $ "/home/cactus/prog/c64/bosszu-disasm/ratbc/_out/hl2-ep1.strip2/" </> name <.> "bin"
+    let asset name = BS.readFile $ "/home/cactus/prog/c64/bosszu-disasm/ratbc/_out/bosszu.hl2/" </> name <.> "bin"
     text1' <- asset "text1"
     text2' <- asset "text2"
     dict' <- asset "dict"
