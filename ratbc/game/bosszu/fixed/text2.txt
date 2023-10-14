@@ -6,7 +6,7 @@
 , (5   ,"Egy lerombolt faluban vagy egy leégett ház előtt. Utak indulnak északra és délre. ")
 , (6   ,"Üszkös romok között állsz. Felismered, hogy ez apád háza... ez volt apád háza... Egy sötét nyílást látsz a padlón. Az egykori kijárat keletre van. ")
 , (7   ,"A pincében vagy. ")
-, (8   ,"Egy napfényes úton gyalogolsz valahol Japánban. Gátak és rizsföldek vannak körülötted. Keskeny utak indulnak minden irányba. ")
+, (8   ,"Egy napfényes úton gyalogolsz valahol Japánban. Gátak és rizsföldek vannak körülötted. A keskeny út északkeletre és délre vezet. ")
 , (9   ,"Egy kisváros főutcáján vagy. Az utca észak felé folytatódik. Kisebb utca vezet nyugatra a piachoz. Egy hatalmas kaput látsz kelet felé. ")
 , (10  ,"Egy nagy kapu előtt állsz. Az út nyugat felé vezet. ")
 , (11  ,"A piacon vagy. Csak kelet felé hagyhatod el a teret. ")

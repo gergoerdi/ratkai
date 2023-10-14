@@ -108,7 +108,7 @@
       [ Message 199                    -- 02 c7                -- "Milyen szörnyű látvány! "
       ]
   , InputDispatch [0x01] -- "é"
-      [ MoveTo 8                       -- 0c 08
+      [ MoveTo 13                       -- 0c 08
       ]
   , InputDispatch [0x0b] -- "be"
       [ Skip 6                         -- 09 06
@@ -185,159 +185,21 @@
       ]
   ]
 , -- ROOM 8
-  [ InputDispatch [0x01] -- "é"
-      [ MoveTo 9                       -- 0c 09
-      ]
-  , InputDispatch [0x02] -- "ék"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x03] -- "k"
-      [ MoveTo 10                      -- 0c 0a
-      ]
-  , InputDispatch [0x04] -- "dk"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x05] -- "d"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x06] -- "dny"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x07] -- "ny"
-      [ MoveTo 5                       -- 0c 05
-      ]
-  , InputDispatch [0x08] -- "ény"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  ]
+  []
 , -- ROOM 9
-  [ InputDispatch [0x01] -- "é"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x02] -- "ék"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x03] -- "k"
-      [ MoveTo 10                      -- 0c 0a
-      ]
-  , InputDispatch [0x04] -- "dk"
-      [ MoveTo 10                      -- 0c 0a
-      ]
-  , InputDispatch [0x05] -- "d"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x06] -- "dny"
-      [ MoveTo 8                       -- 0c 08
-      ]
-  , InputDispatch [0x07] -- "ny"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x08] -- "ény"
-      [ MoveTo 10                      -- 0c 0a
-      ]
-  ]
+  []
 , -- ROOM 10
-  [ InputDispatch [0x01] -- "é"
-      [ MoveTo 14                      -- 0c 0e
-      ]
-  , InputDispatch [0x02] -- "ék"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x03] -- "k"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x04] -- "dk"
-      [ MoveTo 10                      -- 0c 0a
-      ]
-  , InputDispatch [0x05] -- "d"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x06] -- "dny"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x07] -- "ny"
-      [ MoveTo 9                       -- 0c 09
-      ]
-  , InputDispatch [0x08] -- "ény"
-      [ MoveTo 13                      -- 0c 0d
-      ]
-  ]
+  []
 , -- ROOM 11
-  [ InputDispatch [0x01] -- "é"
-      [ MoveTo 13                      -- 0c 0d
-      ]
-  , InputDispatch [0x02] -- "ék"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x03] -- "k"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x04] -- "dk"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x05] -- "d"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x06] -- "dny"
-      [ MoveTo 10                      -- 0c 0a
-      ]
-  , InputDispatch [0x07] -- "ny"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x08] -- "ény"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  ]
+  []
 , -- ROOM 12
-  [ InputDispatch [0x01] -- "é"
-      [ MoveTo 9                       -- 0c 09
-      ]
-  , InputDispatch [0x02] -- "ék"
-      [ MoveTo 14                      -- 0c 0e
-      ]
-  , InputDispatch [0x03] -- "k"
-      [ MoveTo 13                      -- 0c 0d
-      ]
-  , InputDispatch [0x04] -- "dk"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x05] -- "d"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x06] -- "dny"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x07] -- "ny"
-      [ MoveTo 8                       -- 0c 08
-      ]
-  , InputDispatch [0x08] -- "ény"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  ]
+  []
 , -- ROOM 13
-  [ InputDispatch [0x01] -- "é"
-      [ MoveTo 11                      -- 0c 0b
+  [ InputDispatch [0x05] -- "d"
+      [ MoveTo 5                      -- 0c 0b
       ]
   , InputDispatch [0x02] -- "ék"
-      [ MoveTo 12                      -- 0c 0c
-      ]
-  , InputDispatch [0x03] -- "k"
-      [ MoveTo 10                      -- 0c 0a
-      ]
-  , InputDispatch [0x04] -- "dk"
-      [ MoveTo 8                       -- 0c 08
-      ]
-  , InputDispatch [0x05] -- "d"
-      [ MoveTo 9                       -- 0c 09
-      ]
-  , InputDispatch [0x06] -- "dny"
-      [ MoveTo 11                      -- 0c 0b
-      ]
-  , InputDispatch [0x07] -- "ny"
-      [ MoveTo 8                       -- 0c 08
-      ]
-  , InputDispatch [0x08] -- "ény"
-      [ MoveTo 8                       -- 0c 08
+      [ MoveTo 14                      -- 0c 0c
       ]
   , InputDispatch [0x37, 0x66, 0xa1] -- "beszé |66| ember"
       [ Skip 7                         -- 09 07
@@ -372,7 +234,7 @@
       [ MoveTo 15                      -- 0c 0f
       ]
   , InputDispatch [0x05] -- "d"
-      [ MoveTo 9                       -- 0c 09
+      [ MoveTo 13                       -- 0c 09
       ]
   , InputDispatch [0x07] -- "ny"
       [ MoveTo 16                      -- 0c 10
