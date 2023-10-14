@@ -218,4 +218,5 @@
 , (217 ,"- Te egy igazi hős vagy! ")
 , (218 ,"Ez egy vitorlás bárka... ")
 , (219 ,"Keményebben! ")
+, (220 ,"Majd a második részben!")
 ]

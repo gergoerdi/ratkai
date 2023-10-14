@@ -285,21 +285,6 @@
       , SetPlayerStatus 255            -- 0d ff
       , Chime 2                        -- 14 02
       ]
-  , InputDispatch [0x39] -- "késse"
-      [ Skip 6                         -- 09 06
-      ]
-  , InputDispatch [0x39, 0xb1] -- "késse magam"
-      [ AssertFF 7 2                   -- 07 07 02             -- "Nem teheted meg. "
-      , Message 4                      -- 02 04                -- "OK. "
-      , Message 40                     -- 02 28                -- "A katonák elfognak. "
-      , Chime 2                        -- 14 02
-      , Sleep 5                        -- 15 05
-      , MoveTo 60                      -- 0c 3c
-      , AddScore 2                     -- 10 02
-      , Assign00 63                    -- 03 3f
-      , Chime 9                        -- 14 09
-      , MachineCode 20 [160,120,185,0,32,208,5,169,95,153,0,32,200,192,160,208,241,96] -- 17 a0 78 b9 00 20 d0 05 a9 5f 99 00 20 c8 c0 a0 d0 f1 60
-      ]
   ]
 , -- ROOM 17
   [ InputDispatch [0x05] -- "d"
@@ -890,7 +875,7 @@
       [ MoveTo 36                      -- 0c 24
       ]
   , InputDispatch [0x02] -- "ék"
-      [ MoveTo 39                      -- 0c 27
+      [ Message 220                      -- 0c 27
       ]
   , InputDispatch [0x08] -- "ény"
       [ MoveTo 40                      -- 0c 28
@@ -2189,17 +2174,14 @@
       ]
   ]
 , -- ROOM 85
-  [ InputDispatch [0x07] -- "ny"
-      [ MoveTo 84                      -- 0c 54
-      ]
+  [ -- This room immediately kills the player upon entering, so no point in storing scripts for it.
   ]
 , -- ROOM 86
   [ InputDispatch [0x01] -- "é"
       [ MoveTo 84                      -- 0c 54
       ]
   , InputDispatch [0x05] -- "d"
-      [ AssertFF 73 148                -- 07 49 94             -- "Megállítanak. "
-      , MoveTo 88                      -- 0c 58
+      [ Message 148
       ]
   , InputDispatch [0x2c, 0xae] -- "öl őr"
       [ Assert00 73 2                  -- 06 49 02             -- "Nem teheted meg. "
@@ -2225,11 +2207,7 @@
       [ Skip 8                         -- 09 08
       ]
   , InputDispatch [0x51, 0x92, 0x67, 0xcd] -- "berak hatsz |67| rés"
-      [ CopyProtection 90 3 192 83     -- 18 5a 03 c0 53
-      , AssertHere 146 6               -- 08 92 06             -- "Nincs nálad az a tárgy. "
-      , Message 181                    -- 02 b5                -- "Oh! Ez egy titkos forgóajtó! "
-      , MoveTo 93                      -- 0c 5d
-      , Chime 4                        -- 14 04
+      [ Message 6
       ]
   ]
 , -- ROOM 88
@@ -2253,16 +2231,10 @@
   ]
 , -- ROOM 89
   [ InputDispatch [0x01] -- "é"
-      [ IfFF 19 4                      -- 0b 13 07
-      , MoveTo 88                      -- 0c 58
-      , Ret                            -- 00
-      , MoveTo 87                      -- 0c 57
+      [ MoveTo 87                      -- 0c 57
       ]
   , InputDispatch [0x07] -- "ny"
-      [ IfFF 19 4                      -- 0b 13 04
-      , MoveTo 88                      -- 0c 58
-      , Ret                            -- 00
-      , Message 182                    -- 02 b6                -- "Őrök jelennek meg és megölnek... "
+      [ Message 182                    -- 02 b6                -- "Őrök jelennek meg és megölnek... "
       , AssignFF 7                     -- 04 07
       , Sleep 5                        -- 15 05
       , Message 183                    -- 02 b7                -- "... vagy mégsem? "
