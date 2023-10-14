@@ -201,7 +201,7 @@
 , (200 ,"Próbálj átjutni rajta! ")
 , (201 ,"Túl magas! ")
 , (202 ,"Lehet, hogy fel tudsz mászni... de lehet, hogy nem... ")
-, (203 ,"Magas és erős. ")
+, (203 ,"Magas és erős. Egy tömzsi fa áll mellette. ")
 , (204 ,"Azt hiszem egy hajó sokkal kényelmeseb lenne! ")
 , (205 ,"Hé! Ez a tenger! ")
 , (206 ,"Nem láttál még tengerpartot? ")
