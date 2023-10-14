@@ -80,16 +80,17 @@ pprInputDispatch dict msgs (InputDispatch input stmts) = vcat
     [ hsep
       [ fill 20 $ "InputDispatch" <+> list (map (fromString . printf "0x%02x") input)
       , "--"
-      , pprWords input
+      , dquotes $ pprWords dict input
       ]
     , indent 2 $ pprStmts msgs stmts
     ]
-  where
-     pprWords bs = dquotes $ hsep
-       [ fromString . trimRight $ head words
-       | b <- bs
-       , let words = fromMaybe [printf "|%02x|" b] $ M.lookup b dict
-       ]
+
+pprWords :: Dict -> [Word8] -> Doc ann
+pprWords dict bs = hsep
+    [ fromString . trimRight $ head words
+    | b <- bs
+    , let words = fromMaybe [printf "|%02x|" b] $ M.lookup b dict
+    ]
 
 pprGame :: Game Identity -> Game (Const (Doc ann))
 pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, helpMap, resetState} = mapGameF withEmacsHeader game'

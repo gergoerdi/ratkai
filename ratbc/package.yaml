@@ -18,6 +18,8 @@ dependencies:
   - prettyprinter
   - array
   - mtl
+  - fgl
+  - graphviz
 
 source-dirs:
   - src

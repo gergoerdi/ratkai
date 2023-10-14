@@ -12,6 +12,10 @@ import RatBC.Pretty
 import RatBC.Game
 import RatBC.Game.Text
 
+import RatBC.Map
+import Data.GraphViz
+import Data.GraphViz.Commands.IO
+
 import Options.Applicative
 import System.Directory
 import System.FilePath
@@ -30,6 +34,8 @@ main = do
     game <- pure $ if block then mapStmts restoreBlocks game else game
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
+
+    writeDotFile (outputPath </> "map.dot") $ roomDot game
 
 options :: Parser Options
 options = do

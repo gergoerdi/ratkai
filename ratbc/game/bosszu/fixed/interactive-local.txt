@@ -2389,7 +2389,9 @@
   ]
 , -- ROOM 89
   [ InputDispatch [0x01] -- "é"
-      [ IfFF 19 7                      -- 0b 13 07
+      [ IfFF 19 4                      -- 0b 13 07
+      , MoveTo 88                      -- 0c 58
+      , Ret                            -- 00
       , MoveTo 87                      -- 0c 57
       ]
   , InputDispatch [0x07] -- "ny"

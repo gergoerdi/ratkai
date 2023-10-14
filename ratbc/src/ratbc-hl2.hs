@@ -13,6 +13,7 @@ import RatBC.Game
 import RatBC.Game.Text
 import RatBC.Game.ToHL
 
+import Options.Applicative
 import Control.Monad.State
 import Data.Functor.Const
 import Control.Monad.Identity
@@ -27,7 +28,6 @@ import Data.Bits
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as M
 import qualified Data.Set as S
-import Options.Applicative
 import Control.Monad
 import Data.List.Split
 import Data.List (nub, sort)
@@ -39,6 +39,9 @@ import Data.Char
 import System.Directory
 import System.FilePath
 import Data.Foldable (toList)
+import RatBC.Map
+import Data.GraphViz
+import Data.GraphViz.Commands.IO
 
 data Options = Options
     { inputPath :: FilePath
@@ -188,6 +191,7 @@ main = do
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
     writeHLFiles outputPath game
+    writeDotFile (outputPath </> "map.dot") $ roomDot game
 
 options :: Parser Options
 options = do
