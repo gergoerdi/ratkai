@@ -29,13 +29,18 @@ data Game f = Game
     , startRoom :: Word8
     }
 
-mapStmts :: ([Stmt] -> [Stmt]) -> Game Identity -> Game Identity
+data Bank = Bank1 | Bank2
+
+mapStmts :: (Bank -> [Stmt] -> [Stmt]) -> Game Identity -> Game Identity
 mapStmts f game@Game{..} = game
-    { enterRoom = fmap (fmap f) enterRoom
-    , afterTurn = fmap f afterTurn
-    , interactiveGlobal = fmap (fmap (fmap f)) interactiveGlobal
-    , interactiveLocal = fmap (fmap (fmap (fmap f))) interactiveLocal
+    { enterRoom = fmap (fmap (f Bank2)) enterRoom
+    , afterTurn = fmap (f Bank1) afterTurn
+    , interactiveGlobal = fmap (fmap (fmap (f Bank1))) interactiveGlobal
+    , interactiveLocal = fmap (fmap (fmap (fmap (f Bank1)))) interactiveLocal
     }
+
+mapStmt :: (Bank -> Stmt -> Stmt) -> Game Identity -> Game Identity
+mapStmt f = mapStmts (\bank -> map (f bank))
 
 mapGameF :: (forall a. f a -> g a) -> Game f -> Game g
 mapGameF f game@Game{..} = game

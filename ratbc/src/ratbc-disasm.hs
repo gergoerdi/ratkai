@@ -33,7 +33,7 @@ main = do
     bs <- pure $ BL.drop 2 bs
 
     let game = fromImage bs
-    game <- pure $ if block then mapStmts restoreBlocks game else game
+    game <- pure $ if block then mapStmts (\_ -> restoreBlocks) game else game
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game

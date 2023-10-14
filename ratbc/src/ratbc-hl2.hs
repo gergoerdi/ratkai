@@ -17,7 +17,8 @@ import Options.Applicative
 import Control.Monad.State
 import Data.Functor.Const
 import Control.Monad.Identity
-import Data.Array (Array, listArray, elems, assocs, bounds, (!))
+import Data.Array (Array, array, listArray, elems, assocs, bounds, (!), indices)
+import Data.Ix (Ix(..))
 import Prettyprinter
 import Prettyprinter.Render.String
 import Data.String
@@ -133,11 +134,26 @@ accessibleRooms Game{..} = S.toList $ flip execState mempty $ do
             mapM_ walkStmt stmts
 
 stripMessages :: [Val] -> [Val] -> Game Identity -> Game Identity
-stripMessages bank1 bank2 game@Game{..} = game
-    { msgs1 = fmap (onlyKeep bank1) msgs1
+stripMessages bank1 bank2 game@Game{..} = mapStmt remap $ game
+    { msgs1 = fmap (compactArray gc1) msgs1
     , msgs2 = fmap (onlyKeep bank2) msgs2
     }
   where
+    gc1@(_, remap1) = gcArray (bounds $ runIdentity msgs1) bank1
+
+    remap Bank2 = id
+    remap Bank1 = \case
+        Message msg -> Message $ f msg
+        CompactMessage msg -> CompactMessage $ f msg
+        Assert00 var msg -> Assert00 var $ f msg
+        AssertFF var msg -> AssertFF var $ f msg
+        AssertHere var msg -> AssertHere var $ f msg
+        When00 var body -> When00 var $ remap Bank1 <$> body
+        WhenFF var body -> WhenFF var $ remap Bank1 <$> body
+        stmt -> stmt
+      where
+        f msg = fromMaybe (error "Message GC screwed up") $ remap1 msg
+
     onlyKeep bank msgs = listArray (bounds msgs)
       [ if i `elem` bank then trimRight s else mempty | (i, s) <- assocs msgs ]
 
@@ -147,14 +163,32 @@ stripWords words game@Game{..} = game
     }
 
 stripRooms :: [Val] -> Game Identity -> Game Identity
-stripRooms rooms game@Game{..} = game
-    { enterRoom = fmap strip enterRoom
-    , interactiveLocal = fmap strip interactiveLocal
+stripRooms rooms game@Game{..} = mapStmt remap $ game
+    { enterRoom = fmap (compactArray gc) enterRoom
+    , interactiveLocal = fmap (compactArray gc) interactiveLocal
+    , helpMap = fmap (compactArray gc) helpMap
     }
   where
-    strip :: (Monoid a) => ByRoom a -> ByRoom a
-    strip xs = listArray (bounds xs)
-      [ if i `elem` rooms then x else mempty | (i, x) <- assocs xs ]
+    gc@(_, remapRoom) = gcArray (bounds . runIdentity $ enterRoom) rooms
+
+    remap bank = \case
+        MoveTo room -> MoveTo $ fromMaybe (error "Room GC screwed up") $ remapRoom room
+        When00 var body -> When00 var $ remap bank <$> body
+        WhenFF var body -> WhenFF var $ remap bank <$> body
+        stmt -> stmt
+
+gcArray :: (Ix i, Enum i) => (i, i) -> [i] -> ((i, i), (i -> Maybe i))
+gcArray bounds@(from, _) keep = (bounds', flip M.lookup mapping)
+  where
+    ranks = zip (sort keep) [from..]
+    bounds' = (from, snd . last $ ranks)
+    mapping = M.fromList ranks
+
+compactArray :: (Ix i) => ((i, i), (i -> Maybe i)) -> Array i a -> Array i a
+compactArray (bounds', mapping) xs = array bounds'
+    [ (i', xs ! i)
+    | i <- indices xs, Just i' <- pure (mapping i)
+    ]
 
 stripInteractive :: Game Identity -> Game Identity
 stripInteractive game@Game{..} = game
@@ -172,7 +206,7 @@ main = do
     opts@Options{..} <- execParser optionsInfo
 
     game <- loadTextFiles inputPath
-    game <- pure $ if block then mapStmts restoreBlocks game else game
+    game <- pure $ if block then mapStmts (\_ -> restoreBlocks) game else game
 
     game <- pure $ transformStmts (mapMaybe toHomeLab) game
     let rooms = accessibleRooms game

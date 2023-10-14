@@ -31,7 +31,7 @@ main = do
     opts@Options{..} <- execParser optionsInfo
 
     game <- loadTextFiles inputPath
-    game <- pure $ if block then mapStmts restoreBlocks game else game
+    game <- pure $ if block then mapStmts (\_ -> restoreBlocks) game else game
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
 
