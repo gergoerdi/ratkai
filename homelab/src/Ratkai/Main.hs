@@ -55,13 +55,17 @@ game = do
         videoOff = ld [0x3e00] A
 
     pure $ mdo
+        ldVia A [gameVars] 0x00
+
+        call resetGameVars
+
+        newGame <- label
+
         -- Clear screen
         ld A 0x0c
         rst 0x28
         ld A 0x0d
         rst 0x28
-
-        call resetGameVars
 
         ldVia A [shiftState] 0
         ldVia A [moved] 1
@@ -117,8 +121,22 @@ game = do
             -- `A` contains the player's status:
             -- 1: Dead
             -- 2: Won the game
-            message1 0x0c
-            loopForever $ pure ()
+            skippable \notDead -> do
+                cp 254
+                jp Z notDead
+                message1 0x0c
+
+            message1 13
+
+            withLabel \loop -> do
+                rst 0x18
+                cp 0x0d
+                jp NZ loop
+
+            call resetGameVars
+            ldVia A [gameVars + 1] 0xff
+
+            jp newGame
 
         -- Input one line of text (up to 38 characters), store result in [HL]
         -- Mangles `HL`, `A` and `B`
