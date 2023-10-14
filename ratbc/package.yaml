@@ -20,6 +20,7 @@ dependencies:
   - mtl
   - fgl
   - graphviz
+  - rev-state
 
 source-dirs:
   - src

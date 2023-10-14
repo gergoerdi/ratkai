@@ -8,6 +8,8 @@ import RatBC.Text
 import RatBC.Game
 
 import Control.Monad.Identity
+import Control.Monad.RevState hiding (put)
+import qualified Control.Monad.RevState as RSt
 import Data.Functor.Const
 import Data.Array (Array, elems)
 import Data.Binary
@@ -19,6 +21,33 @@ import Data.Char
 import System.FilePath
 import Text.Printf
 import Data.Foldable (traverse_)
+
+fixupSkips :: Game Identity -> Game Identity
+fixupSkips game@Game{..} = game
+    { enterRoom = fmap (fmap assertNoSkips) enterRoom
+    , afterTurn = fmap assertNoSkips afterTurn
+    , interactiveGlobal = fmap fixupGlobal interactiveGlobal
+    , interactiveLocal = fmap fixupLocal interactiveLocal
+    }
+  where
+    fixupGlobal = flip evalState (error "invalid skip in global") . reskipRoom
+    fixupLocal = flip evalState (error "invalid skip in local") . traverse reskipRoom
+
+    reskip :: InputDispatch [Stmt] -> State Word8 (InputDispatch [Stmt])
+    reskip (InputDispatch input action) = InputDispatch input <$> do
+            RSt.put $ fromIntegral (length input) + 3
+            action' <- case reverse action of
+                Skip{}:action' -> do
+                    skipToNext <- RSt.get
+                    pure $ reverse $ Skip skipToNext : map assertNoSkip action'
+                _ -> pure $ map assertNoSkip action
+            pure action'
+
+    reskipRoom :: [InputDispatch [Stmt]] -> State Word8 [InputDispatch [Stmt]]
+    reskipRoom room = do
+        room' <- traverse reskip room
+        modify (+ 2)
+        pure room'
 
 assemble :: Game Identity -> Game (Const BL.ByteString)
 assemble game@Game{..} = game
@@ -75,6 +104,16 @@ ensureRet stmts = case reverse stmts of
     MoveTo{}:_ -> stmts
     Skip{}:_ -> stmts
     stmts' -> reverse (Ret : stmts')
+
+assertNoSkip :: Stmt -> Stmt
+assertNoSkip = \case
+    Skip{} -> error "Skip"
+    When00 var body -> When00 var $ assertNoSkips body
+    WhenFF var body -> WhenFF var $ assertNoSkips body
+    stmt -> stmt
+
+assertNoSkips :: [Stmt] -> [Stmt]
+assertNoSkips = map assertNoSkip
 
 writeHLFiles :: FilePath -> Game Identity -> IO ()
 writeHLFiles outputPath game = do

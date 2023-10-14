@@ -221,6 +221,7 @@ main = do
     game <- pure $ stripMessages bank1 bank2 game
     game <- pure $ stripWords words game
     game <- pure $ stripInteractive game
+    game <- pure $ fixupSkips game
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
