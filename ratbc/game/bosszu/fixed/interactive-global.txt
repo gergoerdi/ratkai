@@ -140,9 +140,9 @@
     , SetPlayerStatus 255            -- 0d ff
     , Message 177                    -- 02 b1                -- "Booooommmmmm!!! "
     ]
-, InputDispatch [0x3c] -- "fasz"
-    [ Message 208                    -- 02 d0                -- "Te meg egy kétbalkezes, mocskosszájú, fantáziátlan, billentyűzetkoptató vagy!!! "
-    ]
+-- , InputDispatch [0x3c] -- "fasz"
+--     [ Message 208                    -- 02 d0                -- "Te meg egy kétbalkezes, mocskosszájú, fantáziátlan, billentyűzetkoptató vagy!!! "
+--     ]
 , InputDispatch [0x55, 0x7e] -- "olvas levél"
     [ AssertHere 126 6               -- 08 7e 06             -- "Nincs nálad az a tárgy. "
     , Message 209                    -- 02 d1                -- "Analfabéta vagy! "
@@ -160,10 +160,10 @@
 , InputDispatch [0x54] -- "bújik"
     [ Message 213                    -- 02 d5                -- "Ez nem segít! "
     ]
-, InputDispatch [0x56] -- "miért"
-    [ Skip 6                         -- 09 06
-    ]
-, InputDispatch [0x56, 0x57] -- "miért nem"
-    [ Message 212                    -- 02 d4                -- "Csak! "
-    ]
+-- , InputDispatch [0x56] -- "miért"
+--     [ Skip 6                         -- 09 06
+--     ]
+-- , InputDispatch [0x56, 0x57] -- "miért nem"
+--     [ Message 212                    -- 02 d4                -- "Csak! "
+--     ]
 ]
