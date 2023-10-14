@@ -481,7 +481,7 @@
       ]
   , InputDispatch [0x0c] -- "ki"
       [ If00 14 9                      -- 0a 0e 09
-      , If00 8 17                      -- 0a 08 11
+      , If00 8 15                      -- 0a 08 11
       , MoveTo 17                      -- 0c 11
       , Assign00 13                    -- 03 0d
       , Ret                            -- 00
@@ -646,8 +646,10 @@
   ]
 , -- ROOM 25
   [ InputDispatch [0x01] -- "é"
-      [ If00 28 7                      -- 0a 1c 07
+      [ If00 28 4                      -- 0a 1c 07
       , MoveTo 31                      -- 0c 1f
+      , Ret                            -- 00
+      , SetPlayerStatus 255            -- 0d ff
       ]
   , InputDispatch [0x05] -- "d"
       [ If00 28 4                      -- 0a 1c 04
