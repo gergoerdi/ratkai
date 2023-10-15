@@ -25,7 +25,7 @@
 , (0x19,["disk ", "diskr", "lemez", "flopp"])
 , (0x1a,["undo ", "bom  ", "vel  "])
 , (0x1b,["save ", "qsave", "ment ", "menté", "elmen"])
-, (0x1c,["load ", "qload", "tölt ", "tölté", "betöl"])
+, (0x1c,["load ", "qload", "tölté", "betöl"])
 , (0x1d,["felad", "befej"])
 , (0x1e,["haszn"])
 , (0x28,["vár  ", "várok", "várak"])
