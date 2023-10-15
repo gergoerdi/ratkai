@@ -14,7 +14,7 @@ import Data.Word
 import Data.Char (ord)
 
 release :: Bool
-release = False
+release = True
 
 supportHelp :: Bool
 supportHelp = True
@@ -55,6 +55,12 @@ game = do
         videoOff = ld [0x3e00] A
 
     pure $ mdo
+        ld SP 0x7fff -- No turning back now, baybee!
+
+        -- Restore input vector
+        ldVia A [0x4002] 0x06
+        ldVia A [0x4003] 0x03
+
         ldVia A [gameVars] 0x00
 
         call resetGameVars
