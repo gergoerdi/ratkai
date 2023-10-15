@@ -1,5 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleContexts #-}
-{-# LANGUAGE BlockArguments #-}
+{-# LANGUAGE BlockArguments, LambdaCase #-}
 module RatBC.Engine where
 
 import Control.Monad.State
@@ -201,7 +201,7 @@ runBC = do
             runBC
         0x06 -> assertVar 0x00
         0x07 -> assertVar 0xff
-        0x08 -> assertVar =<< getVar playerLoc
+        0x08 -> assertHere
         0x09 -> skip >> runBC
         0x0a -> skipUnless 0x00
         0x0b -> skipUnless 0xff
@@ -222,8 +222,13 @@ runBC = do
         msg <- fetch
         val <- getVar var
         if val /= target then message msg else runBC
-        -- if val /= target then message msg >> skip else seek 1
-        -- runBC
+
+    assertHere = do
+        var <- fetch
+        msg <- fetch
+        val <- getVar var
+        loc <- getVar playerLoc
+        if val `notElem` [loc, 0x00] then message msg else runBC
 
     skipUnless target = do
         var <- fetch
@@ -248,4 +253,29 @@ runBC = do
         putVar var $ max 0 (val - delta)
 
 runBuiltin :: (MonadIO m) => [Word8] -> Engine m ()
-runBuiltin input = pure ()
+runBuiltin = \case
+    [0x0e] -> do -- Take all
+        loc <- getVar' playerLoc
+        forM_ [minItem..maxItem] \i -> do
+            val <- getVar' i
+            when (val == loc) $ putVar' i 0x00
+    [0x0e, i] -> do -- Take
+        loc <- getVar' playerLoc
+        when (minItem <= i && i <= maxItem) do
+            val <- getVar' i
+            when (val == loc) $ putVar' i 0x00
+    [0x0f] -> do -- Drop all
+        loc <- getVar' playerLoc
+        forM_ [minItem..maxItem] \i -> do
+            val <- getVar' i
+            when (val == 0) $ putVar' i loc
+    [0x0f, i] -> do -- Drop
+        loc <- getVar' playerLoc
+        when (minItem <= i && i <= maxItem) do
+            val <- getVar' i
+            when (val == 0) $ putVar' i loc
+    _ -> pure ()
+
+minItem, maxItem :: Word8
+minItem = 120
+maxItem = 160 - 1
