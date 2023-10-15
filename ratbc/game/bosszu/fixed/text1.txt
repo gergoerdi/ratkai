@@ -119,7 +119,7 @@
 , (118 ,"De ő egy kung-fu mester! ")
 , (119 ,"- Sok szerencsét! ")
 , (120 ,"- Megtanítalak a kung-fu sárkány stílusára... ha meg akarod tanulni... ")
-, (121 ,"Egy év alatt kemény edzésekkel mesterszintet értél el a kung-fu-ban.\nMegnyerted az első részt!")
+, (121 ,"Egy év alatt kemény edzésekkel mesterszintet értél el a kung-fu-ban.\nGratulálok, megnyerted az első részt!")
 , (122 ,"Kinek adod a virágot? ")
 , (123 ,"- Köszönöm. ")
 , (124 ,"Megsebesülsz... ")
