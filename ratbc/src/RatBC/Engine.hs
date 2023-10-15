@@ -10,6 +10,7 @@ import Data.Word
 import Data.Array.IO
 import Data.Bits
 import Data.Char
+import Control.Arrow (first)
 
 type Ptr = Int
 
@@ -41,8 +42,8 @@ putVar var val = undefined
 printZ :: (MonadIO m) => ByteString -> Word8 -> Engine m ()
 printZ bs idx = undefined
 
-unpackZ :: ByteString -> [Word8]
-unpackZ zs = b1:b2:b3:if final then [] else unpackZ zs2
+unpackZ :: ByteString -> ([Word8], ByteString)
+unpackZ zs = first ([b1, b2, b3]<>) (if final then ([], zs2) else unpackZ zs2)
   where
     Just (lo, zs1) = BS.uncons zs
     Just (hi, zs2) = BS.uncons zs1
@@ -58,6 +59,7 @@ decodeZ1 b = do
     put False
     if shifted then shift b else regular b
   where
+    regular 0 = pure ()
     regular 1 = put True
     regular 2 = tell " "
     regular 3 = tell "."
@@ -65,6 +67,7 @@ decodeZ1 b = do
     regular 5 = tell "\n"
     regular b = tell [chr $ 0x41 - 6 + fromIntegral b]
 
+    shift 0 = pure ()
     shift 1 = tell "?"
     shift 2 = tell "'"
     shift 3 = tell ":"
@@ -79,3 +82,18 @@ decodeZ :: [Word8] -> String
 decodeZ bs = s
   where
     (_, s) = execRWS (mapM_ decodeZ1 bs) () False
+
+findZ :: ByteString -> Word8 -> ByteString
+findZ bs 1 = bs
+findZ bs i = let (_, bs') = unpackZ bs in findZ bs' (i - 1)
+
+unpackWords :: ByteString -> [(String, Word8)]
+unpackWords bs
+    | b0 == 0xff = []
+    | otherwise = (w, b) : unpackWords bs''
+  where
+    b0 = BS.head bs
+
+    (z, bs') = unpackZ bs
+    w = decodeZ z
+    Just (b, bs'') = BS.uncons bs'
