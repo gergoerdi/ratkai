@@ -1118,10 +1118,9 @@ game = do
                 inc IY
                 rst 0x28
             ld A [playerScore]
-            call printBCDPercent
 
-            ld A $ fromIntegral . ord $ '\r'
-            rst 0x28
+            call 0x01a5
+            call paragraph
             setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
             ret
 
