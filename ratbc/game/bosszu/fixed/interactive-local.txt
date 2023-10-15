@@ -1515,11 +1515,12 @@
   , InputDispatch [0x4b] -- "tanul"
       [ CopyProtection 16 8 192 57     -- 18 10 08 c0 39
       , Assert00 55 82                 -- 06 37 52             -- "Már megtetted. "
+      , AssertFF 51 221
       , Chime 3                        -- 14 03
       , AddScore 1                     -- 10 01
       , Message 121                    -- 02 79                -- "Egy év alatt kemény edzésekkel mesterszintet értél el a kung-fu-ban. "
       , Sleep 40                       -- 15 28
-      , AssignFF 55                    -- 04 37
+      , SetPlayerStatus 254
       ]
   , InputDispatch [0x38, 0x90] -- "ad virág"
       [ Message 122                    -- 02 7a                -- "Kinek adod a virágot? "
