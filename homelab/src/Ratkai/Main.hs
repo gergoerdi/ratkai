@@ -26,7 +26,7 @@ supportUndo :: Bool
 supportUndo = False
 
 supportQSave :: Bool
-supportQSave = False
+supportQSave = True
 
 game :: IO Z80ASM
 game = do
@@ -58,6 +58,7 @@ game = do
         ldVia A [gameVars] 0x00
 
         call resetGameVars
+        when supportQSave $ call qsave
         ldVia A [shiftState] 0
 
         -- Welcome message
@@ -692,20 +693,22 @@ game = do
                     pure ()
 
             when supportQSave do
-                forM_ [0x12, 0x1c] \op -> do -- Load
-                    builtin op do -- Load
-                        -- TODO
-                        ret
+                builtin 0x1b do         -- QSave
+                    call qsave
+                    finishWith text1 4
 
-                forM_ [0x13, 0x1b] \op -> do -- Save
-                    builtin op do
-                        -- TODO
-                        ret
+                builtin 0x1c do         -- QLoad
+                    ld DE gameVars
+                    ld HL savedVars
+                    ld BC 256
+                    ldir
+                    ldVia A [moved] 1
+                    finishWith text1 4
 
             when supportUndo do
                 builtin 0x1a do -- Undo
                     -- TODO
-                    ret
+                    finishWith text1 2
 
             builtin 0x16 do -- Help
                 if not supportHelp then do
@@ -1086,6 +1089,13 @@ game = do
 
             ldVia A [playerLoc] startRoom
             ldVia A [playerHealth] 0x50 -- in BCD!
+            ret
+
+        qsave <- labelled $ when supportQSave do
+            ld DE savedVars
+            ld HL gameVars
+            ld BC 256
+            ldir
             ret
 
         -- Pre: E is the variable's index
