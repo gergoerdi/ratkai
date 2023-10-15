@@ -31,7 +31,7 @@ import qualified Data.Map as M
 import qualified Data.Set as S
 import Control.Monad
 import Data.List.Split
-import Data.List (nub, sort)
+import Data.List (nub, sort, (\\))
 import Text.Printf
 import Data.Word
 import Data.Maybe
@@ -104,7 +104,7 @@ usedWords :: Game Identity -> [Val]
 usedWords Game{..} = nub . sort $ mconcat
     [ foldMap wordsOf . runIdentity $ interactiveGlobal
     , foldMap (foldMap wordsOf) . runIdentity $ interactiveLocal
-    , [0x00..0x16], [0x1a..0x1c] -- Builtin commands
+    , [0x00..0x16] \\ [0x12, 0x13] , [0x1a..0x1c] -- Builtin commands
     , [0x64] -- ignored grammar connectives
     ]
   where
