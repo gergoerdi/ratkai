@@ -535,7 +535,7 @@
       [ MoveTo 30                      -- 0c 1e
       ]
   , InputDispatch [0x05] -- "d"
-      [ MoveTo 28                      -- 0c 1c
+      [ MoveTo 30                      -- 0c 1c
       ]
   , InputDispatch [0x06] -- "dny"
       [ MoveTo 26                      -- 0c 1a
@@ -576,7 +576,7 @@
       [ MoveTo 27                      -- 0c 1b
       ]
   , InputDispatch [0x05] -- "d"
-      [ MoveTo 28                      -- 0c 1c
+      [ MoveTo 29                      -- 0c 1c
       ]
   , InputDispatch [0x06] -- "dny"
       [ MoveTo 27                      -- 0c 1b
@@ -628,7 +628,7 @@
       [ MoveTo 27                      -- 0c 1b
       ]
   , InputDispatch [0x02] -- "ék"
-      [ MoveTo 28                      -- 0c 1c
+      [ MoveTo 27                      -- 0c 1c
       ]
   , InputDispatch [0x03] -- "k"
       [ MoveTo 26                      -- 0c 1a

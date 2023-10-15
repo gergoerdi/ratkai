@@ -67,7 +67,7 @@
 , (66  ,"Leütötted a bambusz-rúddal. ")
 , (67  ,"Nincs szerszámod! ")
 , (68  ,"Néhány perces munka után egy ládát fordított ki az ásó a földből. ")
-, (69  ,"A fába vésve: 'EK, D, DK, AS'! ")
+, (69  ,"A fába valaki ezt véste: 'EK, D, DK, AS'! ")
 , (70  ,"Egy shuriken áll ki a fából. ")
 , (71  ,"A ninják megállítanak. ")
 , (72  ,"A ninják eltüntek... ")
