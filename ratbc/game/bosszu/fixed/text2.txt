@@ -158,7 +158,7 @@
 , (157 ,"a ")
 , (158 ,"a ")
 , (159 ,"a ")
-, (160 ,"Oh! Egy új játékos! Köszöntelek a programomban! A küldetésed akkor kezdődik, mikor kilépsz a mögötted lévő ajtón! Beszélj mindenkivel és mindent vizsgálj meg! ")
+, (160 ,"Köszöntelek a programomban! A küldetésed akkor kezdődik, mikor kilépsz a mögötted lévő ajtón! Beszélj mindenkivel és mindent vizsgálj meg! ")
 , (161 ,"Hello! Azt hiszem végzetes hibát követtél el. Remélem, tudod mi volt az és legközelebb több sikerrel jársz! ")
 , (162 ,"Egy nagy bezárt ajtót látsz északra. ")
 , (163 ,"Légy óvatos! ")
