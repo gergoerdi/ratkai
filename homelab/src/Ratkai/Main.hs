@@ -1003,7 +1003,7 @@ game = do
                 when release do
                     withLabel \loop -> do
                         exx
-                        decLoopB 14 halt
+                        decLoopB 8 halt
                         exx
                         djnz loop
                 jp runRatScript
