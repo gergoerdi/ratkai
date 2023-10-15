@@ -1411,9 +1411,6 @@
   [ InputDispatch [0x0a] -- "le"
       [ MoveTo 54                      -- 0c 36
       ]
-  , InputDispatch [0x2d, 0xa6] -- "mászi fa"
-      [ AssignFF 95                    -- 04 5f
-      ]
   , InputDispatch [0x2d, 0x7f] -- "mászi kötél"
       [ Message 4                      -- 02 04                -- "OK. "
       , MoveTo 54                      -- 0c 36
@@ -1422,8 +1419,7 @@
       [ Skip 5                         -- 09 05
       ]
   , InputDispatch [0x0b] -- "be"
-      [ AssertFF 95 2                  -- 07 5f 02             -- "Nem teheted meg. "
-      , MoveTo 56                      -- 0c 38
+      [ MoveTo 56                      -- 0c 38
       ]
   ]
 , -- ROOM 56
