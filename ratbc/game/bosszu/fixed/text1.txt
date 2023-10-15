@@ -56,7 +56,7 @@
 , (55  ,"Az őr továbbmegy. ")
 , (56  ,"Az őr észrevesz és belevágja a lándzsáját a fejedbe. ")
 , (57  ,"Ő hirtelen előránt egy tőrt és leszúr. ")
-, (58  ,"- Hakai felfogadott két bérgyilkost.Oshinoko, a néma yakuza és Nusumu, aki nesztelen lopódzik a hátad mögé minden követ megforgatnak, hogy megtaláljanak és megöljenek! ")
+, (58  ,"- Hakai felfogadott két bérgyilkost. Oshinoko, a néma yakuza és Nusumu, aki nesztelen lopódzik a hátad mögé minden követ megforgatnak, hogy megtaláljanak és megöljenek! ")
 , (59  ,"- A felkelők készen állnak a harcra. Adj egy jelet nekünk ma éjszaka és támadunk! ")
 , (60  ,"Valami elszáguld a füled mellett. ")
 , (61  ,"Egy shuriken fúródik be a fejedbe... ")
