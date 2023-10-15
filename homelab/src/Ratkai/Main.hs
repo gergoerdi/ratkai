@@ -126,6 +126,7 @@ game = do
                 cp 254
                 jp Z notDead
                 message1 0x0c
+                when supportScore $ call printScore
 
             call resetGameVars
             ldVia A [gameVars + 1] 0xff
@@ -656,41 +657,8 @@ game = do
                 finishWith text1 9
 
             when supportScore do
-                builtin 0x14 mdo -- Score
-                    let labelledString s = do
-                            l <- labelled $ db $ map (fromIntegral . ord) s
-                            pure (l, s)
-
-                    ld IY lbl1
-                    decLoopB (fromIntegral $ length s1) do
-                        ld A [IY]
-                        inc IY
-                        rst 0x28
-                    ld A [playerScore]
-                    call printBCDPercent
-
-                    ld IY lbl2
-                    decLoopB (fromIntegral $ length s2) do
-                        ld A [IY]
-                        inc IY
-                        rst 0x28
-                    ld A [playerHealth]
-                    call printBCDPercent
-                    ld A $ fromIntegral . ord $ '\r'
-                    rst 0x28
-                    setZ
-                    ret
-
-                    (lbl1, s1) <- labelledString "PONTSZAM: "
-                    (lbl2, s2) <- labelledString "ERONLET:  "
-                    printBCDPercent <- labelled do
-                        call 0x01a5
-                        ld A $ fromIntegral . ord $ '%'
-                        rst 0x28
-                        ld A $ fromIntegral . ord $ '\r'
-                        rst 0x28
-                        ret
-                    pure ()
+                builtin 0x14 do -- Score
+                    jp printStatus
 
             when supportQSave do
                 builtin 0x1b do         -- QSave
@@ -1124,6 +1092,48 @@ game = do
 
         getLocation <- labelled do
             ld A [playerLoc]
+            ret
+
+        let labelledString s = do
+                l <- labelled $ db $ map (fromIntegral . ord) s
+                pure (l, s)
+
+        printStatus <- labelled $ when supportScore mdo
+            ld IY lbl
+            decLoopB (fromIntegral $ length s) do
+                ld A [IY]
+                inc IY
+                rst 0x28
+            ld A [playerHealth]
+            call printBCDPercent
+            jp printScore
+
+            (lbl, s) <- labelledString "ERONLET:  "
+            pure ()
+
+        printScore <- labelled $ when supportScore mdo
+            ld IY lbl
+            decLoopB (fromIntegral $ length s) do
+                ld A [IY]
+                inc IY
+                rst 0x28
+            ld A [playerScore]
+            call printBCDPercent
+
+            ld A $ fromIntegral . ord $ '\r'
+            rst 0x28
+            setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
+            ret
+
+            (lbl, s) <- labelledString "PONTSZAM: "
+            pure ()
+
+        printBCDPercent <- labelled $ when supportScore do
+            call 0x01a5
+            ld A $ fromIntegral . ord $ '%'
+            rst 0x28
+            ld A $ fromIntegral . ord $ '\r'
+            rst 0x28
             ret
 
         text1 <- labelled $ db text1'
