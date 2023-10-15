@@ -130,16 +130,6 @@
     , Message 4                      -- 02 04                -- "OK. "
     , AssignFF 85                    -- 04 55
     ]
-, InputDispatch [0x49, 0x96] -- "gyújt hordó"
-    [ Skip 6                         -- 09 06
-    ]
-, InputDispatch [0x49, 0xc9] -- "gyújt puska"
-    [ AssertHere 150 6               -- 08 96 06             -- "Nincs nálad az a tárgy. "
-    , Assert00 148 2                 -- 06 94 02             -- "Nem teheted meg. "
-    , Assert00 62 2                  -- 06 3e 02             -- "Nem teheted meg. "
-    , SetPlayerStatus 255            -- 0d ff
-    , Message 177                    -- 02 b1                -- "Booooommmmmm!!! "
-    ]
 -- , InputDispatch [0x3c] -- "fasz"
 --     [ Message 208                    -- 02 d0                -- "Te meg egy kétbalkezes, mocskosszájú, fantáziátlan, billentyűzetkoptató vagy!!! "
 --     ]

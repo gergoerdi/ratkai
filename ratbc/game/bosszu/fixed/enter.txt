@@ -2,7 +2,7 @@
 [ -- ROOM 1
   [ SetScreen 9 8 42               -- 11 09 08 2a
   , Message 1                      -- 02 01                -- "Egy barátságos kis szobában vagy. Egy fiatal srác ül egy C64-es előtt. Hirtelen hátrafordul és beszélni kezd: "
-  , Assert00 1 161                 -- 06 01 a1             -- "Hello! Azt hiszem végzetes hibát követtél el. Remélem, tudod mi volt az és legközelebb több sikerrel jársz! "
+  -- , Assert00 1 161                 -- 06 01 a1             -- "Hello! Azt hiszem végzetes hibát követtél el. Remélem, tudod mi volt az és legközelebb több sikerrel jársz! "
   , Message 160                    -- 02 a0                -- "Oh! Egy új játékos! Köszöntelek a programomban! A küldetésed akkor kezdődik, mikor kilépsz a mögötted lévő ajtón! Beszélj mindenkivel és mindent vizsgálj meg! "
   ]
 , -- ROOM 2
