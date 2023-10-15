@@ -39,4 +39,4 @@ executables:
     main: ratbc-play.hs
     dependencies:
       - haskeline
-    
+      - exceptions

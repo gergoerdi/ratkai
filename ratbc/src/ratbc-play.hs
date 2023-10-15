@@ -31,30 +31,49 @@ main = do
 
     let readBin fn = BS.readFile $ inputPath </> fn <.> "bin"
 
-    text1 <- readBin "text1"
-    text2 <- readBin "text2"
+    bank1 <- readBin "text1"
+    bank2 <- readBin "text2"
     dict <- readBin "dict"
     resetState <- readBin "reset"
     helpMap <- readBin "help"
     enterBC <- readBin "enter"
     afterBC <- readBin "after"
     globalBC <- readBin "interactive-global"
-    localBC <- readBin "interactive-local"
+    localBCs <- readBin "interactive-local"
+    let minItem = 120
+        maxItem = 160 - 1
+        startRoom = 1
 
     let parseWord = mkParser dict
 
     vars <- newArray (minBound, maxBound) 0x00
-    dumpVars vars
+    forM_ (zip [minItem..] (BS.unpack resetState)) \(i, x) -> do
+        writeArray vars i x
+    writeArray vars playerLoc startRoom
 
-    putStrLn $ decodeZ . fst . unpackZ . findZ text1 $ 2
-
-    let loop = do
-            mline <- getInputLine "bosszu> "
+    let loop moved = do
+            -- lift dumpVars
+            when moved $ lift do
+                bc <- findByRoom enterBC
+                runTerp bank2 bc
+            mline <- getInputLine "RatBC> "
             case mline of
                 Nothing -> return ()
                 Just line -> do
-                    liftIO . print $ parseLine parseWord line
-                    loop
+                    let words = parseLine parseWord line
+                    ((), Any moved) <- lift $ listen $ case words of
+                        Nothing -> liftIO $ putStrLn "parse error"
+                        Just [] -> pure ()
+                        Just words -> do
+                            localBC <- findByRoom localBCs
+                            let mb_bc = msum
+                                  [ findByInput words localBC
+                                  , findByInput words globalBC
+                                  ]
+                            case mb_bc of
+                                Just bc -> runTerp bank1 bc
+                                Nothing -> runBuiltin words
+                    loop moved
             -- line <- getInputLine "bosszu> "
             -- let tokens = tokenize dict line
             -- minput <- getInputLine "% "
@@ -66,15 +85,8 @@ main = do
             --         loop
 
 
-    runInputT defaultSettings loop
+    runEngine vars $ runInputT defaultSettings $ loop True
     pure ()
-
-dumpVars :: IOArray Word8 Word8 -> IO ()
-dumpVars vars = do
-    vars <- freeze vars :: IO (Array Word8 Word8)
-    forM_ (chunksOf 16 $ elems vars) \chunk -> do
-        mapM_ (printf "%02x ") chunk
-        printf "\n"
 
 tokenize :: String -> [String]
 tokenize = split (dropBlanks $ dropDelims $ oneOf [' ']) . map toUpper
