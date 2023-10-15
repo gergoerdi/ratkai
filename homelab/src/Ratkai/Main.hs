@@ -63,8 +63,8 @@ game = do
 
         -- Welcome message
         call clearScreen
-        message1 14
-        call waitEnter
+        -- message1 14
+        -- call waitEnter
 
         newGame <- label
 
@@ -142,7 +142,7 @@ game = do
             ret
 
         waitEnter <- labelled do
-            message1 13
+            -- message1 13
             withLabel \loop -> do
                 rst 0x18
                 cp 0x0d
