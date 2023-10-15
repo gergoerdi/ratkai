@@ -21,6 +21,7 @@ dependencies:
   - fgl
   - graphviz
   - rev-state
+  - exceptions
 
 source-dirs:
   - src
@@ -39,4 +40,3 @@ executables:
     main: ratbc-play.hs
     dependencies:
       - haskeline
-      - exceptions

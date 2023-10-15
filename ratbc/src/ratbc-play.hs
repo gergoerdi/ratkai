@@ -1,5 +1,5 @@
 {-# LANGUAGE ApplicativeDo, RecordWildCards, TypeApplications #-}
-{-# LANGUAGE BlockArguments, LambdaCase, ViewPatterns #-}
+{-# LANGUAGE BlockArguments, LambdaCase, ViewPatterns, TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 module Main where
 
@@ -20,9 +20,13 @@ import Control.Monad
 import Control.Monad.RWS
 import Data.Char
 import Data.List (find)
+import System.IO
+import Data.Foldable (traverse_)
 
 data Options = Options
     { inputPath :: FilePath
+    , transcriptPath :: FilePath
+    , debug :: Bool
     }
 
 main :: IO ()
@@ -51,42 +55,51 @@ main = do
         writeArray vars i x
     writeArray vars playerLoc startRoom
 
-    let loop moved = do
-            -- lift dumpVars
-            when moved $ lift do
-                bc <- findByRoom enterBC
-                runTerp bank2 bc
-            mline <- getInputLine "RatBC> "
-            case mline of
-                Nothing -> return ()
-                Just line -> do
-                    let words = parseLine parseWord line
-                    ((), Any moved) <- lift $ listen $ case words of
-                        Nothing -> liftIO $ putStrLn "parse error"
-                        Just [] -> pure ()
-                        Just words -> do
-                            localBC <- findByRoom localBCs
-                            let mb_bc = msum
-                                  [ findByInput words localBC
-                                  , findByInput words globalBC
-                                  ]
-                            case mb_bc of
-                                Just bc -> runTerp bank1 bc
-                                Nothing -> runBuiltin words
-                    loop moved
-            -- line <- getInputLine "bosszu> "
-            -- let tokens = tokenize dict line
-            -- minput <- getInputLine "% "
-            -- case minput of
-            --     Nothing -> return ()
-            --     Just "quit" -> return ()
-            --     Just input -> do
-            --         outputStrLn $ "Input was: " ++ input
-            --         loop
+    let runInput :: (MonadIO m) => String -> Engine m Bool
+        runInput line = do
+            let words = parseLine parseWord line
+            ((), Any moved) <- listen $ case words of
+                Nothing -> liftIO $ putStrLn "parse error"
+                Just [] -> pure ()
+                Just words -> do
+                    localBC <- findByRoom localBCs
+                    let mb_bc = msum
+                          [ findByInput words localBC
+                          , findByInput words globalBC
+                          ]
+                    case mb_bc of
+                        Just bc -> runTerp bank1 bc
+                        Nothing -> runBuiltin words
+            runTerp bank2 afterBC
+            pure moved
 
-
-    runEngine vars $ runInputT defaultSettings $ loop True
-    pure ()
+    initialTranscript <- lines <$> readFile' transcriptPath
+    withFile transcriptPath AppendMode \h -> do
+        void $ runEngine vars $ runInputT defaultSettings $ do
+            let loop lines moved = do
+                    when debug $ lift dumpVars
+                    when moved $ lift do
+                        bc <- findByRoom enterBC
+                        runTerp bank2 bc
+                        here <- getVar' playerLoc
+                        itemsHere <- filterM (\i -> (here ==) <$> getVar' i) [minItem..maxItem]
+                        liftIO $ unless (null itemsHere) $ do
+                            putStrLn "Tárgyak:"
+                            mapM_ (printlnZ bank2) itemsHere
+                    (mline, lines') <- case lines of
+                        (line:lines') -> do
+                            liftIO $ putStrLn $ "RatBC> " <> line
+                            pure (Just line, lines')
+                        [] -> do
+                            mline <- getInputLine "RatBC> "
+                            liftIO $ traverse_ (hPutStrLn h) mline
+                            pure (mline, [])
+                    case mline of
+                        Nothing -> return ()
+                        Just line -> do
+                            moved <- lift $ runInput line
+                            loop lines' moved
+            loop initialTranscript True
 
 tokenize :: String -> [String]
 tokenize = split (dropBlanks $ dropDelims $ oneOf [' ']) . map toUpper
@@ -112,8 +125,18 @@ options = do
     inputPath <- strOption $ mconcat
         [ long "input"
         , short 'i'
+        , metavar "DIRECTORY"
+        , help "HL2 datafile directory"
+        ]
+    transcriptPath <- strOption $ mconcat
+        [ long "transcript"
+        , short 'l'
         , metavar "FILENAME"
-        , help "Memory dump"
+        , help "Transcript"
+        ]
+    debug <- switch $ mconcat
+        [ long "debug"
+        , short 'd'
         ]
     pure Options{..}
 

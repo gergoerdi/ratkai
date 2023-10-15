@@ -15,7 +15,6 @@ import Data.Bits
 import Data.Char
 import Control.Arrow (first)
 import Text.Printf
-import System.Console.Haskeline
 import Data.List.Split
 import Debug.Trace
 import GHC.Stack
@@ -37,7 +36,8 @@ dumpVars = do
     vars <- Engine ask
     liftIO do
         vars <- freeze vars :: IO (Array Word8 Word8)
-        forM_ (chunksOf 16 $ elems vars) \chunk -> do
+        forM_ (zip [0, 16..] $ chunksOf 16 $ elems vars) \(i, chunk) -> do
+            printf "%02x  " (i :: Int)
             mapM_ (printf "%02x ") chunk
             printf "\n"
 
@@ -206,7 +206,11 @@ runBC = do
         0x0a -> skipUnless 0x00
         0x0b -> skipUnless 0xff
         0x0c -> fetch >>= putVar playerLoc >> moved
-        0x0d -> fetch >>= putVar playerStatus >> runBC
+        0x0d -> do
+            status <- fetch
+            liftIO $ printf "playerStatus = %d\n" status
+            putVar playerStatus status
+            runBC
         0x0e -> inc playerHealth >> runBC
         0x0f -> dec playerHealth >> runBC
         0x10 -> inc playerScore >> runBC
