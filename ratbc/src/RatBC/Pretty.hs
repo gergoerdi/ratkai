@@ -112,13 +112,19 @@ pprGame game@Game{enterRoom, afterTurn, interactiveLocal, interactiveGlobal, hel
     dict = runIdentity $ Game.dict game
 
     pprMessages msgs = vlist
-      [ tuple [fill 4 (viaShow i), dquotes $ fromString msg ]
-      | (i, msg) <- assocs msgs
-      ]
+        [ tuple [fill 4 (viaShow i), dquotes $ fromString . concatMap escape $ msg ]
+        | (i, msg) <- assocs msgs
+        ]
+      where
+        escape '\n' = "\\n"
+        escape '\r' = "\\r"
+        escape '\t' = "\\t"
+        escape c = [c]
+
     pprDict dict = vlist
-      [ tuple [fromString (printf "0x%02x" i), list [dquotes $ fromString word | word <- words]]
-      | (i, words) <- M.toList dict
-      ]
+        [ tuple [fromString (printf "0x%02x" i), list [dquotes $ fromString word | word <- words]]
+        | (i, words) <- M.toList dict
+        ]
 
     pprHelp msgs i = viaShow i <+> pprMessage msgs i
 

@@ -1,5 +1,5 @@
 {-# LANGUAGE TupleSections, OverloadedStrings #-}
-module RatBC.Text (loadMessages) where
+module RatBC.Text (loadMessages, wrapWords) where
 
 import RatBC.Utils
 
@@ -8,6 +8,7 @@ import Data.Char
 import Text.Printf (printf)
 import Data.Word
 import Data.List (isPrefixOf)
+import Data.List.Split
 
 loadMessages :: BL.ByteString -> ([String], [String])
 loadMessages bs = (f bank1, f bank2)
@@ -61,3 +62,27 @@ toChar b | b >= 128 = toChar (b - 128) ++ " "
          | 0x20 <= b && b < 0x5B = pure $ chr $ fromIntegral b
          -- | otherwise = printf "|0x%02x|" b
          | otherwise = ""
+
+wrapWords :: Int -> String -> String
+wrapWords cols s = foldMap wrapLine paras
+  where
+    paras = split (onSublist "\n") $ s
+
+    wrapLine para = startLine tokens
+      where
+        tokens = split (dropBlanks $ dropDelims $ onSublist " ") $ para
+
+    startLine = reflow True cols
+
+    reflow :: Bool -> Int -> [String] -> String
+    reflow first n [] = []
+    reflow first n (s:ss)
+        | k == n = space <> s <> startLine ss              -- Automatic line-wrapping on last column
+        | k == n - 1 = space <> s <> "\n" <> startLine ss  -- Newline is a whitespace itself
+        | k < n = space <> s <> more ss                   -- Keep going
+        | k > cols = "\n" <> s <> "\n" <> startLine ss    -- This word needs its own line
+        | otherwise = "\n" <> startLine (s:ss)            -- Start a new line
+      where
+        k = length s
+        space = if first then "" else " "
+        more = reflow False (n - (k + 1))

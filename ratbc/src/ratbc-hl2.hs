@@ -157,6 +157,12 @@ stripMessages bank1 bank2 game@Game{..} = mapStmt remap $ game
     onlyKeep bank msgs = listArray (bounds msgs)
       [ if i `elem` bank then trimRight s else mempty | (i, s) <- assocs msgs ]
 
+reflowMessages :: Game Identity -> Game Identity
+reflowMessages game@Game{..} = game
+    { msgs1 = fmap (fmap $ wrapWords 40) msgs1
+    , msgs2 = fmap (fmap $ wrapWords 40) msgs2
+    }
+
 stripWords :: [Val] -> Game Identity -> Game Identity
 stripWords words game@Game{..} = game
     { dict = fmap (M.filterWithKey (\k _ -> k `elem` words)) dict
@@ -228,6 +234,8 @@ main = do
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
+
+    game <- pure $ reflowMessages game
     writeHLFiles outputPath game
     writeDotFile (outputPath </> "map.dot") $ roomDot game
 
