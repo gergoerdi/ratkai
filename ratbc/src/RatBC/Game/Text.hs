@@ -82,5 +82,5 @@ loadTextFiles inputPath = do
       <*> file "help"
       <*> pure 120 -- TODO: minItem
       <*> pure 160 -- TODO: maxItem
-      <*> pure 1 -- TODO: startRoom
+      <*> pure 2 -- TODO: startRoom
     return $ parseGame game0

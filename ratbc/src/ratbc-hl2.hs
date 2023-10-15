@@ -82,7 +82,7 @@ usedMessages Game{..} = both (nub . sort) $ mconcat
     , bank1 $ stmtsMessages . runIdentity $ afterTurn
     , bank1 $ foldMap (foldMap stmtsMessages) . runIdentity $ interactiveGlobal
     , bank1 $ foldMap (foldMap (foldMap stmtsMessages)) . runIdentity $ interactiveLocal
-    , bank1 [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 16, 17] -- Builtins used by the interpreter
+    , bank1 [1, 2, 3, 4, 6, 7, 8, 9, 10, 11, 12, 13, 14, 16, 17] -- Builtins used by the interpreter
     , bank2 [minItem..maxItem]
     ]
   where
