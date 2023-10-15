@@ -34,3 +34,9 @@ executables:
 
   ratbc-hl2:
     main: ratbc-hl2.hs
+
+  ratbc-play:
+    main: ratbc-play.hs
+    dependencies:
+      - haskeline
+    
