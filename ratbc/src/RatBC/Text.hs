@@ -78,11 +78,11 @@ wrapWords cols s = foldMap wrapLine paras
     reflow first n [] = []
     reflow first n (s:ss)
         | k == n = space <> s <> startLine ss              -- Automatic line-wrapping on last column
-        | k == n - 1 = space <> s <> "\n" <> startLine ss  -- Newline is a whitespace itself
+        | k == n - 1 = space <> s <> " " <> startLine ss   -- Automatic line-wrapping on last column
         | k < n = space <> s <> more ss                   -- Keep going
         | k > cols = "\n" <> s <> "\n" <> startLine ss    -- This word needs its own line
         | otherwise = "\n" <> startLine (s:ss)            -- Start a new line
       where
-        k = length s
+        k = length (space <> s)
         space = if first then "" else " "
-        more = reflow False (n - (k + 1))
+        more = reflow False (n - k)
