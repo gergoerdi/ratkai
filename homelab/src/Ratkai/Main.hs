@@ -58,16 +58,16 @@ game = do
         ldVia A [gameVars] 0x00
 
         call resetGameVars
+        ldVia A [shiftState] 0
+
+        -- Welcome message
+        call clearScreen
+        message1 14
+        call waitEnter
 
         newGame <- label
 
-        -- Clear screen
-        ld A 0x0c
-        rst 0x28
-        ld A 0x0d
-        rst 0x28
-
-        ldVia A [shiftState] 0
+        call clearScreen
         ldVia A [moved] 1
 
         withLabel \loop -> do
@@ -126,17 +126,26 @@ game = do
                 jp Z notDead
                 message1 0x0c
 
-            message1 13
+            call resetGameVars
+            ldVia A [gameVars + 1] 0xff
 
+            call waitEnter
+            jp newGame
+
+        clearScreen <- labelled do
+            ld A 0x0c
+            rst 0x28
+            ld A 0x0d
+            rst 0x28
+            ret
+
+        waitEnter <- labelled do
+            message1 13
             withLabel \loop -> do
                 rst 0x18
                 cp 0x0d
                 jp NZ loop
-
-            call resetGameVars
-            ldVia A [gameVars + 1] 0xff
-
-            jp newGame
+            ret
 
         -- Input one line of text (up to 38 characters), store result in [HL]
         -- Mangles `HL`, `A` and `B`
