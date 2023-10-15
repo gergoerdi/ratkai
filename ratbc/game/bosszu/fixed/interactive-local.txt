@@ -1255,8 +1255,8 @@
   ]
 , -- ROOM 50
   [ InputDispatch [0x01] -- "é"
-      [ MoveTo 51                      -- 0c 33
-      , AssertFF 42 98                 -- 07 2a 62             -- "Kezdesz éhes lenni. "
+      [ When00 42 [Message 98]                                 -- "Kezdesz éhes lenni. "
+      , MoveTo 51                      -- 0c 33
       ]
   , InputDispatch [0x05] -- "d"
       [ MoveTo 48                      -- 0c 30
@@ -1267,8 +1267,8 @@
   ]
 , -- ROOM 51
   [ InputDispatch [0x01] -- "é"
-      [ MoveTo 52                      -- 0c 34
-      , AssertFF 42 99                 -- 07 2a 63             -- "Nagyon éhes vagy! "
+      [ When00 42 [Message 99]                                 -- "Nagyon éhes vagy! "
+      , MoveTo 52                      -- 0c 34
       ]
   , InputDispatch [0x05] -- "d"
       [ MoveTo 50                      -- 0c 32
