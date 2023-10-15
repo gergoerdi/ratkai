@@ -167,6 +167,7 @@ stripRooms rooms game@Game{..} = mapStmt remap $ game
     { enterRoom = fmap (compactArray gc) enterRoom
     , interactiveLocal = fmap (compactArray gc) interactiveLocal
     , helpMap = fmap (compactArray gc) helpMap
+    , resetState = fmap (BL.map remapReset) resetState
     }
   where
     gc@(_, remapRoom) = gcArray (bounds . runIdentity $ enterRoom) rooms
@@ -176,6 +177,8 @@ stripRooms rooms game@Game{..} = mapStmt remap $ game
         When00 var body -> When00 var $ remap bank <$> body
         WhenFF var body -> WhenFF var $ remap bank <$> body
         stmt -> stmt
+
+    remapReset room = fromMaybe room $ remapRoom room
 
 gcArray :: (Ix i, Enum i) => (i, i) -> [i] -> ((i, i), (i -> Maybe i))
 gcArray bounds@(from, _) keep = (bounds', flip M.lookup mapping)
