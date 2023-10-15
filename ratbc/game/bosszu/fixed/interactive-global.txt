@@ -34,7 +34,7 @@
     , Assert00 35 82                 -- 06 23 52             -- "Már megtetted. "
     , AssignFF 35                    -- 04 23
     , Message 4                      -- 02 04                -- "OK. "
-    , AddScore 1                     -- 10 01
+    , AddScore 2                     -- 10 01
     , Chime 10                       -- 14 0a
     , Assign00 131                   -- 03 83
     , Message 87                     -- 02 57                -- "Pénzt találtál benne! "
@@ -56,7 +56,7 @@
     , AssignFF 49                    -- 04 31
     , SetScreen 1 15 255             -- 11 01 0f ff
     , Assign 50 250                  -- 01 32 fa
-    , AddScore 1                     -- 10 01
+    , AddScore 2                     -- 10 01
     , Chime 4                        -- 14 04
     ]
 , InputDispatch [0x47, 0x8e] -- "eszik kígyó"
@@ -65,7 +65,7 @@
     , Message 4                      -- 02 04                -- "OK. "
     , Heal 20                        -- 0e 14
     , AssignFF 42                    -- 04 2a
-    , AddScore 1                     -- 10 01
+    , AddScore 2                     -- 10 01
     , Chime 13                       -- 14 0d
     ]
 , InputDispatch [0x47, 0x8b] -- "eszik lepén"
@@ -89,7 +89,7 @@
     , AssignFF 138                   -- 04 8a
     , AssignFF 140                   -- 04 8c
     , Message 126                    -- 02 7e                -- "Készítettél egy szigonyt. "
-    , AddScore 2                     -- 10 02
+    , AddScore 4                     -- 10 02
     , Assign00 145                   -- 03 91
     , Chime 4                        -- 14 04
     ]
@@ -125,7 +125,7 @@
     [ AssertHere 132 6               -- 08 84 06             -- "Nincs nálad az a tárgy. "
     , AssertHere 135 6               -- 08 87 06             -- "Nincs nálad az a tárgy. "
     , AssignFF 132                   -- 04 84
-    , AddScore 2                     -- 10 02
+    , AddScore 4                     -- 10 02
     , Chime 5                        -- 14 05
     , Message 4                      -- 02 04                -- "OK. "
     , AssignFF 85                    -- 04 55

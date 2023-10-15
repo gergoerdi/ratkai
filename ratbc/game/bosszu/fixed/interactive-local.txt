@@ -66,7 +66,7 @@
       , AssignFF 2                     -- 04 02
       , Message 4                      -- 02 04                -- "OK. "
       , Assign00 122                   -- 03 7a
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Chime 10                       -- 14 0a
       ]
   ]
@@ -87,7 +87,7 @@
       , AssignFF 3                     -- 04 03
       , Message 23                     -- 02 17                -- "A fosztogatók elvonultak. "
       , Chime 5                        -- 14 05
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   , InputDispatch [0x2d, 0x69, 0xa6] -- "mászi |69| fa"
       [ Message 24                     -- 02 18                -- "Megpróbálod, de leesel. "
@@ -129,7 +129,7 @@
       , Assert00 4 4                   -- 06 04 04             -- "OK. "
       , AssignFF 4                     -- 04 04
       , Message 26                     -- 02 1a                -- "Eloltottad az izzó gerendát. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 13                       -- 14 0d
       ]
   , InputDispatch [0x05] -- "d"
@@ -163,7 +163,7 @@
       [ Assert00 11 27                 -- 06 0b 1b             -- "Halott. "
       , AssignFF 11                    -- 04 0b
       , Message 29                     -- 02 1d                -- "Visszanyeri az eszméletét és halkan beszélni kezd: Szörnyű mészárlás volt... Megöltek mindenkit a faluban... A vezetőjüket Hakainak szólították... Állj bosszút, fiam... - Félrebillen a feje... Halott... "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 9                        -- 14 09
       ]
   ]
@@ -177,7 +177,7 @@
       , Message 4                      -- 02 04                -- "OK. "
       , Assign00 123                   -- 03 7b
       , SpriteOff 1                    -- 13 01
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 12                       -- 14 0c
       ]
   , InputDispatch [0x15, 0xaa] -- "v cella"
@@ -222,7 +222,7 @@
   , InputDispatch [0x15, 0xab] -- "v vándo"
       [ Assert00 12 2                  -- 06 0c 02             -- "Nem teheted meg. "
       , Message 34                     -- 02 22                -- "Nem vagy te orvos! "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 10                       -- 14 0a
       ]
   ]
@@ -341,7 +341,7 @@
       , Message 46                     -- 02 2e                -- "Sikerül kiosonnod. "
       , MoveTo 19                      -- 0c 13
       , Assign00 8                     -- 03 08
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x0e, 0x7c] -- "f lámpa"
@@ -364,7 +364,7 @@
       , SpriteOff 2                    -- 13 02
       , Sleep 10                       -- 15 0a
       , Chime 1                        -- 14 01
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   , InputDispatch [0x4a, 0x7c] -- "elolt lámpa"
       [ Skip 7                         -- 09 07
@@ -382,7 +382,7 @@
       , SpriteOff 4                    -- 13 04
       , Message 44                     -- 02 2c                -- "A katonák betörik az ajtót és beözönlenek a szobába. "
       , Assign 15 252                  -- 01 0f fc
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 13                       -- 14 0d
       ]
   ]
@@ -511,7 +511,7 @@
       , Message 60                     -- 02 3c                -- "Valami elszáguld a füled mellett. "
       , MoveTo 26                      -- 0c 1a
       , AssignFF 21                    -- 04 15
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 13                       -- 14 0d
       ]
   ]
@@ -560,7 +560,7 @@
       , Assign00 129                   -- 03 81
       , AssignFF 30                    -- 04 1e
       , SpriteOff 1                    -- 13 01
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 10                       -- 14 0a
       ]
   , InputDispatch [0x01] -- "é"
@@ -621,7 +621,7 @@
       , AssignFF 29                    -- 04 1d
       , AssignLoc 130                  -- 05 82
       , Message 68                     -- 02 44                -- "Néhány perces munka után egy ládát fordított ki az ásó a földből. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x01] -- "é"
@@ -677,7 +677,7 @@
       , AssignFF 22                    -- 04 16
       , Message 66                     -- 02 42                -- "Leütötted a bambusz-rúddal. "
       , SetScreen 9 8 7                -- 11 09 08 07
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 5                        -- 14 05
       ]
   , InputDispatch [0x05] -- "d"
@@ -769,7 +769,7 @@
       , Message 74                     -- 02 4a                -- "A ninja elolvassa a levelet, majd egy altató-pirulát ad át neked. "
       , AssignFF 126                   -- 04 7e
       , Assign00 132                   -- 03 84
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 12                       -- 14 0c
       ]
   ]
@@ -808,7 +808,7 @@
       , AssignFF 32                    -- 04 20
       , Chime 6                        -- 14 06
       , Chime 10                       -- 14 0a
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Ret                            -- 00
       , Message 75                     -- 02 4b                -- "A kormányos észreveszi miben mesterkedsz és hozzádvág egy követ. "
       , Hurt 8                         -- 0f 08
@@ -829,7 +829,7 @@
       [ Assert00 131 6                 -- 06 83 06             -- "Nincs nálad az a tárgy. "
       , AssignFF 131                   -- 04 83
       , AssignFF 19                    -- 04 13
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 3                        -- 14 03
       , Message 78                     -- 02 4e                -- "A vitorlás kifut a tengerre. "
       , Sleep 40                       -- 15 28
@@ -850,7 +850,7 @@
       , AssignFF 137                   -- 04 89
       , AssignFF 24                    -- 04 18
       , Message 4                      -- 02 04                -- "OK. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 12                       -- 14 0c
       ]
   , InputDispatch [0x0c] -- "ki"
@@ -892,7 +892,7 @@
       [ Assert00 33 82                 -- 06 21 52             -- "Már megtetted. "
       , AssignFF 33                    -- 04 21
       , Message 4                      -- 02 04                -- "OK. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x41, 0xbd] -- "felhú vasma"
@@ -908,7 +908,7 @@
       , Message 85                     -- 02 55                -- "A vihar darabokra töri a bárkád. "
       , MoveTo 97                      -- 0c 61
       , Assign 83 250                  -- 01 53 fa
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       ]
   ]
 , -- ROOM 40
@@ -951,7 +951,7 @@
       , AssignFF 27                    -- 04 1b
       , Assign00 136                   -- 03 88
       , Message 115                    -- 02 73                -- "Kicsalogatod a macskát a bokor alól az egérrel, majd elkapod. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x30, 0x90] -- "húz virág"
@@ -960,7 +960,7 @@
       , AssignFF 92                    -- 04 5c
       , Assign00 144                   -- 03 90
       , Message 4                      -- 02 04                -- "OK. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 7                        -- 14 07
       ]
   ]
@@ -1002,7 +1002,7 @@
       , Message 90                     -- 02 5a                -- "- Köszönöm, uram! Nos... Valamikor én készítettem el a titkos átjárókat Hakai házában... Ez a 'kulcs' minden titkos ajtót nyit. - mondja a koldus és átnyújt neked egy hatszögletű hasábot. "
       , Assign00 146                   -- 03 92
       , AssignFF 139                   -- 04 8b
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 12                       -- 14 0c
       ]
   ]
@@ -1162,7 +1162,7 @@
       , AssignLoc 138                  -- 05 8a
       , Sleep 5                        -- 15 05
       , MoveTo 47                      -- 0c 2f
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Chime 13                       -- 14 0d
       ]
   , InputDispatch [0x15, 0xc0] -- "v aszta"
@@ -1249,7 +1249,7 @@
       , Message 97                     -- 02 61                -- "Tolvaj! Fogják meg! - kiabál a lepényárus. "
       , Assign 57 248                  -- 01 39 f8
       , Assign00 139                   -- 03 8b
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 7                        -- 14 07
       ]
   ]
@@ -1295,7 +1295,7 @@
       , AssignFF 134                   -- 04 86
       , Assign00 143                   -- 03 8f
       , Message 4                      -- 02 04                -- "OK. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x0e, 0x8d] -- "f kő"
@@ -1308,7 +1308,7 @@
       , Assign00 141                   -- 03 8d
       , AssignFF 44                    -- 04 2c
       , Message 4                      -- 02 04                -- "OK. "
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Chime 5                        -- 14 05
       , Ret                            -- 00
       , AssertHere 141 5               -- 08 8d 05             -- "Nem látom itt azt a tárgyat. "
@@ -1352,7 +1352,7 @@
       , Message 4                      -- 02 04                -- "OK. "
       , AssignFF 45                    -- 04 2d
       , SetScreen 15 12 24             -- 11 0f 0c 18
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 7                        -- 14 07
       ]
   ]
@@ -1398,7 +1398,7 @@
       , AssignFF 127                   -- 04 7f
       , Message 106                    -- 02 6a                -- "Rákötözöd a kötelet a bambuszrúdra, majd feldobod. A bambusz szerencsésen beékelődok két szikla közé. "
       , AssignFF 46                    -- 04 2e
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x2d, 0x7f] -- "mászi kötél"
@@ -1434,7 +1434,7 @@
       , Assign00 46                    -- 03 2e
       , AssignFF 51                    -- 04 33
       , MoveTo 54                      -- 0c 36
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   , InputDispatch [0x05] -- "d"
       [ MoveTo 55                      -- 0c 37
@@ -1475,7 +1475,7 @@
       , AssignFF 52                    -- 04 34
       , Message 4                      -- 02 04                -- "OK. "
       , Message 109                    -- 02 6d                -- "A shuriken megsebzi az egyiket. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 11                       -- 14 0b
       ]
   , InputDispatch [0x2b] -- "üvölt"
@@ -1483,7 +1483,7 @@
       , Assign00 52                    -- 03 34
       , AssignFF 47                    -- 04 2f
       , Message 111                    -- 02 6f                -- "A rablók fejvesztve menekülnek... Elvágod a lány köteleit, majd elkíséred őt az apja házáig. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       , Sleep 10                       -- 15 0a
       , MoveTo 59                      -- 0c 3b
@@ -1517,7 +1517,7 @@
       , Assert00 55 82                 -- 06 37 52             -- "Már megtetted. "
       , AssertFF 51 221
       , Chime 3                        -- 14 03
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Message 121                    -- 02 79                -- "Egy év alatt kemény edzésekkel mesterszintet értél el a kung-fu-ban. "
       , Sleep 40                       -- 15 28
       , SetPlayerStatus 254
@@ -1533,7 +1533,7 @@
       , AssignFF 144                   -- 04 90
       , AssignFF 56                    -- 04 38
       , Message 123                    -- 02 7b                -- "- Köszönöm. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 5                        -- 14 05
       ]
   ]
@@ -1557,7 +1557,7 @@
       , Message 4                      -- 02 04                -- "OK. "
       , SetScreen 14 15 255            -- 11 0e 0f ff
       , Chime 5                        -- 14 05
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   , InputDispatch [0x49, 0x7f] -- "gyújt kötél"
       [ CopyProtection 110 8 192 153   -- 18 6e 08 c0 99
@@ -1567,7 +1567,7 @@
       , MoveTo 95                      -- 0c 5f
       , AssignLoc 127                  -- 05 7f
       , AssignLoc 147                  -- 05 93
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 13                       -- 14 0d
       ]
   ]
@@ -1577,7 +1577,7 @@
       , AssignFF 97                    -- 04 61
       , Message 150                    -- 02 96                -- "Találtál valamit! "
       , Assign 149 61                  -- 01 95 3d
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Chime 11                       -- 14 0b
       ]
   , InputDispatch [0x03] -- "k"
@@ -1595,7 +1595,7 @@
       , AssignFF 59                    -- 04 3b
       , Message 129                    -- 02 81                -- "Leütötted. "
       , Chime 10                       -- 14 0a
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   , InputDispatch [0x4e, 0xae] -- "köt őr"
       [ AssertFF 59 2                  -- 07 3b 02             -- "Nem teheted meg. "
@@ -1605,7 +1605,7 @@
       , Message 4                      -- 02 04                -- "OK. "
       , AssignFF 127                   -- 04 7f
       , Chime 11                       -- 14 0b
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   , InputDispatch [0x4f, 0xc5, 0x6a, 0x93] -- "töm száj |6a| gyert"
       [ Skip 6                         -- 09 06
@@ -1624,7 +1624,7 @@
       , AssignFF 147                   -- 04 93
       , Message 130                    -- 02 82                -- "Betömted a száját a gyeryával. "
       , Chime 10                       -- 14 0a
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   ]
 , -- ROOM 62
@@ -1675,7 +1675,7 @@
       , AssignFF 143                   -- 04 8f
       , Message 166                    -- 02 a6                -- "A skorpió megcsípte a yakuzát, aki hang nélkül összecsuklott. "
       , MoveTo 63                      -- 0c 3f
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 5                        -- 14 05
       ]
   , InputDispatch [0x34, 0xa0, 0x6a, 0x99] -- "tör ajtó |6a| feszí"
@@ -1753,7 +1753,7 @@
       , Chime 5                        -- 14 05
       , IfFF 85 5                      -- 0b 55 05
       , AssignFF 76                    -- 04 4c
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       ]
   ]
 , -- ROOM 67
@@ -1802,7 +1802,7 @@
       , AssignFF 65                    -- 04 41
       , Message 134                    -- 02 86                -- "Hirtelen hátrafordulsz és torkon rúgod... Összecsuklik és nem mozdul többet. "
       , Assign00 66                    -- 03 42
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 11                       -- 14 0b
       ]
   ]
@@ -1854,7 +1854,7 @@
       , AssignFF 67                    -- 04 43
       , AssignFF 145                   -- 04 91
       , Message 135                    -- 02 87                -- "Belevágod a szigonyt a hátába. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 5                        -- 14 05
       ]
   , InputDispatch [0x2c, 0xae] -- "öl őr"
@@ -1941,7 +1941,7 @@
       , AssignFF 69                    -- 04 45
       , Message 138                    -- 02 8a                -- "Elengeded a macskát... Őrülten rohanni kezd... a kutyák meg utána... "
       , Assign00 71                    -- 03 47
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x2c, 0xc8] -- "öl kutya"
@@ -2063,7 +2063,7 @@
       , Message 4                      -- 02 04                -- "OK. "
       , Message 141                    -- 02 8d                -- "Káromkodást hallasz lentről. "
       , AssignFF 64                    -- 04 40
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   ]
@@ -2092,7 +2092,7 @@
       , IfFF 72 10                     -- 0b 48 0a
       , Message 144                    -- 02 90                -- "A puskapor begyullad... Majd egy óriási robbanást hallasz a kapu felől. "
       , AssignFF 73                    -- 04 49
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       , Ret                            -- 00
       , MachineCode 23 [169,77,160,148,153,0,32,96] -- 17 a9 4d a0 94 99 00 20 60
@@ -2125,7 +2125,7 @@
       , AssignFF 86                    -- 04 56
       , Message 149                    -- 02 95                -- "Látsz valamit a tóban. "
       , Chime 13                       -- 14 0d
-      , AddScore 1                     -- 10 01
+      , AddScore 4                     -- 10 01
       , MachineCode 17 [169,91,160,153,153,0,32,96] -- 17 a9 5b a0 99 99 00 20 60
       ]
   ]
@@ -2166,7 +2166,7 @@
       , AssertFF 88 2                  -- 07 58 02             -- "Nem teheted meg. "
       , AssignFF 87                    -- 04 57
       , Message 147                    -- 02 93                -- "Agyonrúgtad. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 5                        -- 14 05
       ]
   ]
@@ -2244,7 +2244,7 @@
       , Message 169                    -- 02 a9                -- "Egy gyűrűt találtál. "
       , Assign00 125                   -- 03 7d
       , AssignFF 89                    -- 04 59
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x0c] -- "ki"
@@ -2271,7 +2271,7 @@
       , AssignFF 90                    -- 04 5a
       , AssignLoc 154                  -- 05 9a
       , Message 150                    -- 02 96                -- "Találtál valamit! "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 10                       -- 14 0a
       ]
   ]
@@ -2306,7 +2306,7 @@
       , AssignFF 78                    -- 04 4e
       , Message 4                      -- 02 04                -- "OK. "
       , Message 131                    -- 02 83                -- "A rab megköszöni, hogy kiszabadítottad, majd elszalad. "
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       , Chime 13                       -- 14 0d
       ]
   ]
@@ -2340,7 +2340,7 @@
       , Message 157                    -- 02 9d                -- "Megbosszultad végre apád halálát! "
       , SetPlayerStatus 254            -- 0d fe
       , SetScreen 2 10 53              -- 11 02 0a 35
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 3                        -- 14 03
       , Ret                            -- 00
       , Message 153                    -- 02 99                -- "Nincs megfelelő fegyvered, így pillanatok alatt végez veled... "
@@ -2365,7 +2365,7 @@
       , AssertFF 51 164                -- 07 33 a4             -- "Túl erős. "
       , AssignFF 79                    -- 04 4f
       , Message 165                    -- 02 a5                -- "A lábadba irányítod az összes erődet, majd egy irtózatos rúgással ripityára töröd az ajtót. "
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 10                       -- 14 0a
       , SpriteOff 1                    -- 13 01
       , SpriteOff 2                    -- 13 02
@@ -2431,7 +2431,7 @@
       , AssignFF 80                    -- 04 50
       , Message 161                    -- 02 a1                -- "Megölted a cápát a szigonnyal. "
       , Assign00 93                    -- 03 5d
-      , AddScore 2                     -- 10 02
+      , AddScore 4                     -- 10 02
       , Chime 4                        -- 14 04
       ]
   ]
@@ -2451,7 +2451,7 @@
       , Assign 82 251                  -- 01 52 fb
       , Assign00 83                    -- 03 53
       , Assign 93 252                  -- 01 5d fc
-      , AddScore 1                     -- 10 01
+      , AddScore 2                     -- 10 01
       ]
   ]
 ]
