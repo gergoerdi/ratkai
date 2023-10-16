@@ -22,6 +22,7 @@ dependencies:
   - graphviz
   - rev-state
   - exceptions
+  - pqueue
 
 source-dirs:
   - src
