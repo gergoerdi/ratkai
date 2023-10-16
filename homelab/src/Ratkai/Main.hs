@@ -1124,9 +1124,7 @@ game = do
                 inc IY
                 rst 0x28
             ld A [playerScore]
-
-            call 0x01a5
-            call paragraph
+            call printBCDPercent
             setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
             ret
 
