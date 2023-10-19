@@ -1,0 +1,50 @@
+name: ratkai
+version: 0.1.0
+category: game
+license: GPL-3
+
+extra-source-files:
+  - README.md
+
+dependencies:
+  - base
+  - bytestring
+  - filepath
+  - directory
+  - binary
+  - optparse-applicative
+  - split
+  - containers
+  - prettyprinter
+  - array
+  - mtl
+  - fgl
+  - graphviz
+  - rev-state
+  - exceptions
+  - pqueue
+
+executables:
+  homelab-ratkai:
+    main: main.hs
+    source-dirs: homelab/src
+    dependencies:
+      - z80
+
+  ratbc-disasm:
+    main: ratbc-disasm.hs
+    source-dirs: ratbc/src
+    
+  ratbc-asm:
+    main: ratbc-asm.hs
+    source-dirs: ratbc/src
+
+  ratbc-hl2:
+    main: ratbc-hl2.hs
+    source-dirs: ratbc/src
+
+  ratbc-play:
+    main: ratbc-play.hs
+    source-dirs: ratbc/src
+    dependencies:
+      - haskeline
