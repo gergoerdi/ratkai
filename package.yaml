@@ -24,27 +24,34 @@ dependencies:
   - exceptions
   - pqueue
 
+library:
+  source-dirs: src
+  
 executables:
   homelab-ratkai:
     main: main.hs
-    source-dirs: homelab/src
+    source-dirs: homelab
     dependencies:
       - z80
+      - ratkai
 
   ratbc-disasm:
-    main: ratbc-disasm.hs
-    source-dirs: ratbc/src
+    main: src/ratbc-disasm.hs
+    dependencies:
+      - ratkai
     
   ratbc-asm:
-    main: ratbc-asm.hs
-    source-dirs: ratbc/src
+    main: src/ratbc-asm.hs
+    dependencies:
+      - ratkai
 
   ratbc-hl2:
-    main: ratbc-hl2.hs
-    source-dirs: ratbc/src
+    main: src/ratbc-hl2.hs
+    dependencies:
+      - ratkai
 
   ratbc-play:
-    main: ratbc-play.hs
-    source-dirs: ratbc/src
+    main: src/ratbc-play.hs
     dependencies:
+      - ratkai
       - haskeline
