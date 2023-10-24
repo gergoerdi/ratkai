@@ -8,7 +8,7 @@ import RatBC.Text
 import RatBC.Pretty
 import RatBC.Game
 import RatBC.Game.Text
-import RatBC.Game.ToHL
+import RatBC.HomeLab2.Binary
 
 import Control.Arrow ((>>>))
 import Control.Monad.State

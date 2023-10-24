@@ -1,5 +1,5 @@
 {-# LANGUAGE LambdaCase, RecordWildCards, TypeApplications #-}
-module RatBC.Game.ToHL where
+module RatBC.HomeLab2.Binary (fixupSkips, assemble, writeFiles) where
 
 import RatBC.Utils
 import RatBC.Syntax
@@ -115,8 +115,8 @@ assertNoSkip = \case
 assertNoSkips :: [Stmt] -> [Stmt]
 assertNoSkips = map assertNoSkip
 
-writeHLFiles :: FilePath -> Game Identity -> IO ()
-writeHLFiles outputPath game = do
+writeFiles :: FilePath -> Game Identity -> IO ()
+writeFiles outputPath game = do
     write "dict" $ dict game'
     write "text1" $ msgs1 game'
     write "text2" $ msgs2 game'
