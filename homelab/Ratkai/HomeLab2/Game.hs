@@ -2,7 +2,7 @@
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
-module Ratkai.Main (game) where
+module Ratkai.HomeLab2.Game (game) where
 
 import Z80
 import Z80.Utils

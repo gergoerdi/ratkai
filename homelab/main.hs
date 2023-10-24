@@ -2,7 +2,7 @@
 {-# LANGUAGE RecursiveDo #-}
 module Main where
 
-import qualified Ratkai.Main as Ratkai
+import qualified Ratkai.HomeLab2.Game as Ratkai
 
 import Z80
 import Z80.Utils
