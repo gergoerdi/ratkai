@@ -3,6 +3,7 @@
 module Main where
 
 import qualified Ratkai.HomeLab2.Game as Ratkai
+import RatBC.Game.Text
 
 import Z80
 import Z80.Utils
@@ -14,7 +15,10 @@ import Text.Printf
 
 main :: IO ()
 main = do
-    emit "_build/ratkai" . org (16700 - 60) =<< Ratkai.game
+    let inputPath = "game/bosszu/part1"
+    assets <- loadTextFiles inputPath
+    -- assets <- pure $ mapStmts (\_ -> restoreBlocks) assets
+    emit "_build/ratkai" . org (16700 - 60) $ Ratkai.game assets
 
 emit :: String -> ASMBlock -> IO ()
 emit name block = do

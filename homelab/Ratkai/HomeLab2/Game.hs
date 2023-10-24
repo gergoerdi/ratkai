@@ -1,14 +1,22 @@
-{-# LANGUAGE RecordWildCards, RecursiveDo, BlockArguments #-}
+{-# LANGUAGE RecordWildCards, NamedFieldPuns, RecursiveDo, BlockArguments #-}
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
 module Ratkai.HomeLab2.Game (game) where
 
+import RatBC.Game
+import RatBC.HomeLab2
+import RatBC.HomeLab2.Strip
+import RatBC.HomeLab2.Binary
+
 import Z80
 import Z80.Utils
 import HL2
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
+import Control.Monad.Identity
 import Control.Monad
+import Data.Functor.Const
 import System.FilePath
 import Data.Word
 import Data.Char (ord)
@@ -28,22 +36,11 @@ supportUndo = False
 supportQSave :: Bool
 supportQSave = True
 
-game :: IO Z80ASM
-game = do
-    let asset name = BS.readFile $ "_build/bosszu1.hl2/" </> name <.> "bin"
-    text1' <- asset "text1"
-    text2' <- asset "text2"
-    dict' <- asset "dict"
-    scriptEnter' <- asset "enter"
-    scriptAfter' <- asset "after"
-    scriptGlobal' <- asset "interactive-global"
-    scriptLocal' <- asset "interactive-local"
-    help' <- asset "help"
-    reset' <- asset "reset"
+game :: Game Identity -> Z80ASM
+game assets@Game{ minItem, maxItem, startRoom } = mdo
+    let assets' = assemble . reflowMessages . stripGame $ assets
+    let asset sel = labelled $ db $ BL.toStrict . getConst . sel $ assets'
     let connective = 100 -- TODO
-    let minItem = 120 -- TODO
-    let maxItem = 160 -- TODO
-    let startRoom = 1 -- TODO
 
     let dbgPrintA = unless release do
             push AF
@@ -53,1085 +50,1084 @@ game = do
     let videoOn = ld [0x3f00] A
         videoOff = ld [0x3e00] A
 
-    pure $ mdo
-        ld SP 0x7fff -- No turning back now, baybee!
+    ld SP 0x7fff -- No turning back now, baybee!
 
-        -- Restore input vector
-        ldVia A [0x4002] 0x06
-        ldVia A [0x4003] 0x03
+    -- Restore input vector
+    ldVia A [0x4002] 0x06
+    ldVia A [0x4003] 0x03
 
-        ldVia A [gameVars] 0x00
+    ldVia A [gameVars] 0x00
 
-        call resetGameVars
-        when supportQSave $ call qsave
-        ldVia A [shiftState] 0
+    call resetGameVars
+    when supportQSave $ call qsave
+    ldVia A [shiftState] 0
 
-        -- Welcome message
-        call clearScreen
-        -- message1 14
-        -- call waitEnter
+    -- Welcome message
+    call clearScreen
+    -- message1 14
+    -- call waitEnter
 
-        newGame <- label
+    newGame <- label
 
-        call clearScreen
-        ldVia A [moved] 1
+    call clearScreen
+    ldVia A [moved] 1
 
-        withLabel \loop -> do
-            skippable \notMoved -> do
-                ld A [moved]
-                dec A
-                jp NZ notMoved
-                ld [moved] A
+    withLabel \loop -> do
+        skippable \notMoved -> do
+            ld A [moved]
+            dec A
+            jp NZ notMoved
+            ld [moved] A
 
-                when False do -- Clear screen for each new location?
-                    ld A 0x0c
-                    rst 0x28
-                    ld A 0x0d
-                    replicateM_ 3 $ rst 0x28
-                call runEnter
+            when False do -- Clear screen for each new location?
+                ld A 0x0c
+                rst 0x28
+                ld A 0x0d
+                replicateM_ 3 $ rst 0x28
+            call runEnter
 
-            -- check player status
-            ld A [playerStatus]
-            cp 0
-            jp NZ gameOver
+        -- check player status
+        ld A [playerStatus]
+        cp 0
+        jp NZ gameOver
 
-            call readLine
-            -- call dbgPrintParseBuf
+        call readLine
+        -- call dbgPrintParseBuf
 
-            ld A [parseBuf]
-            cp 0x00
-            jp Z loop
+        ld A [parseBuf]
+        cp 0x00
+        jp Z loop
 
-            skippable \processed -> do
-                call runInteractiveLocal
-                jp NZ processed
-                call runInteractiveGlobal
-                jp NZ processed
-                call runInteractiveBuiltin
-                jp Z processed
+        skippable \processed -> do
+            call runInteractiveLocal
+            jp NZ processed
+            call runInteractiveGlobal
+            jp NZ processed
+            call runInteractiveBuiltin
+            jp Z processed
 
-                message1 2
-                jp loop
-
-            -- check health
-            skippable \healthy -> do
-                ld A [playerHealth]
-                cp 0
-                jp NZ healthy
-                ldVia A [playerStatus] 1
-
-            -- call runAfter
+            message1 2
             jp loop
 
-        gameOver <- labelled do
-            -- `A` contains the player's status:
-            -- 1: Dead
-            -- 2: Won the game
-            skippable \notDead -> do
-                cp 254
-                jp Z notDead
-                message1 0x0c
-                when supportScore $ call printScore
+        -- check health
+        skippable \healthy -> do
+            ld A [playerHealth]
+            cp 0
+            jp NZ healthy
+            ldVia A [playerStatus] 1
 
-            call resetGameVars
-            ldVia A [gameVars + 1] 0xff
+        -- call runAfter
+        jp loop
 
-            call waitEnter
-            jp newGame
+    gameOver <- labelled do
+        -- `A` contains the player's status:
+        -- 1: Dead
+        -- 2: Won the game
+        skippable \notDead -> do
+            cp 254
+            jp Z notDead
+            message1 0x0c
+            when supportScore $ call printScore
 
-        clearScreen <- labelled do
-            ld A 0x0c
+        call resetGameVars
+        ldVia A [gameVars + 1] 0xff
+
+        call waitEnter
+        jp newGame
+
+    clearScreen <- labelled do
+        ld A 0x0c
+        rst 0x28
+        ld A 0x0d
+        rst 0x28
+        ret
+
+    waitEnter <- labelled do
+        -- message1 13
+        withLabel \loop -> do
+            rst 0x18
+            cp 0x0d
+            jp NZ loop
+        ret
+
+    -- Input one line of text (up to 38 characters), store result in [HL]
+    -- Mangles `HL`, `A` and `B`
+    inputLine <- labelled $ mdo
+        ld A 0x29
+        rst 0x28
+        ld A 0x20
+        rst 0x28
+        ld B 38
+        withLabel \loop -> mdo
+            ld [HL] 0xff
+            rst 0x18
+            cp 0x0d -- End of line
+            jr Z enter
+            cp 0x07 -- Backspace
+            jr Z backspace
+
+            -- Normal character: print and record
+            dec B
+            jr Z noMoreRoom
             rst 0x28
-            ld A 0x0d
-            rst 0x28
-            ret
+            ld [HL] A
+            inc HL
+            jr loop
 
-        waitEnter <- labelled do
-            -- message1 13
-            withLabel \loop -> do
-                rst 0x18
-                cp 0x0d
-                jp NZ loop
-            ret
-
-        -- Input one line of text (up to 38 characters), store result in [HL]
-        -- Mangles `HL`, `A` and `B`
-        inputLine <- labelled $ mdo
-            ld A 0x29
-            rst 0x28
-            ld A 0x20
-            rst 0x28
-            ld B 38
-            withLabel \loop -> mdo
-                ld [HL] 0xff
-                rst 0x18
-                cp 0x0d -- End of line
-                jr Z enter
-                cp 0x07 -- Backspace
-                jr Z backspace
-
-                -- Normal character: print and record
-                dec B
-                jr Z noMoreRoom
-                rst 0x28
+            noMoreRoom <- labelled do
+                inc B -- So that next `dec B` will trigger `Z` again
+                dec HL
                 ld [HL] A
+                ld A 0x07 -- Erase previous last character
+                rst 0x28
+                ld A [HL] -- Print new last character
                 inc HL
+                rst 0x28
                 jr loop
 
-                noMoreRoom <- labelled do
-                    inc B -- So that next `dec B` will trigger `Z` again
-                    dec HL
-                    ld [HL] A
-                    ld A 0x07 -- Erase previous last character
-                    rst 0x28
-                    ld A [HL] -- Print new last character
-                    inc HL
-                    rst 0x28
+            backspace <- labelled do
+                -- Try to increase B
+                inc B
+                skippable \inRange -> do
+                    ld A B
+                    cp 39
+                    jr NZ inRange
+                    dec B
                     jr loop
 
-                backspace <- labelled do
-                    -- Try to increase B
-                    inc B
-                    skippable \inRange -> do
-                        ld A B
-                        cp 39
-                        jr NZ inRange
-                        dec B
-                        jr loop
+                ld A 0x07
+                rst 0x28
+                ld [HL] 0x00
+                dec HL
+                jr loop
 
-                    ld A 0x07
-                    rst 0x28
-                    ld [HL] 0x00
-                    dec HL
-                    jr loop
+            enter <- labelled do
+                ld [HL] 0x20
+                inc HL
+                ld [HL] 0xff
+                ret
+            pure ()
 
-                enter <- labelled do
-                    ld [HL] 0x20
-                    inc HL
-                    ld [HL] 0xff
-                    ret
-                pure ()
+    readLine <- labelled do
+        ld HL inputBuf
+        call inputLine
+        call paragraph
+        jp parseLine
 
-        readLine <- labelled do
-            ld HL inputBuf
-            call inputLine
-            call paragraph
-            jp parseLine
+    parseLine <- labelled do
+        -- For a bit of extra zoom-zoom
+        videoOff
 
-        parseLine <- labelled do
-            -- For a bit of extra zoom-zoom
-            videoOff
-
-            -- Clear out `parseBuf`
-            ld IY parseBuf
-            ld A 0x00
-            decLoopB 5 do
-                ld [IY] A
-                inc IY
-
-            -- Parse up to 5 words from inputBuf into parseBuf
-            ld HL inputBuf
-            ld IY parseBuf
-            skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
-                -- Skip all leading spaces
-                ld A 0x20
-                skippable \end -> loopForever do
-                    cp [HL]
-                    jp NZ end
-                    inc HL
-
-                ld A [HL]
-                cp 0xff
-                jr Z end
-                push BC
-                call parse1
-                pop BC
-                jr Z parseError
-
-                -- Is this a connective? If so, it doesn't count
-                skippable \notConnective -> do
-                    ld A [IY]
-                    cp connective
-                    jp NZ notConnective
-                    ld [IY] 0x00
-                    jp doesntCount
-                inc IY
-            videoOn
-            ret
-
-        parseError <- labelled do
-            videoOn
-            message1 1
-            jp readLine
-
-        dbgPrintParseBuf <- labelled do
-            -- DEBUG: print parse buffer
-            ld IY parseBuf
-            replicateM_ 5 do
-                ld A [IY]
-                inc IY
-                call 0x01a5
-            ld A 0x0d
-            rst 0x28
-            ret
-
-        -- Parse one word from [HL] into [IY], advancing `HL` as needed
-        -- Post: flag Z iff parse error
-        parse1 <- labelled mdo
-            ld IX dict
-            loopForever do
-                ld A [IX]
-                cp 0xff
-                ret Z
-
-                push IY
-                call matchWord
-                pop IY
-                cp 0x00
-                jp NZ found
-
-            found <- label
+        -- Clear out `parseBuf`
+        ld IY parseBuf
+        ld A 0x00
+        decLoopB 5 do
             ld [IY] A
-            ret
+            inc IY
 
-        -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
-        -- After: `A` contains the word code (or 0 on non-match), and
-        -- `HL` is the rest of the input
-        -- Clobbers: `BC`, `IY`
-        matchWord <- labelled mdo
-            ldVia A [shiftState] 0
-            ldVia A [unpackIsLast] 0
-            -- Unpack word into dictBuf
-            ld DE dictBuf
-            ldVia A [dictBuf] 0x00
-            withLabel \keepDecoding -> do
-                call unpackZ
-                ld IY unpackBuf
-                replicateM_ 3 $ do
-                    ld A [IY]
-                    inc IY
-                    call decodeZ1
-                    skippable \unprintable -> do
-                        jp Z unprintable
-                        ld [DE] A
-                        inc DE
-                ld A [unpackIsLast]
-                cp 0
-                jp Z keepDecoding
-            -- Note: IX now points to the code of the word we're trying to match
-
-            -- If dictBuf is empty, this is an invalid entry
-            ld A [dictBuf]
-            cp 0
-            ret Z
-
-            ld DE dictBuf
-            push IX
-            push HL
-            -- Match the first 5 characters of HL, or until there is a space
-            decLoopB 5 do
-                ld A [DE]
-                inc DE
-                ld C [HL]
-                cp C
-                jp NZ noMatch
-                cp 0x20 -- If next char to match is a space, then we're done
-                jp Z match
+        -- Parse up to 5 words from inputBuf into parseBuf
+        ld HL inputBuf
+        ld IY parseBuf
+        skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
+            -- Skip all leading spaces
+            ld A 0x20
+            skippable \end -> loopForever do
+                cp [HL]
+                jp NZ end
                 inc HL
 
-            match <- labelled do
-                -- Skip all remaining characters of the current word
-                skippable \end -> loopForever do
-                    ld A [HL]
-                    cp 0x20
-                    jp Z end
-                    inc HL
+            ld A [HL]
+            cp 0xff
+            jr Z end
+            push BC
+            call parse1
+            pop BC
+            jr Z parseError
 
-                pop IX -- Discard pushed IX, since we want to "commit" our progress
-                pop IX
-                ld A [IX]
-                ret
+            -- Is this a connective? If so, it doesn't count
+            skippable \notConnective -> do
+                ld A [IY]
+                cp connective
+                jp NZ notConnective
+                ld [IY] 0x00
+                jp doesntCount
+            inc IY
+        videoOn
+        ret
 
-            noMatch <- labelled do
-                pop HL
-                pop IX
-                inc IX
-                ld A 0
-                ret
-            pure ()
+    parseError <- labelled do
+        videoOn
+        message1 1
+        jp readLine
 
-        let message1 msg = do
-                ld IX text1
-                ld B msg
-                call printlnZ
+    dbgPrintParseBuf <- labelled do
+        -- DEBUG: print parse buffer
+        ld IY parseBuf
+        replicateM_ 5 do
+            ld A [IY]
+            inc IY
+            call 0x01a5
+        ld A 0x0d
+        rst 0x28
+        ret
 
-        -- Input: IX contains the message bank, B is the message ID
-        printlnZ <- labelled do
-            call printZ
-        paragraph <- labelled do
-            ld A 0x0d
-            rst 0x28
-            rst 0x28
-            ret
-
-        -- Input: IX contains the message bank, B is the message ID
-        printZ <- labelled $ withLabel \tryNext -> mdo
-            -- Is this the message we want?
-            dec B
-            jr Z start
-
-            loopForever do
-                inc IX
-                ld A [IX]
-                inc IX
-                bit 7 A
-                jr NZ tryNext
-
-            start <- labelled $ do
-                ldVia A [shiftState] 0
-                ldVia A [unpackIsLast] 0
-                loopForever do
-                    call unpackZ
-                    ld HL unpackBuf
-                    replicateM_ 3 $ do
-                        ld A [HL]
-                        inc HL
-                        call decodeZ1
-                        skippable \unprintable -> do
-                            jr Z unprintable
-                            call 0x28
-                    ld A [unpackIsLast]
-                    cp 0
-                    ret NZ
-            pure ()
-
-        unpackZ <- labelled $ unpackZ_ unpackBuf unpackIsLast
-
-        -- Decode a single character in ZSCII codepage in A.
-        -- Sets Z iff the character is unprintable (i.e. a shift)
-        decodeZ1 <- labelled mdo
-            push AF
-            ld A [shiftState]
-            cp 0
-            ldVia A [shiftState] 0
-            jr NZ shifted
-            pop AF
-
-            cp 0
+    -- Parse one word from [HL] into [IY], advancing `HL` as needed
+    -- Post: flag Z iff parse error
+    parse1 <- labelled mdo
+        ld IX dict_
+        loopForever do
+            ld A [IX]
+            cp 0xff
             ret Z
 
-            cp 1
-            jr Z shift
+            push IY
+            call matchWord
+            pop IY
+            cp 0x00
+            jp NZ found
 
-            cp 2
-            jr Z space
-            cp 3
-            jr Z period
-            cp 4
-            jr Z comma
-            cp 5
-            jr Z newline
+        found <- label
+        ld [IY] A
+        ret
 
-            add A (0x41 - 6)
-            printable <- labelled do
-                cp 0 -- Clear Z flag
-                ret
-
-            space <- labelled do
-                ld A 0x20
-                jr printable
-            period <- labelled do
-                ld A 0x2e
-                jr printable
-            comma <- labelled do
-                ld A 0x2c
-                jr printable
-            newline <- labelled do
-                ld A 0x0d
-                jr printable
-
-            shifted <- labelled mdo
-                pop AF
-                sub 1
-                ret C
-                cp 22
-                jp C symbol
-                add A (0x30 - 22 + 1)
-                jr printable
-
-                symbol <- labelled mdo
-                    push IX
-                    push DE
-                    ld IX symbols
-                    ld D 0
-                    ld E A
-                    add IX DE
-                    ld A [IX]
-                    pop DE
-                    pop IX
-                    jr printable
-                    symbols <- labelled $ db [0x3f, 0x27, 0x3a, 0x2d, 0x26, 0x21, 0x0c, 0x0e]
-                    pure ()
-                pure ()
-
-            shift <- labelled do
-                ldVia A [shiftState] 1
-                setZ
-                ret
-            pure ()
-
-        -- Find data corresponding to the current room, starting at HL
-        -- Afterwards, HL points to the *length* of the current room's data,
-        -- and the actual data starts afterwards
-        findByRoom <- labelled do
-            ld A [playerLoc]
-            ld B 0
-            loopForever do
-                dec A
-                ret Z
-                ld C [HL]
-                add HL BC
-
-        -- Find data corresponding to the current input in parseBuf, starting at HL
-        -- Afterwards: Z iff no mach
-        findByWords <- labelled mdo
-            ld D 0 -- We'll use DE as an offset to add to HL
-
-            loopForever mdo
-                ld [savedHL] HL
-
-                ld A [HL] -- Load skip amount, needed later if no match
-                inc HL
-
-                -- No more entries?
-                cp 0
-                ret Z
-                ld E A
-
-                -- Compare with parseBuf
-                ld IX parseBuf
-                loopForever do
-                    ld B [IX] -- The next input token
-                    inc IX
-                    ld A [HL] -- The pattern from the set of responses
-                    inc HL
-
-                    cp B -- Are they the same word?
-                    jp NZ noMatch
-
-                    cp 0 -- If this is the last word, we're done
-                    jp Z match
-
-                match <- labelled do
-                    -- Clear Z flag
-                    ld A 1
-                    cp 0
-                    ret
-
-                noMatch <- label
-                -- No match, so skip (based on original origin!)
-                ld HL [savedHL]
-                add HL DE
-
-            savedHL <- labelled $ dw [0]
-            pure ()
-
-        -- Are there any items at location `D`? If yes, set Z
-        -- Clobbers `IY`, `A`, `B`
-        anyItemsAtD <- labelled do
-            ld IY $ gameVars + fromIntegral maxItem
-            decLoopB (maxItem - minItem) $ skippable \notHere -> do
-                dec IY
+    -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
+    -- After: `A` contains the word code (or 0 on non-match), and
+    -- `HL` is the rest of the input
+    -- Clobbers: `BC`, `IY`
+    matchWord <- labelled mdo
+        ldVia A [shiftState] 0
+        ldVia A [unpackIsLast] 0
+        -- Unpack word into dictBuf
+        ld DE dictBuf
+        ldVia A [dictBuf] 0x00
+        withLabel \keepDecoding -> do
+            call unpackZ
+            ld IY unpackBuf
+            replicateM_ 3 $ do
                 ld A [IY]
-                cp D
-                ret Z
-            ld A 0
-            cp 1
-            ret
+                inc IY
+                call decodeZ1
+                skippable \unprintable -> do
+                    jp Z unprintable
+                    ld [DE] A
+                    inc DE
+            ld A [unpackIsLast]
+            cp 0
+            jp Z keepDecoding
+        -- Note: IX now points to the code of the word we're trying to match
 
-        -- Print all items at location `D`.
-        -- Clobbers `IY`, `A`, `B`
-        printItemsAtD <- labelled do
-            ld IY $ gameVars + fromIntegral maxItem
-            decLoopB (maxItem - minItem) $ skippable \next -> do
-                dec IY
-                ld A [IY]
-                cp D
-                jp NZ next
-                ld IX text2
-                push BC
-                ld A B
-                add A $ minItem - 1
-                ld B A
-                call printlnZ
-                pop BC
-            ret
+        -- If dictBuf is empty, this is an invalid entry
+        ld A [dictBuf]
+        cp 0
+        ret Z
 
-        -- Move all items at location `D` to location `E`. `C` is number of items moved.
-        -- Clobbers `IY`, `A`, `B`
-        moveItemsDE <- labelled do
-            ld IY $ gameVars + fromIntegral maxItem
-            ld C 0
-            decLoopB (maxItem - minItem) $ skippable \next -> do
-                dec IY
-                ld A [IY]
-                cp D
-                jp NZ next
-                inc C
-                ld [IY] E
-            ret
-
-        -- Run "enter" script for current room
-        runEnter <- labelled do
-            ld HL scriptEnter
-            call findByRoom
+        ld DE dictBuf
+        push IX
+        push HL
+        -- Match the first 5 characters of HL, or until there is a space
+        decLoopB 5 do
+            ld A [DE]
+            inc DE
+            ld C [HL]
+            cp C
+            jp NZ noMatch
+            cp 0x20 -- If next char to match is a space, then we're done
+            jp Z match
             inc HL
-            ld IX text2
-            call runRatScript
 
-            ldVia A D [playerLoc]
-            call anyItemsAtD
-            ret NZ
-            message1 0x0b
-            jp printItemsAtD
-
-        runAfter <- labelled do
-            ld HL scriptAfter
-            ld IX text1
-            jp runRatScript
-
-        -- Returns Z iff there was a matching command
-        runInteractiveBuiltin <- labelled mdo
-            ld A [parseBuf]
-            skippable \notMove -> do
-                cp 0x0c
-                jp NC notMove
-                message1 3
-                setZ
-                ret
-
-            let builtin val body = skippable \skip -> do
-                    cp val
-                    jp NZ skip
-                    body
-
-            let finishWith :: (Load Reg8 msg) => Word16 -> msg -> Z80ASM
-                finishWith bank msg = do
-                    ld IX bank
-                    ld B msg
-                    jp finish
-
-            builtin 0x0d do -- Look
-                ldVia A [moved] 1
-                ret
-
-            builtin 0x15 do -- Examine
-                finishWith text1 9
-
-            when supportScore do
-                builtin 0x14 do -- Score
-                    jp printStatus
-
-            when supportQSave do
-                builtin 0x1b do         -- QSave
-                    call qsave
-                    finishWith text1 4
-
-                builtin 0x1c do         -- QLoad
-                    ld DE gameVars
-                    ld HL savedVars
-                    ld BC 256
-                    ldir
-                    ldVia A [moved] 1
-                    finishWith text1 4
-
-            when supportUndo do
-                builtin 0x1a do -- Undo
-                    -- TODO
-                    finishWith text1 2
-
-            builtin 0x16 do -- Help
-                if not supportHelp then do
-                    finishWith text1 10
-                  else mdo
-                    ld D 0
-                    ldVia A E [playerLoc]
-                    ld HL help
-                    add HL DE
-                    ld A [HL]
-                    skippable \noHelp -> do
-                        cp 0
-                        jr Z noHelp
-                        finishWith text2 A
-                    finishWith text1 10
-
-            builtin 0x10 mdo -- Inventory
-                ld D 0
-                call anyItemsAtD
-                skippable \haveItems -> do
-                    jr Z haveItems
-                    finishWith text1 8
-                message1 7
-                call printItemsAtD
-                setZ
-                ret
-
-            builtin 0x0e mdo -- Take
-                ld A [parseBuf + 1]
-                cp 0x00
-                jp Z takeAll -- No nouns
-
-                -- Is it an item?
-                cp minItem
-                jp C notItem
-                cp maxItem
-                jp NC notItem
-
-                -- Is it here?
-                ld E A
-                call varIY
-                ld A [playerLoc]
-                cp [IY]
-                jr NZ notHere
-
-                -- Finally, all good
-                ld [IY] 0
-                finishWith text1 4
-
-                notHere <- labelled do
-                    finishWith text1 5
-
-                takeAll <- labelled mdo
-                    ldVia A D [playerLoc]
-                    ldVia A E 0x00
-                    call moveItemsDE
-
-                    -- Did we take anything after all?
-                    ld A C
-                    cp 0
-                    jr Z noItems
-                    finishWith text1 4
-
-                    noItems <- label
-                    finishWith text1 16
-
-                finish <- label
-                call printlnZ
-                setZ
-                ret
-
-            builtin 0x0f mdo -- Drop
-                ld A [parseBuf + 1]
-                cp 0x00
-                jp Z dropAll -- No nouns
-
-                -- Is it an item?
-                cp minItem
-                jp C notItem
-                cp maxItem
-                jp NC notItem
-
-                -- Does the player have it?
-                ld E A
-                call varIY
-                ld A 0
-                cp [IY]
-                jr NZ notHere
-
-                -- Finally, all good
-                ldVia A [IY] [playerLoc]
-                finishWith text1 4
-
-                notHere <- labelled do
-                    finishWith text1 6
-
-                dropAll <- labelled mdo
-                    ldVia A D 0x00
-                    ldVia A E [playerLoc]
-                    call moveItemsDE
-
-                    -- Did we drop anything after all?
-                    ld A C
-                    cp 0
-                    jr Z noItems
-                    finishWith text1 4
-
-                    noItems <- label
-                    finishWith text1 8
-
-                finish <- label
-                call printlnZ
-                setZ
-                ret
-
-            ret
-
-            notItem <- labelled do
-                ld IX text1
-                ld B 2
-                -- Fall through to `finish`
-
-            finish <- labelled do
-                call printlnZ
-                setZ
-                ret
-
-            pure ()
-
-
-        -- Returns NZ iff there was a matching command
-        runInteractiveLocal <- labelled do
-            ld HL scriptLocal
-            call findByRoom
-            inc HL
-            jp runInteractive
-
-        -- Returns NZ iff there was a matching command
-        runInteractiveGlobal <- labelled do
-            ld HL scriptGlobal
-        runInteractive <- labelled do
-            call findByWords
-            ret Z
-
-            ld IX text1
-            call runRatScript
-            -- Clear NZ flag
-            ld A 0
-            cp 1
-            ret
-
-        let fetch :: (Load r [HL]) => r -> Z80ASM
-            fetch r = do
-                ld r [HL]
+        match <- labelled do
+            -- Skip all remaining characters of the current word
+            skippable \end -> loopForever do
+                ld A [HL]
+                cp 0x20
+                jp Z end
                 inc HL
 
-        -- Run a Rat script starting at IX, with text bank HL
-        runRatScript <- labelled do
-            fetch A
-            cp 0x18
-            jp C runRatStmt
-        ratMessage <- labelled do
-            ld B A
-            push IX
-            push HL
-            call printlnZ
+            pop IX -- Discard pushed IX, since we want to "commit" our progress
+            pop IX
+            ld A [IX]
+            ret
+
+        noMatch <- labelled do
             pop HL
             pop IX
+            inc IX
+            ld A 0
+            ret
+        pure ()
+
+    let message1 msg = do
+            ld IX text1
+            ld B msg
+            call printlnZ
+
+    -- Input: IX contains the message bank, B is the message ID
+    printlnZ <- labelled do
+        call printZ
+    paragraph <- labelled do
+        ld A 0x0d
+        rst 0x28
+        rst 0x28
+        ret
+
+    -- Input: IX contains the message bank, B is the message ID
+    printZ <- labelled $ withLabel \tryNext -> mdo
+        -- Is this the message we want?
+        dec B
+        jr Z start
+
+        loopForever do
+            inc IX
+            ld A [IX]
+            inc IX
+            bit 7 A
+            jr NZ tryNext
+
+        start <- labelled $ do
+            ldVia A [shiftState] 0
+            ldVia A [unpackIsLast] 0
+            loopForever do
+                call unpackZ
+                ld HL unpackBuf
+                replicateM_ 3 $ do
+                    ld A [HL]
+                    inc HL
+                    call decodeZ1
+                    skippable \unprintable -> do
+                        jr Z unprintable
+                        call 0x28
+                ld A [unpackIsLast]
+                cp 0
+                ret NZ
+        pure ()
+
+    unpackZ <- labelled $ unpackZ_ unpackBuf unpackIsLast
+
+    -- Decode a single character in ZSCII codepage in A.
+    -- Sets Z iff the character is unprintable (i.e. a shift)
+    decodeZ1 <- labelled mdo
+        push AF
+        ld A [shiftState]
+        cp 0
+        ldVia A [shiftState] 0
+        jr NZ shifted
+        pop AF
+
+        cp 0
+        ret Z
+
+        cp 1
+        jr Z shift
+
+        cp 2
+        jr Z space
+        cp 3
+        jr Z period
+        cp 4
+        jr Z comma
+        cp 5
+        jr Z newline
+
+        add A (0x41 - 6)
+        printable <- labelled do
+            cp 0 -- Clear Z flag
+            ret
+
+        space <- labelled do
+            ld A 0x20
+            jr printable
+        period <- labelled do
+            ld A 0x2e
+            jr printable
+        comma <- labelled do
+            ld A 0x2c
+            jr printable
+        newline <- labelled do
+            ld A 0x0d
+            jr printable
+
+        shifted <- labelled mdo
+            pop AF
+            sub 1
+            ret C
+            cp 22
+            jp C symbol
+            add A (0x30 - 22 + 1)
+            jr printable
+
+            symbol <- labelled mdo
+                push IX
+                push DE
+                ld IX symbols
+                ld D 0
+                ld E A
+                add IX DE
+                ld A [IX]
+                pop DE
+                pop IX
+                jr printable
+                symbols <- labelled $ db [0x3f, 0x27, 0x3a, 0x2d, 0x26, 0x21, 0x0c, 0x0e]
+                pure ()
+            pure ()
+
+        shift <- labelled do
+            ldVia A [shiftState] 1
+            setZ
+            ret
+        pure ()
+
+    -- Find data corresponding to the current room, starting at HL
+    -- Afterwards, HL points to the *length* of the current room's data,
+    -- and the actual data starts afterwards
+    findByRoom <- labelled do
+        ld A [playerLoc]
+        ld B 0
+        loopForever do
+            dec A
+            ret Z
+            ld C [HL]
+            add HL BC
+
+    -- Find data corresponding to the current input in parseBuf, starting at HL
+    -- Afterwards: Z iff no mach
+    findByWords <- labelled mdo
+        ld D 0 -- We'll use DE as an offset to add to HL
+
+        loopForever mdo
+            ld [savedHL] HL
+
+            ld A [HL] -- Load skip amount, needed later if no match
+            inc HL
+
+            -- No more entries?
+            cp 0
+            ret Z
+            ld E A
+
+            -- Compare with parseBuf
+            ld IX parseBuf
+            loopForever do
+                ld B [IX] -- The next input token
+                inc IX
+                ld A [HL] -- The pattern from the set of responses
+                inc HL
+
+                cp B -- Are they the same word?
+                jp NZ noMatch
+
+                cp 0 -- If this is the last word, we're done
+                jp Z match
+
+            match <- labelled do
+                -- Clear Z flag
+                ld A 1
+                cp 0
+                ret
+
+            noMatch <- label
+            -- No match, so skip (based on original origin!)
+            ld HL [savedHL]
+            add HL DE
+
+        savedHL <- labelled $ dw [0]
+        pure ()
+
+    -- Are there any items at location `D`? If yes, set Z
+    -- Clobbers `IY`, `A`, `B`
+    anyItemsAtD <- labelled do
+        ld IY $ gameVars + fromIntegral maxItem
+        decLoopB (maxItem - minItem) $ skippable \notHere -> do
+            dec IY
+            ld A [IY]
+            cp D
+            ret Z
+        ld A 0
+        cp 1
+        ret
+
+    -- Print all items at location `D`.
+    -- Clobbers `IY`, `A`, `B`
+    printItemsAtD <- labelled do
+        ld IY $ gameVars + fromIntegral maxItem
+        decLoopB (maxItem - minItem) $ skippable \next -> do
+            dec IY
+            ld A [IY]
+            cp D
+            jp NZ next
+            ld IX text2
+            push BC
+            ld A B
+            add A $ minItem - 1
+            ld B A
+            call printlnZ
+            pop BC
+        ret
+
+    -- Move all items at location `D` to location `E`. `C` is number of items moved.
+    -- Clobbers `IY`, `A`, `B`
+    moveItemsDE <- labelled do
+        ld IY $ gameVars + fromIntegral maxItem
+        ld C 0
+        decLoopB (maxItem - minItem) $ skippable \next -> do
+            dec IY
+            ld A [IY]
+            cp D
+            jp NZ next
+            inc C
+            ld [IY] E
+        ret
+
+    -- Run "enter" script for current room
+    runEnter <- labelled do
+        ld HL scriptEnter
+        call findByRoom
+        inc HL
+        ld IX text2
+        call runRatScript
+
+        ldVia A D [playerLoc]
+        call anyItemsAtD
+        ret NZ
+        message1 0x0b
+        jp printItemsAtD
+
+    runAfter <- labelled do
+        ld HL scriptAfter
+        ld IX text1
+        jp runRatScript
+
+    -- Returns Z iff there was a matching command
+    runInteractiveBuiltin <- labelled mdo
+        ld A [parseBuf]
+        skippable \notMove -> do
+            cp 0x0c
+            jp NC notMove
+            message1 3
+            setZ
+            ret
+
+        let builtin val body = skippable \skip -> do
+                cp val
+                jp NZ skip
+                body
+
+        let finishWith :: (Load Reg8 msg) => Word16 -> msg -> Z80ASM
+            finishWith bank msg = do
+                ld IX bank
+                ld B msg
+                jp finish
+
+        builtin 0x0d do -- Look
+            ldVia A [moved] 1
+            ret
+
+        builtin 0x15 do -- Examine
+            finishWith text1 9
+
+        when supportScore do
+            builtin 0x14 do -- Score
+                jp printStatus
+
+        when supportQSave do
+            builtin 0x1b do         -- QSave
+                call qsave
+                finishWith text1 4
+
+            builtin 0x1c do         -- QLoad
+                ld DE gameVars
+                ld HL savedVars
+                ld BC 256
+                ldir
+                ldVia A [moved] 1
+                finishWith text1 4
+
+        when supportUndo do
+            builtin 0x1a do -- Undo
+                -- TODO
+                finishWith text1 2
+
+        builtin 0x16 do -- Help
+            if not supportHelp then do
+                finishWith text1 10
+              else mdo
+                ld D 0
+                ldVia A E [playerLoc]
+                ld HL help
+                add HL DE
+                ld A [HL]
+                skippable \noHelp -> do
+                    cp 0
+                    jr Z noHelp
+                    finishWith text2 A
+                finishWith text1 10
+
+        builtin 0x10 mdo -- Inventory
+            ld D 0
+            call anyItemsAtD
+            skippable \haveItems -> do
+                jr Z haveItems
+                finishWith text1 8
+            message1 7
+            call printItemsAtD
+            setZ
+            ret
+
+        builtin 0x0e mdo -- Take
+            ld A [parseBuf + 1]
+            cp 0x00
+            jp Z takeAll -- No nouns
+
+            -- Is it an item?
+            cp minItem
+            jp C notItem
+            cp maxItem
+            jp NC notItem
+
+            -- Is it here?
+            ld E A
+            call varIY
+            ld A [playerLoc]
+            cp [IY]
+            jr NZ notHere
+
+            -- Finally, all good
+            ld [IY] 0
+            finishWith text1 4
+
+            notHere <- labelled do
+                finishWith text1 5
+
+            takeAll <- labelled mdo
+                ldVia A D [playerLoc]
+                ldVia A E 0x00
+                call moveItemsDE
+
+                -- Did we take anything after all?
+                ld A C
+                cp 0
+                jr Z noItems
+                finishWith text1 4
+
+                noItems <- label
+                finishWith text1 16
+
+            finish <- label
+            call printlnZ
+            setZ
+            ret
+
+        builtin 0x0f mdo -- Drop
+            ld A [parseBuf + 1]
+            cp 0x00
+            jp Z dropAll -- No nouns
+
+            -- Is it an item?
+            cp minItem
+            jp C notItem
+            cp maxItem
+            jp NC notItem
+
+            -- Does the player have it?
+            ld E A
+            call varIY
+            ld A 0
+            cp [IY]
+            jr NZ notHere
+
+            -- Finally, all good
+            ldVia A [IY] [playerLoc]
+            finishWith text1 4
+
+            notHere <- labelled do
+                finishWith text1 6
+
+            dropAll <- labelled mdo
+                ldVia A D 0x00
+                ldVia A E [playerLoc]
+                call moveItemsDE
+
+                -- Did we drop anything after all?
+                ld A C
+                cp 0
+                jr Z noItems
+                finishWith text1 4
+
+                noItems <- label
+                finishWith text1 8
+
+            finish <- label
+            call printlnZ
+            setZ
+            ret
+
+        ret
+
+        notItem <- labelled do
+            ld IX text1
+            ld B 2
+            -- Fall through to `finish`
+
+        finish <- labelled do
+            call printlnZ
+            setZ
+            ret
+
+        pure ()
+
+
+    -- Returns NZ iff there was a matching command
+    runInteractiveLocal <- labelled do
+        ld HL scriptLocal
+        call findByRoom
+        inc HL
+        jp runInteractive
+
+    -- Returns NZ iff there was a matching command
+    runInteractiveGlobal <- labelled do
+        ld HL scriptGlobal
+    runInteractive <- labelled do
+        call findByWords
+        ret Z
+
+        ld IX text1
+        call runRatScript
+        -- Clear NZ flag
+        ld A 0
+        cp 1
+        ret
+
+    let fetch :: (Load r [HL]) => r -> Z80ASM
+        fetch r = do
+            ld r [HL]
+            inc HL
+
+    -- Run a Rat script starting at IX, with text bank HL
+    runRatScript <- labelled do
+        fetch A
+        cp 0x18
+        jp C runRatStmt
+    ratMessage <- labelled do
+        ld B A
+        push IX
+        push HL
+        call printlnZ
+        pop HL
+        pop IX
+        jp runRatScript
+
+    runRatStmt <- labelled mdo
+        -- We know `A` is at most 0x18, i.e. a valid stmt opcode
+        -- dbgPrintA
+
+        -- Compute jump table address into DE
+        ld DE opTable
+        sla A
+        add A E
+        ld E A
+        skippable \noCarry -> do
+            jp NC noCarry
+            inc D
+
+        -- Load jump destination
+        ldVia A [trampoline + 1] [DE]
+        inc DE
+        ldVia A [trampoline + 2] [DE]
+
+        -- Do the jump
+        trampoline <- labelled do
+            jp 0x0000
+
+        opRet <- labelled do
+            ret
+
+        opMessage <- labelled do
+            fetch A -- Message to print
+            jp ratMessage
+
+        let opAssert val = do
+                fetch E -- Variable to check
+                fetch B -- Message to print if assertion fails
+                call getVar
+                skippable \assertHolds -> do
+                    cp val
+                    jp Z assertHolds
+                    jp printlnZ
+                jp runRatScript
+        opAssert00 <- labelled $ opAssert 0x00
+        opAssertFF <- labelled $ opAssert 0xff
+
+        opAssign <- labelled do
+            fetch E -- Variable
+            fetch A -- Value
+            call putVar
             jp runRatScript
 
-        runRatStmt <- labelled mdo
-            -- We know `A` is at most 0x18, i.e. a valid stmt opcode
-            -- dbgPrintA
+        opSetPlayerStatus <- labelled do
+            fetch A -- Value
+            ld [playerStatus] A
+            jp runRatScript
 
-            -- Compute jump table address into DE
-            ld DE opTable
-            sla A
-            add A E
-            ld E A
-            skippable \noCarry -> do
-                jp NC noCarry
-                inc D
-
-            -- Load jump destination
-            ldVia A [trampoline + 1] [DE]
-            inc DE
-            ldVia A [trampoline + 2] [DE]
-
-            -- Do the jump
-            trampoline <- labelled do
-                jp 0x0000
-
-            opRet <- labelled do
-                ret
-
-            opMessage <- labelled do
-                fetch A -- Message to print
-                jp ratMessage
-
-            let opAssert val = do
-                    fetch E -- Variable to check
-                    fetch B -- Message to print if assertion fails
-                    call getVar
-                    skippable \assertHolds -> do
-                        cp val
-                        jp Z assertHolds
-                        jp printlnZ
-                    jp runRatScript
-            opAssert00 <- labelled $ opAssert 0x00
-            opAssertFF <- labelled $ opAssert 0xff
-
-            opAssign <- labelled do
+        let opAssignConst val = do
                 fetch E -- Variable
-                fetch A -- Value
+                ld A val
                 call putVar
                 jp runRatScript
+        opAssignFF <- labelled $ opAssignConst 0xff
+        opAssign00 <- labelled $ opAssignConst 0x00
 
-            opSetPlayerStatus <- labelled do
-                fetch A -- Value
-                ld [playerStatus] A
-                jp runRatScript
+        opAssignLoc <- labelled do
+            fetch E -- Variable
+            ld A [gameVars + 0xff] -- Value
+            call putVar
+            jp runRatScript
 
-            let opAssignConst val = do
-                    fetch E -- Variable
-                    ld A val
-                    call putVar
-                    jp runRatScript
-            opAssignFF <- labelled $ opAssignConst 0xff
-            opAssign00 <- labelled $ opAssignConst 0x00
-
-            opAssignLoc <- labelled do
-                fetch E -- Variable
-                ld A [gameVars + 0xff] -- Value
-                call putVar
-                jp runRatScript
-
-            opSkip <- labelled do
-                ld E [HL] -- Number of bytes to skip
-                ld D 0
-                add HL DE
-                jp runRatScript
-
-            let opIf val = do
-                    fetch E -- Variable to check
-                    call getVar
-                    cp val
-                    jp NZ opSkip -- Number of bytes to skip if check fails
-                    inc HL
-                    jp runRatScript
-            opIf00 <- labelled $ opIf 0x00
-            opIfFF <- labelled $ opIf 0xff
-
-            opMoveTo <- labelled do
-                fetch A
-                ld [gameVars + 0xff] A
-                ldVia A [moved] 1
-                ret
-
-            opHeal <- labelled $ do
-                ld IY playerHealth
-                jp opAddToCounter
-            opAddScore <- labelled $ do
-                ld IY playerScore
-                jp opAddToCounter
-            opHurt <- labelled do
-                ld IY playerHealth
-                call opSubFromCounter
-
-            opIncIfNot0 <- labelled do
-                fetch E -- Variable
-                call getVar
-                cp 0
-                jp Z runRatScript
-                inc A
-                ld [IY] A
-                jp runRatScript
-
-            opAssertHere <- labelled do
-                fetch E -- Item to check
-                fetch B -- Message to print when item is not here
-                call getVar
-                cp 0x00   -- Item is in the player's posession
-                jp Z runRatScript
-                ld C A
-                ld A [playerLoc]
-                cp C
-                jp Z runRatScript
-                jp printlnZ
-
-            opSleep <- labelled do
-                fetch B
-                when release do
-                    withLabel \loop -> do
-                        exx
-                        decLoopB 8 halt
-                        exx
-                        djnz loop
-                jp runRatScript
-
-            let unimplemented n = labelled do
-                    replicateM_ n $ inc IX
-                    jp runRatScript
-
-                unsupported :: Z80 Location
-                unsupported = pure 0x0000
-
-            opSetScreen <- unsupported
-            opSpriteOn <- unsupported
-            opSpriteOff <- unsupported
-            opChime <- unsupported
-            opMachineCode <- unsupported
-            opCopyProtection <- unsupported
-
-            opTable <- labelled $ dw
-                [ opRet             -- 00
-                , opAssign          -- 01
-                , opMessage         -- 02
-                , opAssign00        -- 03
-                , opAssignFF        -- 04
-                , opAssignLoc       -- 05
-                , opAssert00        -- 06
-                , opAssertFF        -- 07
-                , opAssertHere      -- 08
-                , opSkip            -- 09
-                , opIf00            -- 0a
-                , opIfFF            -- 0b
-                , opMoveTo          -- 0c
-                , opSetPlayerStatus -- 0d
-                , opHeal            -- 0e
-                , opHurt            -- 0f
-                , opAddScore        -- 10
-                , opSetScreen       -- 11
-                , opSpriteOn        -- 12
-                , opSpriteOff       -- 13
-                , opChime           -- 14
-                , opSleep           -- 15
-                , opIncIfNot0       -- 16
-                , opMachineCode     -- 17
-                , opCopyProtection  -- 18
-                ]
-
-            -- Add to counter in `[IY]`
-            opAddToCounter <- labelled do
-                ld A [IY]
-                fetch B -- Value to add
-                add A B
-                daa
-                skippable \noOverflow -> do
-                    jp NC noOverflow
-                    ld A 0x99
-                ld [IY] A
-                jp runRatScript
-
-            -- Subtract from counter in `[IY]`
-            opSubFromCounter <- labelled do
-                ld A [IY]
-                fetch B -- Value to add
-                sub B
-                daa
-                skippable \noOverflow -> do
-                    jp NC noOverflow
-                    ld A 0
-                ld [IY] A
-                jp runRatScript
-            pure ()
-
-        resetGameVars <- labelled do
-            ld DE gameVars
-            ld A 0x00
-            decLoopB 256 do
-                ld [DE] A
-                inc DE
-
-            ld DE $ gameVars + fromIntegral minItem
-            ld HL resetVars
-            ld BC $ fromIntegral (maxItem - minItem)
-            ldir
-
-            ldVia A [playerLoc] startRoom
-            ldVia A [playerHealth] 0x50 -- in BCD!
-            ret
-
-        qsave <- labelled $ when supportQSave do
-            ld DE savedVars
-            ld HL gameVars
-            ld BC 256
-            ldir
-            ret
-
-        -- Pre: E is the variable's index
-        -- Post: IY is the variable's address
-        -- Clobbers: D, A, IY
-        varIY <- labelled do
-            ld IY gameVars
+        opSkip <- labelled do
+            ld E [HL] -- Number of bytes to skip
             ld D 0
-            add IY DE
+            add HL DE
+            jp runRatScript
+
+        let opIf val = do
+                fetch E -- Variable to check
+                call getVar
+                cp val
+                jp NZ opSkip -- Number of bytes to skip if check fails
+                inc HL
+                jp runRatScript
+        opIf00 <- labelled $ opIf 0x00
+        opIfFF <- labelled $ opIf 0xff
+
+        opMoveTo <- labelled do
+            fetch A
+            ld [gameVars + 0xff] A
+            ldVia A [moved] 1
             ret
 
-        -- Pre: E is the variable's index
-        -- Post: A is the variable's value
-        -- Clobbers: D, IY
-        getVar <- labelled do
-            call varIY
-            ld A [IY]
-            ret
+        opHeal <- labelled $ do
+            ld IY playerHealth
+            jp opAddToCounter
+        opAddScore <- labelled $ do
+            ld IY playerScore
+            jp opAddToCounter
+        opHurt <- labelled do
+            ld IY playerHealth
+            call opSubFromCounter
 
-        -- Pre: E is the variable's index, A is its value-to-be
-        -- Clobbers: D, IY
-        putVar <- labelled do
-            call varIY
+        opIncIfNot0 <- labelled do
+            fetch E -- Variable
+            call getVar
+            cp 0
+            jp Z runRatScript
+            inc A
             ld [IY] A
-            ret
+            jp runRatScript
 
-        getLocation <- labelled do
+        opAssertHere <- labelled do
+            fetch E -- Item to check
+            fetch B -- Message to print when item is not here
+            call getVar
+            cp 0x00   -- Item is in the player's posession
+            jp Z runRatScript
+            ld C A
             ld A [playerLoc]
-            ret
+            cp C
+            jp Z runRatScript
+            jp printlnZ
 
-        let labelledString s = do
-                l <- labelled $ db $ map (fromIntegral . ord) s
-                pure (l, s)
+        opSleep <- labelled do
+            fetch B
+            when release do
+                withLabel \loop -> do
+                    exx
+                    decLoopB 8 halt
+                    exx
+                    djnz loop
+            jp runRatScript
 
-        printStatus <- labelled $ when supportScore mdo
-            ld IY lbl
-            decLoopB (fromIntegral $ length s) do
-                ld A [IY]
-                inc IY
-                rst 0x28
-            ld A [playerHealth]
-            call printBCDPercent
-            jp printScore
+        let unimplemented n = labelled do
+                replicateM_ n $ inc IX
+                jp runRatScript
 
-            (lbl, s) <- labelledString "ERONLET:  "
-            pure ()
+            unsupported :: Z80 Location
+            unsupported = pure 0x0000
 
-        printScore <- labelled $ when supportScore mdo
-            ld IY lbl
-            decLoopB (fromIntegral $ length s) do
-                ld A [IY]
-                inc IY
-                rst 0x28
-            ld A [playerScore]
-            call printBCDPercent
-            setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
-            ret
+        opSetScreen <- unsupported
+        opSpriteOn <- unsupported
+        opSpriteOff <- unsupported
+        opChime <- unsupported
+        opMachineCode <- unsupported
+        opCopyProtection <- unsupported
 
-            (lbl, s) <- labelledString "PONTSZAM: "
-            pure ()
+        opTable <- labelled $ dw
+            [ opRet             -- 00
+            , opAssign          -- 01
+            , opMessage         -- 02
+            , opAssign00        -- 03
+            , opAssignFF        -- 04
+            , opAssignLoc       -- 05
+            , opAssert00        -- 06
+            , opAssertFF        -- 07
+            , opAssertHere      -- 08
+            , opSkip            -- 09
+            , opIf00            -- 0a
+            , opIfFF            -- 0b
+            , opMoveTo          -- 0c
+            , opSetPlayerStatus -- 0d
+            , opHeal            -- 0e
+            , opHurt            -- 0f
+            , opAddScore        -- 10
+            , opSetScreen       -- 11
+            , opSpriteOn        -- 12
+            , opSpriteOff       -- 13
+            , opChime           -- 14
+            , opSleep           -- 15
+            , opIncIfNot0       -- 16
+            , opMachineCode     -- 17
+            , opCopyProtection  -- 18
+            ]
 
-        printBCDPercent <- labelled $ when supportScore do
-            call 0x01a5
-            ld A $ fromIntegral . ord $ '%'
-            rst 0x28
-            ld A $ fromIntegral . ord $ '\r'
-            rst 0x28
-            ret
+        -- Add to counter in `[IY]`
+        opAddToCounter <- labelled do
+            ld A [IY]
+            fetch B -- Value to add
+            add A B
+            daa
+            skippable \noOverflow -> do
+                jp NC noOverflow
+                ld A 0x99
+            ld [IY] A
+            jp runRatScript
 
-        text1 <- labelled $ db text1'
-        text2 <- labelled $ db text2'
-        dict <- labelled $ db dict'
-        scriptEnter <- labelled $ db scriptEnter'
-        scriptAfter <- labelled $ db scriptAfter'
-        scriptGlobal <- labelled $ db scriptGlobal'
-        scriptLocal <-  labelled $ db scriptLocal'
-        help <- labelled $ when supportHelp $ db help'
-        resetVars <- labelled $ db reset'
-
-        moved <- labelled $ db [0]
-        unpackBuf <- labelled $ db [0, 0, 0]
-        unpackIsLast <- labelled $ db [0]
-        shiftState <- labelled $ db [0]
-
-        inputBuf <- labelled $ resb 40
-        parseBuf <- labelled $ resb 5
-        dictBuf <- labelled $ resb 5
-        gameVars <- labelled $ resb 256
-        let playerScore = gameVars + 0xfc
-            playerHealth = gameVars + 0xfd
-            playerStatus = gameVars + 0xfe
-            playerLoc = gameVars + 0xff
-        savedVars <- labelled $ when supportQSave $ resb 256
-        undoVars <- labelled $ when supportUndo $ resb 256
-        unless release nop -- To see real memory usage instead of just image size
+        -- Subtract from counter in `[IY]`
+        opSubFromCounter <- labelled do
+            ld A [IY]
+            fetch B -- Value to add
+            sub B
+            daa
+            skippable \noOverflow -> do
+                jp NC noOverflow
+                ld A 0
+            ld [IY] A
+            jp runRatScript
         pure ()
+
+    resetGameVars <- labelled do
+        ld DE gameVars
+        ld A 0x00
+        decLoopB 256 do
+            ld [DE] A
+            inc DE
+
+        ld DE $ gameVars + fromIntegral minItem
+        ld HL resetVars
+        ld BC $ fromIntegral (maxItem - minItem)
+        ldir
+
+        ldVia A [playerLoc] startRoom
+        ldVia A [playerHealth] 0x50 -- in BCD!
+        ret
+
+    qsave <- labelled $ when supportQSave do
+        ld DE savedVars
+        ld HL gameVars
+        ld BC 256
+        ldir
+        ret
+
+    -- Pre: E is the variable's index
+    -- Post: IY is the variable's address
+    -- Clobbers: D, A, IY
+    varIY <- labelled do
+        ld IY gameVars
+        ld D 0
+        add IY DE
+        ret
+
+    -- Pre: E is the variable's index
+    -- Post: A is the variable's value
+    -- Clobbers: D, IY
+    getVar <- labelled do
+        call varIY
+        ld A [IY]
+        ret
+
+    -- Pre: E is the variable's index, A is its value-to-be
+    -- Clobbers: D, IY
+    putVar <- labelled do
+        call varIY
+        ld [IY] A
+        ret
+
+    getLocation <- labelled do
+        ld A [playerLoc]
+        ret
+
+    let labelledString s = do
+            l <- labelled $ db $ map (fromIntegral . ord) s
+            pure (l, s)
+
+    printStatus <- labelled $ when supportScore mdo
+        ld IY lbl
+        decLoopB (fromIntegral $ length s) do
+            ld A [IY]
+            inc IY
+            rst 0x28
+        ld A [playerHealth]
+        call printBCDPercent
+        jp printScore
+
+        (lbl, s) <- labelledString "ERONLET:  "
+        pure ()
+
+    printScore <- labelled $ when supportScore mdo
+        ld IY lbl
+        decLoopB (fromIntegral $ length s) do
+            ld A [IY]
+            inc IY
+            rst 0x28
+        ld A [playerScore]
+        call printBCDPercent
+        setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
+        ret
+
+        (lbl, s) <- labelledString "PONTSZAM: "
+        pure ()
+
+    printBCDPercent <- labelled $ when supportScore do
+        call 0x01a5
+        ld A $ fromIntegral . ord $ '%'
+        rst 0x28
+        ld A $ fromIntegral . ord $ '\r'
+        rst 0x28
+        ret
+
+    text1 <- asset msgs1
+    text2 <- asset msgs2
+    dict_ <- asset dict
+    scriptEnter <- asset enterRoom
+    scriptAfter <- asset afterTurn
+    scriptGlobal <- asset interactiveGlobal
+    scriptLocal <-  asset interactiveLocal
+    help <- asset helpMap
+    resetVars <- asset resetState
+
+    moved <- labelled $ db [0]
+    unpackBuf <- labelled $ db [0, 0, 0]
+    unpackIsLast <- labelled $ db [0]
+    shiftState <- labelled $ db [0]
+
+    inputBuf <- labelled $ resb 40
+    parseBuf <- labelled $ resb 5
+    dictBuf <- labelled $ resb 5
+    gameVars <- labelled $ resb 256
+    let playerScore = gameVars + 0xfc
+        playerHealth = gameVars + 0xfd
+        playerStatus = gameVars + 0xfe
+        playerLoc = gameVars + 0xff
+    savedVars <- labelled $ when supportQSave $ resb 256
+    undoVars <- labelled $ when supportUndo $ resb 256
+    unless release nop -- To see real memory usage instead of just image size
+    pure ()
 
 
 -- Unpack a ZSCII pair of bytes from [IX] into [unpackBuf], and set [unpackIsLast]
