@@ -9,8 +9,10 @@ import RatBC.Words
 import RatBC.Text
 import RatBC.Game
 import RatBC.Pretty
-import RatBC.Game.FromImage
+-- import RatBC.Game.FromImage
 import RatBC.Game.Text
+
+import RatBC.Commodore64.Binary
 
 import Prettyprinter
 import Prettyprinter.Render.String

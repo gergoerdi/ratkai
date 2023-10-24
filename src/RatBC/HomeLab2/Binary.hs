@@ -7,6 +7,8 @@ import RatBC.Words
 import RatBC.Text
 import RatBC.Game
 
+import qualified RatBC.Commodore64.Binary as C64
+
 import Control.Monad.Identity
 import Control.Monad.RevState hiding (put)
 import qualified Control.Monad.RevState as RSt
@@ -24,8 +26,8 @@ import Data.Foldable (traverse_)
 
 fixupSkips :: Game Identity -> Game Identity
 fixupSkips game@Game{..} = game
-    { enterRoom = fmap (fmap assertNoSkips) enterRoom
-    , afterTurn = fmap assertNoSkips afterTurn
+    { enterRoom = fmap (fmap $ assertNoSkips "enterRoom") enterRoom
+    , afterTurn = fmap (assertNoSkips "afterTurn") afterTurn
     , interactiveGlobal = fmap fixupGlobal interactiveGlobal
     , interactiveLocal = fmap fixupLocal interactiveLocal
     }
@@ -39,8 +41,8 @@ fixupSkips game@Game{..} = game
             action' <- case reverse action of
                 Skip{}:action' -> do
                     skipToNext <- RSt.get
-                    pure $ reverse $ Skip skipToNext : map assertNoSkip action'
-                _ -> pure $ map assertNoSkip action
+                    pure $ reverse $ Skip skipToNext : assertNoSkips (show input) action'
+                _ -> pure $ assertNoSkips (show input) action
             pure action'
 
     reskipRoom :: [InputDispatch [Stmt]] -> State Word8 [InputDispatch [Stmt]]
@@ -62,7 +64,7 @@ assemble game@Game{..} = game
     , helpMap = Const . BL.pack . elems . runIdentity $ helpMap
     }
   where
-    putStmts = mapM_ put . ensureRet
+    putStmts = mapM_ C64.putStmt . ensureRet
 
     putInteractive :: [InputDispatch [Stmt]] -> Put
     putInteractive responses = do
@@ -105,15 +107,15 @@ ensureRet stmts = case reverse stmts of
     Skip{}:_ -> stmts
     stmts' -> reverse (Ret : stmts')
 
-assertNoSkip :: Stmt -> Stmt
-assertNoSkip = \case
-    Skip{} -> error "Skip"
-    When00 var body -> When00 var $ assertNoSkips body
-    WhenFF var body -> WhenFF var $ assertNoSkips body
+assertNoSkip :: String -> Stmt -> Stmt
+assertNoSkip tag = \case
+    Skip{} -> error $ "Skip " <> tag
+    When00 var body -> When00 var $ assertNoSkips tag body
+    WhenFF var body -> WhenFF var $ assertNoSkips tag body
     stmt -> stmt
 
-assertNoSkips :: [Stmt] -> [Stmt]
-assertNoSkips = map assertNoSkip
+assertNoSkips :: String -> [Stmt] -> [Stmt]
+assertNoSkips tag = map (assertNoSkip tag)
 
 writeFiles :: FilePath -> Game Identity -> IO ()
 writeFiles outputPath game = do

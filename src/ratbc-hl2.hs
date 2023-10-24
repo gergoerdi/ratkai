@@ -12,6 +12,7 @@ import RatBC.Game.Text
 import RatBC.HomeLab2
 import RatBC.HomeLab2.Strip
 import RatBC.HomeLab2.Binary as HL2
+import RatBC.Commodore64.Binary as C64
 
 import Options.Applicative
 import Control.Monad.Identity
@@ -31,7 +32,7 @@ main = do
     opts@Options{..} <- execParser optionsInfo
 
     game <- loadTextFiles inputPath
-    game <- pure $ if block then mapStmts (\_ -> restoreBlocks) game else game
+    game <- pure $ if block then mapStmts (\_ -> C64.restoreBlocks) game else game
     game <- pure $ stripGame game
 
     createDirectoryIfMissing True outputPath

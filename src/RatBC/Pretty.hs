@@ -3,6 +3,7 @@ module RatBC.Pretty where
 
 import RatBC.Syntax
 import RatBC.Game as Game
+import RatBC.Commodore64.Binary
 
 import Control.Monad.Identity
 import Data.Functor.Const
@@ -50,7 +51,7 @@ pprStmt msgs stmt = hsep
           Just extra -> fill 20 bytesDoc <+> extra
     ]
   where
-    bytesDoc = pprBytes $ runPut $ put stmt
+    bytesDoc = pprBytes $ runPut $ putStmt stmt
 
 pprBytes :: BL.ByteString -> Doc ann
 pprBytes bs = hsep [ fromString $ printf "%02x" b | b <- BL.unpack bs ]
