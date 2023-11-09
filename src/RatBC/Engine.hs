@@ -214,7 +214,7 @@ runBC = do
         0x0e -> inc playerHealth >> runBC
         0x0f -> dec playerHealth >> runBC
         0x10 -> inc playerScore >> runBC
-        0x15 -> fetch >> liftIO (putStrLn "<SLEEP>") >> runBC
+        0x15 -> fetch >>= \n -> liftIO (printf "<SLEEP %d>\n" n) >> runBC
         0x16 -> do
             var <- fetch
             val <- getVar var
