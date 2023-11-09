@@ -25,7 +25,7 @@ import Data.Foldable (traverse_)
 
 data Options = Options
     { inputPath :: FilePath
-    , transcriptPath :: FilePath
+    , transcriptPath :: Maybe FilePath
     , debug :: Bool
     }
 
@@ -73,8 +73,14 @@ main = do
             runTerp bank2 afterBC
             pure moved
 
-    initialTranscript <- lines <$> readFile' transcriptPath
-    withFile transcriptPath AppendMode \h -> do
+    initialTranscript <- case transcriptPath of
+        Nothing -> pure []
+        Just fileName -> lines <$> readFile' fileName
+    let withAppendMaybe maybePath body = case maybePath of
+            Nothing -> body $ \_ -> pure ()
+            Just fileName -> withFile fileName AppendMode \h -> body $ hPutStrLn h
+
+    withAppendMaybe transcriptPath \appendLine -> do
         void $ runEngine vars $ runInputT defaultSettings $ do
             let loop lines moved = do
                     when debug $ lift dumpVars
@@ -92,7 +98,7 @@ main = do
                             pure (Just line, lines')
                         [] -> do
                             mline <- getInputLine "RatBC> "
-                            liftIO $ traverse_ (hPutStrLn h) mline
+                            liftIO $ traverse_ appendLine mline
                             pure (mline, [])
                     case mline of
                         Nothing -> return ()
@@ -128,7 +134,7 @@ options = do
         , metavar "DIRECTORY"
         , help "HL2 datafile directory"
         ]
-    transcriptPath <- strOption $ mconcat
+    transcriptPath <- optional $ strOption $ mconcat
         [ long "transcript"
         , short 'l'
         , metavar "FILENAME"
