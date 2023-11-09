@@ -45,12 +45,12 @@ executables:
     dependencies:
       - ratkai
 
-  ratbc-hl2:
+  ratbc-hl2-asm:
     main: src/ratbc-hl2.hs
     dependencies:
       - ratkai
 
-  ratbc-play:
+  ratbc-hl2-play:
     main: src/ratbc-play.hs
     dependencies:
       - ratkai
