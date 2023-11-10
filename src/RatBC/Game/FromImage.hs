@@ -38,7 +38,7 @@ fromImage bs = Game
         let bs' = deref bs 0x0835
         in BL.take (fromIntegral $ maxItem - minItem) bs'
     , helpMap = Identity $
-        let bs' = deref bs 0x0837
+        let bs' = BL.tail $ deref bs 0x0837
         in listArray (1, fromIntegral numRooms) $ BL.unpack bs'
     , minItem = minItem
     , maxItem = maxItem

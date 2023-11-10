@@ -6,13 +6,13 @@
 , -- ROOM 3
   0 
 , -- ROOM 4
-  0 
-, -- ROOM 5
   163 -- "Légy óvatos! "
-, -- ROOM 6
+, -- ROOM 5
   0 
-, -- ROOM 7
+, -- ROOM 6
   164 -- "Lehet, hogy ő tud valamit a támadókról... "
+, -- ROOM 7
+  0 
 , -- ROOM 8
   0 
 , -- ROOM 9
@@ -24,25 +24,25 @@
 , -- ROOM 12
   0 
 , -- ROOM 13
-  0 
-, -- ROOM 14
   165 -- "Emlékezz István szavaira! "
+, -- ROOM 14
+  0 
 , -- ROOM 15
   0 
 , -- ROOM 16
   0 
 , -- ROOM 17
-  0 
-, -- ROOM 18
   166 -- "Kopogj be! "
+, -- ROOM 18
+  0 
 , -- ROOM 19
   0 
 , -- ROOM 20
-  0 
-, -- ROOM 21
   167 -- "Használd a szemed! "
-, -- ROOM 22
+, -- ROOM 21
   168 -- "Nem fog itt állni örökké... "
+, -- ROOM 22
+  0 
 , -- ROOM 23
   0 
 , -- ROOM 24
@@ -62,15 +62,15 @@
 , -- ROOM 31
   0 
 , -- ROOM 32
-  0 
-, -- ROOM 33
   170 -- "A ninják kíváló harcosok. "
+, -- ROOM 33
+  0 
 , -- ROOM 34
   0 
 , -- ROOM 35
-  0 
-, -- ROOM 36
   171 -- "Lehet, hogy szükséged lesz egy darab vászonra... "
+, -- ROOM 36
+  0 
 , -- ROOM 37
   0 
 , -- ROOM 38
@@ -84,11 +84,11 @@
 , -- ROOM 42
   0 
 , -- ROOM 43
-  0 
-, -- ROOM 44
   172 -- "Légy könyörületes! "
-, -- ROOM 45
+, -- ROOM 44
   173 -- "Tűnj el, mint egy ninja... "
+, -- ROOM 45
+  0 
 , -- ROOM 46
   0 
 , -- ROOM 47
@@ -96,15 +96,15 @@
 , -- ROOM 48
   0 
 , -- ROOM 49
-  0 
-, -- ROOM 50
   174 -- "Mit csinálsz, ha szükséged van valamire, de nics pénzed? "
+, -- ROOM 50
+  0 
 , -- ROOM 51
   0 
 , -- ROOM 52
-  0 
-, -- ROOM 53
   176 -- "Öld meg és ne legyél finnyás! "
+, -- ROOM 53
+  0 
 , -- ROOM 54
   0 
 , -- ROOM 55
@@ -114,9 +114,9 @@
 , -- ROOM 57
   0 
 , -- ROOM 58
-  0 
-, -- ROOM 59
   175 -- "Használj valami fegyvert és csinálj úgy, mintha kung-fu mester lennél! "
+, -- ROOM 59
+  0 
 , -- ROOM 60
   0 
 , -- ROOM 61
@@ -124,9 +124,9 @@
 , -- ROOM 62
   0 
 , -- ROOM 63
-  0 
-, -- ROOM 64
   178 -- "Te nem tudod megölni... De egy kis állat... "
+, -- ROOM 64
+  0 
 , -- ROOM 65
   0 
 , -- ROOM 66
@@ -146,15 +146,15 @@
 , -- ROOM 73
   0 
 , -- ROOM 74
-  0 
-, -- ROOM 75
   177 -- "Öld meg! "
+, -- ROOM 75
+  0 
 , -- ROOM 76
   0 
 , -- ROOM 77
-  0 
-, -- ROOM 78
   179 -- "Azt hiszem, egy nagy robbanás jó jelzés lenne... "
+, -- ROOM 78
+  0 
 , -- ROOM 79
   0 
 , -- ROOM 80
