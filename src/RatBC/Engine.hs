@@ -21,19 +21,21 @@ import GHC.Stack
 
 type Ptr = Int
 
-data St = MkSt
+data R = MkR
   { vars :: IOArray Word8 Word8
+  , bank1, bank2 :: ByteString
+  , helpMap :: ByteString
   }
 
-newtype Engine m a = Engine{ unEngine :: RWST (IOArray Word8 Word8) Any () m a }
+newtype Engine m a = Engine{ unEngine :: RWST R Any () m a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadCatch, MonadThrow, MonadMask, MonadWriter Any)
 
-runEngine :: (Monad m) => IOArray Word8 Word8 -> Engine m a -> m (a, Any)
-runEngine vars engine = evalRWST (unEngine engine) vars ()
+runEngine :: (Monad m) => IOArray Word8 Word8 -> ByteString -> ByteString -> ByteString -> Engine m a -> m (a, Any)
+runEngine vars bank1 bank2 helpMap engine = evalRWST (unEngine engine) (MkR vars bank1 bank2 helpMap) ()
 
 dumpVars :: (MonadIO m) => Engine m ()
 dumpVars = do
-    vars <- Engine ask
+    vars <- Engine $ asks vars
     liftIO do
         vars <- freeze vars :: IO (Array Word8 Word8)
         forM_ (zip [0, 16..] $ chunksOf 16 $ elems vars) \(i, chunk) -> do
@@ -72,7 +74,7 @@ playerLoc = 0xff
 
 getVar' :: (MonadIO m) => Word8 -> Engine m Word8
 getVar' var = do
-    vars <- Engine ask
+    vars <- Engine $ asks vars
     liftIO $ readArray vars var
 
 getVar :: (MonadIO m) => Word8 -> Terp m Word8
@@ -80,7 +82,7 @@ getVar = Terp . lift . getVar'
 
 putVar' :: (MonadIO m) => Word8 -> Word8 -> Engine m ()
 putVar' var val = do
-    vars <- Engine ask
+    vars <- Engine $ asks vars
     liftIO $ writeArray vars var val
 
 putVar :: (MonadIO m) => Word8 -> Word8 -> Terp m ()
@@ -137,6 +139,11 @@ printZ bank = liftIO . mapM_ putStrLn . reflow . decodeZ . fst . unpackZ . findZ
     reflow :: String -> [String]
     reflow = concatMap (chunksOf 40) . split (dropDelims . onSublist $ "\n")
 
+printlnZ1 :: (MonadIO m) => Word8 -> Engine m ()
+printlnZ1 msg = do
+    bank1 <- Engine $ asks bank1
+    printlnZ bank1 msg
+
 printlnZ :: (MonadIO m) => ByteString -> Word8 -> m ()
 printlnZ bank msg = printZ bank msg >> liftIO (putStrLn "")
 
@@ -179,6 +186,7 @@ findByInput input bs = do
 runBC :: (MonadIO m) => Terp m ()
 runBC = do
     op <- fetch
+    -- liftIO $ printf "runBC: 0x%02x\n" op
     if op > 0x18 then message op >> runBC else case op of
         0x00 -> pure ()
         0x01 -> do
@@ -260,25 +268,46 @@ runBuiltin :: (MonadIO m) => [Word8] -> Engine m ()
 runBuiltin = \case
     [0x0e] -> do -- Take all
         loc <- getVar' playerLoc
-        forM_ [minItem..maxItem] \i -> do
-            val <- getVar' i
-            when (val == loc) $ putVar' i 0x00
+        items <- filterM (\i -> (loc ==) <$> getVar' i) [minItem..maxItem]
+        if null items then printlnZ1 9 else do
+            forM_ items \i -> putVar' i 0x00
+            printlnZ1 4
     [0x0e, i] -> do -- Take
         loc <- getVar' playerLoc
         when (minItem <= i && i <= maxItem) do
             val <- getVar' i
-            when (val == loc) $ putVar' i 0x00
+            if val /= loc then printlnZ1 5 else do
+                putVar' i 0x00
     [0x0f] -> do -- Drop all
         loc <- getVar' playerLoc
-        forM_ [minItem..maxItem] \i -> do
-            val <- getVar' i
-            when (val == 0) $ putVar' i loc
+        items <- filterM (\i -> (0 ==) <$> getVar' i) [minItem..maxItem]
+        if null items then printlnZ1 8 else do
+            forM_ items \i -> putVar' i loc
+            printlnZ1 4
     [0x0f, i] -> do -- Drop
         loc <- getVar' playerLoc
         when (minItem <= i && i <= maxItem) do
             val <- getVar' i
-            when (val == 0) $ putVar' i loc
-    _ -> pure ()
+            if val /= 0 then printlnZ1 6 else do
+                putVar' i loc
+    [0x10] -> do -- Inventory
+        bank1 <- Engine $ asks bank1
+        printZ bank1 7
+        items <- filterM (\i -> (0 ==) <$> getVar' i) [minItem..maxItem]
+        if null items then printlnZ bank1 8 else do
+            bank2 <- Engine $ asks bank2
+            mapM_ (printZ bank2) items
+    [0x16] -> do -- Help
+        loc <- getVar' playerLoc
+        helps <- Engine $ asks helpMap
+        bank2 <- Engine $ asks bank2
+        case BS.index helps (fromIntegral loc - 1) of
+            0x00 -> printlnZ1 10
+            msg -> printlnZ bank2 msg
+    (w:_) -> do
+        printlnZ1 $ case w of
+            w | w <= 12 -> 3
+            _ -> 2
 
 minItem, maxItem :: Word8
 minItem = 120

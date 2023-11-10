@@ -81,7 +81,7 @@ main = do
             Just fileName -> withFile fileName AppendMode \h -> body $ hPutStrLn h
 
     withAppendMaybe transcriptPath \appendLine -> do
-        void $ runEngine vars $ runInputT defaultSettings $ do
+        void $ runEngine vars bank1 bank2 helpMap $ runInputT defaultSettings $ do
             let loop lines moved = do
                     when debug $ lift dumpVars
                     when moved $ lift do
