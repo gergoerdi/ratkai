@@ -33,10 +33,12 @@ writeTextFiles outputPath game = do
     write "interactive-local" $ interactiveLocal game'
     write "reset" $ resetState game'
     write "help" $ helpMap game'
+    bin "charset" $ charSet game
   where
     game' = pprGame game
     write fileName = writeFile (outputPath </> fileName <.> "txt") . renderString .
       layoutPretty defaultLayoutOptions{ layoutPageWidth = Unbounded } . getConst
+    bin fileName = BL.writeFile (outputPath </> fileName <.> "bin")
 
 parseGame :: Game (Const String) -> Game Identity
 parseGame game@Game{..} = game
@@ -69,6 +71,7 @@ removeComments = unlines . map removeComment . lines
 loadTextFiles :: FilePath -> IO (Game Identity)
 loadTextFiles inputPath = do
     let file fileName = Const . removeComments <$> readFile (inputPath </> fileName <.> "txt")
+        bin fileName =  BL.readFile (inputPath </> fileName <.> "bin")
 
     game0 <- Game
       <$> file "text1"
@@ -83,4 +86,5 @@ loadTextFiles inputPath = do
       <*> pure 120 -- TODO: minItem
       <*> pure 160 -- TODO: maxItem
       <*> pure 1 -- TODO: startRoom
+      <*> bin "charset"
     return $ parseGame game0

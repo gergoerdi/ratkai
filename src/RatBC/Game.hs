@@ -27,6 +27,7 @@ data Game f = Game
     , helpMap :: f (ByRoom Word8)
     , minItem, maxItem :: Word8
     , startRoom :: Word8
+    , charSet :: BL.ByteString
     }
 
 data Bank = Bank1 | Bank2

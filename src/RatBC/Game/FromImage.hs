@@ -43,6 +43,7 @@ fromImage bs = Game
     , minItem = minItem
     , maxItem = maxItem
     , startRoom = BL.index bs 0x083c
+    , charSet = BL.take 0x400 . BL.drop 0x3000 $ bs
     }
   where
     numRooms = 97
