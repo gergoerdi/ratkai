@@ -3,7 +3,14 @@
 # For more information, please see the documentation at:
 #   https://docs.haskellstack.org/en/stable/lock_files
 
-packages: []
+packages:
+- completed:
+    hackage: monomer-1.5.1.0@sha256:0441ecfb767c716015d4baace5bd66eda62bb65afdca0ca3ad7d81a9d4bd1353,17356
+    pantry-tree:
+      sha256: f803a19d455fad33a0e02db0aac1996d53f70e8311e480ca1752085c81d1690c
+      size: 14513
+  original:
+    hackage: monomer-1.5.1.0
 snapshots:
 - completed:
     sha256: 1867d84255dff8c87373f5dd03e5a5cb1c10a99587e26c8793e750c54e83ffdc

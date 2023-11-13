@@ -55,3 +55,12 @@ executables:
     dependencies:
       - ratkai
       - haskeline
+
+  ratbc-tvc-colors:
+    main: src/ratbc-tvc-colors.hs
+    dependencies:
+      - monomer
+      - lens
+      - optparse-applicative
+      - ratkai
+      - text-show
