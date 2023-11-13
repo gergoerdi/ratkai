@@ -46,12 +46,12 @@ executables:
       - ratkai
 
   ratbc-hl2-asm:
-    main: src/ratbc-hl2.hs
+    main: src/ratbc-hl2-asm.hs
     dependencies:
       - ratkai
 
   ratbc-hl2-play:
-    main: src/ratbc-play.hs
+    main: src/ratbc-hl2-play.hs
     dependencies:
       - ratkai
       - haskeline
