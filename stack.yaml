@@ -3,3 +3,6 @@ resolver: lts-21.0
 packages:
   - ./import/z80-assembler-haskell
   - .
+
+extra-deps:
+  - monomer-1.5.1.0
