@@ -15,6 +15,7 @@ import Z80.Utils
 import HL2
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
+import Data.Bifunctor
 import Control.Monad.Identity
 import Control.Monad
 import Data.Functor.Const
@@ -37,10 +38,13 @@ supportUndo = False
 supportQSave :: Bool
 supportQSave = True
 
+moveIsFinal :: Bool
+moveIsFinal = True
+
 game :: Game Identity -> Z80ASM
 game assets@Game{ minItem, maxItem, startRoom } = mdo
-    let assets' = assemble . reflowMessages 40 . preprocessGame $ assets
-    let asset sel = labelled $ db $ BL.toStrict . getConst . sel $ assets'
+    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 40 . preprocessGame $ assets
+    let asset sel = labelled $ db $ getConst . sel $ assets'
     let connective = 100 -- TODO
 
     let dbgPrintA = unless release do
@@ -60,7 +64,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     ldVia A [gameVars] 0x00
 
     call resetGameVars
-    when supportQSave $ call qsave
+    -- when supportQSave $ call qsave -- XXX
     ldVia A [shiftState] 0
 
     -- Welcome message
@@ -525,184 +529,10 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         ld IX text1
         jp runRatScript
 
+    let locations = Locations{ printMessage = printlnZ, .. }
+
     -- Returns Z iff there was a matching command
-    runInteractiveBuiltin <- labelled mdo
-        ld A [parseBuf]
-        skippable \notMove -> do
-            cp 0x0c
-            jp NC notMove
-            message1 3
-            setZ
-            ret
-
-        let builtin val body = skippable \skip -> do
-                cp val
-                jp NZ skip
-                body
-
-        let finishWith :: (Load Reg8 msg) => Word16 -> msg -> Z80ASM
-            finishWith bank msg = do
-                ld IX bank
-                ld B msg
-                jp finish
-
-        builtin 0x0d do -- Look
-            ldVia A [moved] 1
-            ret
-
-        builtin 0x15 do -- Examine
-            finishWith text1 9
-
-        when supportScore do
-            builtin 0x14 do -- Score
-                jp printStatus
-
-        when supportQSave do
-            builtin 0x1b do         -- QSave
-                call qsave
-                finishWith text1 4
-
-            builtin 0x1c do         -- QLoad
-                ld DE gameVars
-                ld HL savedVars
-                ld BC 256
-                ldir
-                ldVia A [moved] 1
-                finishWith text1 4
-
-        when supportUndo do
-            builtin 0x1a do -- Undo
-                -- TODO
-                finishWith text1 2
-
-        builtin 0x16 do -- Help
-            if not supportHelp then do
-                finishWith text1 10
-              else mdo
-                ld D 0
-                ldVia A E [playerLoc]
-                ld HL help
-                add HL DE
-                ld A [HL]
-                skippable \noHelp -> do
-                    cp 0
-                    jr Z noHelp
-                    finishWith text2 A
-                finishWith text1 10
-
-        builtin 0x10 mdo -- Inventory
-            ld D 0
-            call anyItemsAtD
-            skippable \haveItems -> do
-                jr Z haveItems
-                finishWith text1 8
-            message1 7
-            call printItemsAtD
-            setZ
-            ret
-
-        builtin 0x0e mdo -- Take
-            ld A [parseBuf + 1]
-            cp 0x00
-            jp Z takeAll -- No nouns
-
-            -- Is it an item?
-            cp minItem
-            jp C notItem
-            cp maxItem
-            jp NC notItem
-
-            -- Is it here?
-            ld E A
-            call varIY
-            ld A [playerLoc]
-            cp [IY]
-            jr NZ notHere
-
-            -- Finally, all good
-            ld [IY] 0
-            finishWith text1 4
-
-            notHere <- labelled do
-                finishWith text1 5
-
-            takeAll <- labelled mdo
-                ldVia A D [playerLoc]
-                ldVia A E 0x00
-                call moveItemsDE
-
-                -- Did we take anything after all?
-                ld A C
-                cp 0
-                jr Z noItems
-                finishWith text1 4
-
-                noItems <- label
-                finishWith text1 16
-
-            finish <- label
-            call printlnZ
-            setZ
-            ret
-
-        builtin 0x0f mdo -- Drop
-            ld A [parseBuf + 1]
-            cp 0x00
-            jp Z dropAll -- No nouns
-
-            -- Is it an item?
-            cp minItem
-            jp C notItem
-            cp maxItem
-            jp NC notItem
-
-            -- Does the player have it?
-            ld E A
-            call varIY
-            ld A 0
-            cp [IY]
-            jr NZ notHere
-
-            -- Finally, all good
-            ldVia A [IY] [playerLoc]
-            finishWith text1 4
-
-            notHere <- labelled do
-                finishWith text1 6
-
-            dropAll <- labelled mdo
-                ldVia A D 0x00
-                ldVia A E [playerLoc]
-                call moveItemsDE
-
-                -- Did we drop anything after all?
-                ld A C
-                cp 0
-                jr Z noItems
-                finishWith text1 4
-
-                noItems <- label
-                finishWith text1 8
-
-            finish <- label
-            call printlnZ
-            setZ
-            ret
-
-        ret
-
-        notItem <- labelled do
-            ld IX text1
-            ld B 2
-            -- Fall through to `finish`
-
-        finish <- labelled do
-            call printlnZ
-            setZ
-            ret
-
-        pure ()
-
+    runInteractiveBuiltin <- labelled $ runInteractiveBuiltin_ assetLocs locations
 
     -- Returns NZ iff there was a matching command
     runInteractiveLocal <- labelled do
@@ -731,6 +561,92 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             inc HL
 
     -- Run a Rat script starting at IX, with text bank HL
+    runRatScript <- labelled $ runRatScript_ locations
+    resetGameVars <- labelled $ resetGameVars_ assetLocs locations
+
+    -- Pre: E is the variable's index
+    -- Post: IY is the variable's address
+    -- Clobbers: D, A, IY
+    varIY <- labelled do
+        ld IY gameVars
+        ld D 0
+        add IY DE
+        ret
+
+    getLocation <- labelled do
+        ld A [playerLoc]
+        ret
+
+    let labelledString s = do
+            l <- labelled $ db $ map (fromIntegral . ord) s
+            pure (l, s)
+
+    printScore <- labelled $ printScore_ locations
+    printBCDPercent <- labelled $ when supportScore do
+        call 0x01a5
+        ld A $ fromIntegral . ord $ '%'
+        rst 0x28
+        ld A $ fromIntegral . ord $ '\r'
+        rst 0x28
+        ret
+
+    text1 <- asset msgs1
+    text2 <- asset msgs2
+    dict_ <- asset dict
+    scriptEnter <- asset enterRoom
+    scriptAfter <- asset afterTurn
+    scriptGlobal <- asset interactiveGlobal
+    scriptLocal <-  asset interactiveLocal
+    help <- asset helpMap
+    resetVars <- asset resetState
+    resetData <- asset resetState
+    let assetLocs = assets
+          { msgs1 = Const text1
+          , msgs2 = Const text2
+          , dict = Const dict_
+          , enterRoom = Const scriptEnter
+          , afterTurn = Const scriptAfter
+          , interactiveGlobal = Const scriptGlobal
+          , interactiveLocal = Const scriptLocal
+          , resetState = Const resetData
+          , helpMap = Const help
+          }
+
+    moved <- labelled $ db [0]
+    unpackBuf <- labelled $ db [0, 0, 0]
+    unpackIsLast <- labelled $ db [0]
+    shiftState <- labelled $ db [0]
+
+    inputBuf <- labelled $ resb 40
+    parseBuf <- labelled $ resb 5
+    dictBuf <- labelled $ resb 5
+    gameVars <- labelled $ resb 256
+    let playerScore = gameVars + 0xfc
+        playerHealth = gameVars + 0xfd
+        playerStatus = gameVars + 0xfe
+        playerLoc = gameVars + 0xff
+    savedVars <- labelled $ when supportQSave $ resb 256
+    undoVars <- labelled $ when supportUndo $ resb 256
+    unless release nop -- To see real memory usage instead of just image size
+    pure ()
+
+
+
+
+data Locations = Locations
+    { gameVars, moved :: Location
+    , playerScore, playerHealth, playerStatus, playerLoc :: Location
+    , varIY :: Location
+    , printItemsAtD, anyItemsAtD :: Location
+    , printScore, printBCDPercent :: Location
+    , savedVars, parseBuf :: Location
+    , printMessage :: Location
+    }
+
+
+-- | Run a Rat script starting at IX, with text bank HL
+runRatScript_ :: Locations -> Z80ASM
+runRatScript_ Locations{..} = mdo
     runRatScript <- labelled do
         fetch A
         cp 0x18
@@ -739,10 +655,25 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         ld B A
         push IX
         push HL
-        call printlnZ
+        call printMessage
         pop HL
         pop IX
         jp runRatScript
+
+    -- Pre: E is the variable's index
+    -- Post: A is the variable's value
+    -- Clobbers: D, IY
+    getVar <- labelled do
+        call varIY
+        ld A [IY]
+        ret
+
+    -- Pre: E is the variable's index, A is its value-to-be
+    -- Clobbers: D, IY
+    putVar <- labelled do
+        call varIY
+        ld [IY] A
+        ret
 
     runRatStmt <- labelled mdo
         -- We know `A` is at most 0x18, i.e. a valid stmt opcode
@@ -780,7 +711,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 skippable \assertHolds -> do
                     cp val
                     jp Z assertHolds
-                    jp printlnZ
+                    jp printMessage
                 jp runRatScript
         opAssert00 <- labelled $ opAssert 0x00
         opAssertFF <- labelled $ opAssert 0xff
@@ -830,7 +761,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             fetch A
             ld [gameVars + 0xff] A
             ldVia A [moved] 1
-            ret
+            if moveIsFinal then ret else jp runRatScript
 
         opHeal <- labelled $ do
             ld IY playerHealth
@@ -861,7 +792,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             ld A [playerLoc]
             cp C
             jp Z runRatScript
-            jp printlnZ
+            jp printMessage
 
         opSleep <- labelled do
             fetch B
@@ -939,61 +870,229 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             ld [IY] A
             jp runRatScript
         pure ()
+    pure ()
+  where
+    fetch :: (Load r [HL]) => r -> Z80ASM
+    fetch r = do
+        ld r [HL]
+        inc HL
 
-    resetGameVars <- labelled do
-        ld DE gameVars
-        ld A 0x00
-        decLoopB 256 do
-            ld [DE] A
-            inc DE
+resetGameVars_ :: Game (Const Location) -> Locations -> Z80ASM
+resetGameVars_ assets Locations{..} = mdo
+    ld DE gameVars
+    ld A 0x00
+    decLoopB 256 do
+        ld [DE] A
+        inc DE
 
-        ld DE $ gameVars + fromIntegral minItem
-        ld HL resetVars
-        ld BC $ fromIntegral (maxItem - minItem)
-        ldir
+    ld DE $ gameVars + fromIntegral minItem
+    ld HL resetState
+    ld BC $ fromIntegral (maxItem - minItem)
+    ldir
 
-        ldVia A [playerLoc] startRoom
-        ldVia A [playerHealth] 0x50 -- in BCD!
+    ldVia A [playerLoc] startRoom
+    ldVia A [playerHealth] 0x50 -- in BCD!
+    ret
+
+    pure ()
+  where
+    Game
+      { minItem = minItem
+      , maxItem = maxItem
+      , resetState = Const resetState
+      , startRoom = startRoom
+      } = assets
+
+-- | Returns Z iff there was a matching command
+runInteractiveBuiltin_ :: Game (Const Location) -> Locations -> Z80ASM
+runInteractiveBuiltin_ assets Locations{..} = mdo
+    ld A [parseBuf]
+    skippable \notMove -> do
+        cp 0x0c
+        jp NC notMove
+        message1 3
+        setZ
         ret
 
-    qsave <- labelled $ when supportQSave do
-        ld DE savedVars
-        ld HL gameVars
-        ld BC 256
-        ldir
+    let builtin val body = skippable \skip -> do
+            cp val
+            jp NZ skip
+            body
+
+    let finishWith :: (Load Reg8 msg) => Word16 -> msg -> Z80ASM
+        finishWith bank msg = do
+            ld IX bank
+            ld B msg
+            jp finish
+
+    builtin 0x0d do -- Look
+        ldVia A [moved] 1
         ret
 
-    -- Pre: E is the variable's index
-    -- Post: IY is the variable's address
-    -- Clobbers: D, A, IY
-    varIY <- labelled do
-        ld IY gameVars
+    builtin 0x15 do -- Examine
+        finishWith msgs1 9
+
+    when supportScore do
+        builtin 0x14 do -- Score
+            jp printStatus
+
+    when supportQSave do
+        builtin 0x1b do         -- QSave
+            call qsave
+            finishWith msgs1 4
+
+        builtin 0x1c do         -- QLoad
+            ld DE gameVars
+            ld HL savedVars
+            ld BC 256
+            ldir
+            ldVia A [moved] 1
+            finishWith msgs1 4
+
+    when supportUndo do
+        builtin 0x1a do -- Undo
+            -- TODO
+            finishWith msgs1 2
+
+    builtin 0x16 do -- Help
+        if not supportHelp then do
+            finishWith msgs1 10
+          else mdo
+            ld D 0
+            ldVia A E [playerLoc]
+            ld HL help
+            add HL DE
+            ld A [HL]
+            skippable \noHelp -> do
+                cp 0
+                jr Z noHelp
+                finishWith msgs2 A
+            finishWith msgs1 10
+
+    builtin 0x10 mdo -- Inventory
         ld D 0
-        add IY DE
+        call anyItemsAtD
+        skippable \haveItems -> do
+            jr Z haveItems
+            finishWith msgs1 8
+        message1 7
+        call printItemsAtD
+        setZ
         ret
 
-    -- Pre: E is the variable's index
-    -- Post: A is the variable's value
-    -- Clobbers: D, IY
-    getVar <- labelled do
+    builtin 0x0e mdo -- Take
+        ld A [parseBuf + 1]
+        cp 0x00
+        jp Z takeAll -- No nouns
+
+        -- Is it an item?
+        cp minItem
+        jp C notItem
+        cp maxItem
+        jp NC notItem
+
+        -- Is it here?
+        ld E A
         call varIY
-        ld A [IY]
-        ret
-
-    -- Pre: E is the variable's index, A is its value-to-be
-    -- Clobbers: D, IY
-    putVar <- labelled do
-        call varIY
-        ld [IY] A
-        ret
-
-    getLocation <- labelled do
         ld A [playerLoc]
+        cp [IY]
+        jr NZ notHere
+
+        -- Finally, all good
+        ld [IY] 0
+        finishWith msgs1 4
+
+        notHere <- labelled do
+            finishWith msgs1 5
+
+        takeAll <- labelled mdo
+            ldVia A D [playerLoc]
+            ldVia A E 0x00
+            call moveItemsDE
+
+            -- Did we take anything after all?
+            ld A C
+            cp 0
+            jr Z noItems
+            finishWith msgs1 4
+
+            noItems <- label
+            finishWith msgs1 16
+
+        finish <- label
+        call printMessage
+        setZ
         ret
 
-    let labelledString s = do
-            l <- labelled $ db $ map (fromIntegral . ord) s
-            pure (l, s)
+    builtin 0x0f mdo -- Drop
+        ld A [parseBuf + 1]
+        cp 0x00
+        jp Z dropAll -- No nouns
+
+        -- Is it an item?
+        cp minItem
+        jp C notItem
+        cp maxItem
+        jp NC notItem
+
+        -- Does the player have it?
+        ld E A
+        call varIY
+        ld A 0
+        cp [IY]
+        jr NZ notHere
+
+        -- Finally, all good
+        ldVia A [IY] [playerLoc]
+        finishWith msgs1 4
+
+        notHere <- labelled do
+            finishWith msgs1 6
+
+        dropAll <- labelled mdo
+            ldVia A D 0x00
+            ldVia A E [playerLoc]
+            call moveItemsDE
+
+            -- Did we drop anything after all?
+            ld A C
+            cp 0
+            jr Z noItems
+            finishWith msgs1 4
+
+            noItems <- label
+            finishWith msgs1 8
+
+        finish <- label
+        call printMessage
+        setZ
+        ret
+
+    ret
+
+    notItem <- labelled do
+        ld IX msgs1
+        ld B 2
+        -- Fall through to `finish`
+
+    finish <- labelled do
+        call printMessage
+        setZ
+        ret
+
+    -- Move all items at location `D` to location `E`. `C` is number of items moved.
+    -- Clobbers `IY`, `A`, `B`
+    moveItemsDE <- labelled do
+        ld IY $ gameVars + fromIntegral maxItem
+        ld C 0
+        decLoopB (maxItem - minItem) $ skippable \next -> do
+            dec IY
+            ld A [IY]
+            cp D
+            jp NZ next
+            inc C
+            ld [IY] E
+        ret
 
     printStatus <- labelled $ when supportScore mdo
         ld IY lbl
@@ -1008,52 +1107,44 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         (lbl, s) <- labelledString "ERONLET:  "
         pure ()
 
-    printScore <- labelled $ when supportScore mdo
-        ld IY lbl
-        decLoopB (fromIntegral $ length s) do
-            ld A [IY]
-            inc IY
-            rst 0x28
-        ld A [playerScore]
-        call printBCDPercent
-        setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
+    qsave <- labelled $ when supportQSave do
+        ld DE savedVars
+        ld HL gameVars
+        ld BC 256
+        ldir
         ret
 
-        (lbl, s) <- labelledString "PONTSZAM: "
-        pure ()
+    pure ()
+  where
+    Game
+      { minItem = minItem
+      , maxItem = maxItem
+      , msgs1 = Const msgs1
+      , msgs2 = Const msgs2
+      , helpMap = Const help
+      } = assets
 
-    printBCDPercent <- labelled $ when supportScore do
-        call 0x01a5
-        ld A $ fromIntegral . ord $ '%'
+    message1 msg = do
+        ld IX msgs1
+        ld B msg
+        call printMessage
+
+labelledString :: String -> Z80 (Location, String)
+labelledString s = do
+    l <- labelled $ db $ map (fromIntegral . ord) s
+    pure (l, s)
+
+printScore_ :: Locations -> Z80ASM
+printScore_ Locations{..} = when supportScore mdo
+    ld IY lbl
+    decLoopB (fromIntegral $ length s) do
+        ld A [IY]
+        inc IY
         rst 0x28
-        ld A $ fromIntegral . ord $ '\r'
-        rst 0x28
-        ret
+    ld A [playerScore]
+    call printBCDPercent
+    setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
+    ret
 
-    text1 <- asset msgs1
-    text2 <- asset msgs2
-    dict_ <- asset dict
-    scriptEnter <- asset enterRoom
-    scriptAfter <- asset afterTurn
-    scriptGlobal <- asset interactiveGlobal
-    scriptLocal <-  asset interactiveLocal
-    help <- asset helpMap
-    resetVars <- asset resetState
-
-    moved <- labelled $ db [0]
-    unpackBuf <- labelled $ db [0, 0, 0]
-    unpackIsLast <- labelled $ db [0]
-    shiftState <- labelled $ db [0]
-
-    inputBuf <- labelled $ resb 40
-    parseBuf <- labelled $ resb 5
-    dictBuf <- labelled $ resb 5
-    gameVars <- labelled $ resb 256
-    let playerScore = gameVars + 0xfc
-        playerHealth = gameVars + 0xfd
-        playerStatus = gameVars + 0xfe
-        playerLoc = gameVars + 0xff
-    savedVars <- labelled $ when supportQSave $ resb 256
-    undoVars <- labelled $ when supportUndo $ resb 256
-    unless release nop -- To see real memory usage instead of just image size
+    (lbl, s) <- labelledString "PONTSZAM: "
     pure ()
