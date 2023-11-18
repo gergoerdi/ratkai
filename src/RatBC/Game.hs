@@ -55,3 +55,9 @@ mapGameF f game@Game{..} = game
     , resetState = f resetState
     , helpMap = f helpMap
     }
+
+reflowMessages :: Int -> Game Identity -> Game Identity
+reflowMessages numCols game@Game{..} = game
+    { msgs1 = fmap (fmap $ wrapWords numCols) msgs1
+    , msgs2 = fmap (fmap $ wrapWords numCols) msgs2
+    }

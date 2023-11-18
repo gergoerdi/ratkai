@@ -5,7 +5,6 @@
 module Ratkai.HomeLab2.Game (game) where
 
 import RatBC.Game
-import RatBC.HomeLab2
 import RatBC.HomeLab2.Strip
 import RatBC.HomeLab2.Binary
 
@@ -38,7 +37,7 @@ supportQSave = True
 
 game :: Game Identity -> Z80ASM
 game assets@Game{ minItem, maxItem, startRoom } = mdo
-    let assets' = assemble . reflowMessages . stripGame $ assets
+    let assets' = assemble . reflowMessages 40 . preprocessGame $ assets
     let asset sel = labelled $ db $ BL.toStrict . getConst . sel $ assets'
     let connective = 100 -- TODO
 
