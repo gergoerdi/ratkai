@@ -28,9 +28,9 @@ library:
   source-dirs: src
   
 executables:
-  homelab-ratkai:
-    main: main.hs
-    source-dirs: homelab
+  ratkai-homelab:
+    main: homelab.hs
+    source-dirs: z80
     dependencies:
       - z80
       - ratkai
@@ -55,3 +55,8 @@ executables:
     dependencies:
       - ratkai
       - haskeline
+
+  ratbc-tvc-asm:
+    main: src/ratbc-tvc-asm.hs
+    dependencies:
+      - ratkai

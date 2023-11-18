@@ -10,15 +10,12 @@ import RatBC.Game
 import RatBC.Game.Text
 
 import RatBC.Strip
-import RatBC.HomeLab2.Strip
-import RatBC.HomeLab2.Binary as HL2
+import RatBC.TVC.Binary as TVC
 
 import Options.Applicative
 import Control.Monad.Identity
 import System.Directory
 import System.FilePath
-import Data.GraphViz
-import Data.GraphViz.Commands.IO
 
 data Options = Options
     { inputPath :: FilePath
@@ -32,14 +29,13 @@ main = do
 
     game <- loadTextFiles inputPath
     game <- pure $ if block then mapStmts (\_ -> restoreBlocks) game else game
-    game <- pure $ preprocessGame $ game
+    game <- pure $ stripGame game
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
 
-    game <- pure $ reflowMessages 40 game
-    HL2.writeFiles outputPath game
-    writeDotFile (outputPath </> "map.dot") $ roomDot game
+    game <- pure $ reflowMessages 31 game
+    TVC.writeFiles outputPath game
 
 options :: Parser Options
 options = do
@@ -64,5 +60,5 @@ options = do
 
 optionsInfo = info (options <**> helper) $ mconcat
     [ fullDesc
-    , header "RatBC HomeLab2 compiler"
+    , header "RatBC TVC compiler"
     ]
