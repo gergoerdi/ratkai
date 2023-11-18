@@ -219,46 +219,15 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         call paragraph
         jp parseLine
 
-    parseLine <- labelled do
+    parseLine <- labelled mdo
         -- For a bit of extra zoom-zoom
         videoOff
-
-        -- Clear out `parseBuf`
-        ld IY parseBuf
-        ld A 0x00
-        decLoopB 5 do
-            ld [IY] A
-            inc IY
-
-        -- Parse up to 5 words from inputBuf into parseBuf
-        ld HL inputBuf
-        ld IY parseBuf
-        skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
-            -- Skip all leading spaces
-            ld A 0x20
-            skippable \end -> loopForever do
-                cp [HL]
-                jp NZ end
-                inc HL
-
-            ld A [HL]
-            cp 0xff
-            jr Z end
-            push BC
-            call parse1
-            pop BC
-            jr Z parseError
-
-            -- Is this a connective? If so, it doesn't count
-            skippable \notConnective -> do
-                ld A [IY]
-                cp connective
-                jp NZ notConnective
-                ld [IY] 0x00
-                jp doesntCount
-            inc IY
+        call parseLine'
         videoOn
         ret
+
+        parseLine' <- labelled $ parseLine_ assetLocs locations
+        pure ()
 
     parseError <- labelled do
         videoOn
@@ -274,25 +243,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             call 0x01a5
         ld A 0x0d
         rst 0x28
-        ret
-
-    -- Parse one word from [HL] into [IY], advancing `HL` as needed
-    -- Post: flag Z iff parse error
-    parse1 <- labelled mdo
-        ld IX dict_
-        loopForever do
-            ld A [IX]
-            cp 0xff
-            ret Z
-
-            push IY
-            call matchWord
-            pop IY
-            cp 0x00
-            jp NZ found
-
-        found <- label
-        ld [IY] A
         ret
 
     -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
@@ -409,61 +359,8 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unpackZ <- labelled $ unpackZ_ unpackBuf unpackIsLast
     decodeZ1 <- labelled $ decodeZ1_ shiftState
 
-    -- Find data corresponding to the current room, starting at HL
-    -- Afterwards, HL points to the *length* of the current room's data,
-    -- and the actual data starts afterwards
-    findByRoom <- labelled do
-        ld A [playerLoc]
-        ld B 0
-        loopForever do
-            dec A
-            ret Z
-            ld C [HL]
-            add HL BC
-
-    -- Find data corresponding to the current input in parseBuf, starting at HL
-    -- Afterwards: Z iff no mach
-    findByWords <- labelled mdo
-        ld D 0 -- We'll use DE as an offset to add to HL
-
-        loopForever mdo
-            ld [savedHL] HL
-
-            ld A [HL] -- Load skip amount, needed later if no match
-            inc HL
-
-            -- No more entries?
-            cp 0
-            ret Z
-            ld E A
-
-            -- Compare with parseBuf
-            ld IX parseBuf
-            loopForever do
-                ld B [IX] -- The next input token
-                inc IX
-                ld A [HL] -- The pattern from the set of responses
-                inc HL
-
-                cp B -- Are they the same word?
-                jp NZ noMatch
-
-                cp 0 -- If this is the last word, we're done
-                jp Z match
-
-            match <- labelled do
-                -- Clear Z flag
-                ld A 1
-                cp 0
-                ret
-
-            noMatch <- label
-            -- No match, so skip (based on original origin!)
-            ld HL [savedHL]
-            add HL DE
-
-        savedHL <- labelled $ dw [0]
-        pure ()
+    findByRoom <- labelled $ findByRoom_ locations
+    findByWords <- labelled $ findByWords_ locations
 
     -- Are there any items at location `D`? If yes, set Z
     -- Clobbers `IY`, `A`, `B`
@@ -510,50 +407,14 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             ld [IY] E
         ret
 
-    -- Run "enter" script for current room
-    runEnter <- labelled do
-        ld HL scriptEnter
-        call findByRoom
-        inc HL
-        ld IX text2
-        call runRatScript
-
-        ldVia A D [playerLoc]
-        call anyItemsAtD
-        ret NZ
-        message1 0x0b
-        jp printItemsAtD
-
-    runAfter <- labelled do
-        ld HL scriptAfter
-        ld IX text1
-        jp runRatScript
-
     let locations = Locations{ printMessage = printlnZ, .. }
 
-    -- Returns Z iff there was a matching command
+    runEnter <- labelled $ runEnter_ assetLocs locations
+    runAfter <- labelled $ runAfter_ assetLocs locations
     runInteractiveBuiltin <- labelled $ runInteractiveBuiltin_ assetLocs locations
-
-    -- Returns NZ iff there was a matching command
-    runInteractiveLocal <- labelled do
-        ld HL scriptLocal
-        call findByRoom
-        inc HL
-        jp runInteractive
-
-    -- Returns NZ iff there was a matching command
-    runInteractiveGlobal <- labelled do
-        ld HL scriptGlobal
-    runInteractive <- labelled do
-        call findByWords
-        ret Z
-
-        ld IX text1
-        call runRatScript
-        -- Clear NZ flag
-        ld A 0
-        cp 1
-        ret
+    runInteractiveLocal <- labelled $ runInteractiveLocal_ assetLocs locations
+    runInteractiveGlobal <- labelled $ runInteractiveGlobal_ assetLocs locations
+    runInteractive <- labelled $ runInteractive_ assetLocs locations
 
     let fetch :: (Load r [HL]) => r -> Z80ASM
         fetch r = do
@@ -576,10 +437,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     getLocation <- labelled do
         ld A [playerLoc]
         ret
-
-    let labelledString s = do
-            l <- labelled $ db $ map (fromIntegral . ord) s
-            pure (l, s)
 
     printScore <- labelled $ printScore_ locations
     printBCDPercent <- labelled $ when supportScore do
@@ -635,12 +492,18 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
 data Locations = Locations
     { gameVars, moved :: Location
+    , inputBuf :: Location
     , playerScore, playerHealth, playerStatus, playerLoc :: Location
     , varIY :: Location
     , printItemsAtD, anyItemsAtD :: Location
+    , findByRoom, findByWords :: Location
+    , runRatScript :: Location
+    , runInteractive :: Location
     , printScore, printBCDPercent :: Location
     , savedVars, parseBuf :: Location
     , printMessage :: Location
+    , matchWord :: Location
+    , parseError :: Location
     }
 
 
@@ -903,6 +766,34 @@ resetGameVars_ assets Locations{..} = mdo
       , startRoom = startRoom
       } = assets
 
+-- | Returns NZ iff there was a matching command
+runInteractiveLocal_ :: Game (Const Location) -> Locations -> Z80ASM
+runInteractiveLocal_ assets Locations{..} = do
+    ld HL $ getConst $ interactiveLocal assets
+    call findByRoom
+    inc HL
+    jp runInteractive
+
+-- | Returns NZ iff there was a matching command
+runInteractiveGlobal_ :: Game (Const Location) -> Locations -> Z80ASM
+runInteractiveGlobal_ assets Locations{..} = do
+    ld HL $ getConst $ interactiveGlobal assets
+    jp runInteractive
+
+-- | Returns NZ iff there was a matching command
+runInteractive_ :: Game (Const Location) -> Locations -> Z80ASM
+runInteractive_ assets Locations{..} = do
+    call findByWords
+    ret Z
+
+    ld IX $ getConst $ msgs1 assets
+    call runRatScript
+    -- Clear NZ flag
+    ld A 0
+    cp 1
+    ret
+
+
 -- | Returns Z iff there was a matching command
 runInteractiveBuiltin_ :: Game (Const Location) -> Locations -> Z80ASM
 runInteractiveBuiltin_ assets Locations{..} = mdo
@@ -1148,3 +1039,149 @@ printScore_ Locations{..} = when supportScore mdo
 
     (lbl, s) <- labelledString "PONTSZAM: "
     pure ()
+
+-- | Find data corresponding to the current room, starting at `HL`
+--   Afterwards, HL points to the *length* of the current room's data,
+--   and the actual data starts afterwards
+findByRoom_ :: Locations -> Z80ASM
+findByRoom_ Locations{..} = do
+    ld A [playerLoc]
+    ld B 0
+    loopForever do
+        dec A
+        ret Z
+        ld C [HL]
+        add HL BC
+
+-- Find data corresponding to the current input in parseBuf, starting at HL
+-- Afterwards: Z iff no mach
+findByWords_ :: Locations -> Z80ASM
+findByWords_ Locations{..} = mdo
+    ld D 0 -- We'll use DE as an offset to add to HL
+
+    loopForever mdo
+        ld [savedHL] HL
+
+        ld A [HL] -- Load skip amount, needed later if no match
+        inc HL
+
+        -- No more entries?
+        cp 0
+        ret Z
+        ld E A
+
+        -- Compare with parseBuf
+        ld IX parseBuf
+        loopForever do
+            ld B [IX] -- The next input token
+            inc IX
+            ld A [HL] -- The pattern from the set of responses
+            inc HL
+
+            cp B -- Are they the same word?
+            jp NZ noMatch
+
+            cp 0 -- If this is the last word, we're done
+            jp Z match
+
+        match <- labelled do
+            -- Clear Z flag
+            ld A 1
+            cp 0
+            ret
+
+        noMatch <- label
+        -- No match, so skip (based on original origin!)
+        ld HL [savedHL]
+        add HL DE
+
+    savedHL <- labelled $ dw [0]
+    pure ()
+
+-- | Run "enter" script for current room
+runEnter_ :: Game (Const Location) -> Locations -> Z80ASM
+runEnter_ assets Locations{..} = do
+    ld HL $ getConst . enterRoom $ assets
+    call findByRoom
+    inc HL
+    ld IX $ getConst . msgs2 $ assets
+    call runRatScript
+
+    ldVia A D [playerLoc]
+    call anyItemsAtD
+    ret NZ
+
+    ld IX $ getConst . msgs1 $ assets
+    ld B 0x0b
+    call printMessage
+    jp printItemsAtD
+
+runAfter_ :: Game (Const Location) -> Locations -> Z80ASM
+runAfter_ assets Locations{..} = do
+    ld HL $ getConst . afterTurn $ assets
+    ld IX $ getConst . msgs1 $ assets
+    jp runRatScript
+
+parseLine_ :: Game (Const Location) -> Locations -> Z80ASM
+parseLine_ assets Locations{..} = mdo
+    -- -- For a bit of extra zoom-zoom
+    -- videoOff
+
+    -- Clear out `parseBuf`
+    ld IY parseBuf
+    ld A 0x00
+    decLoopB 5 do
+        ld [IY] A
+        inc IY
+
+    -- Parse up to 5 words from inputBuf into parseBuf
+    ld HL inputBuf
+    ld IY parseBuf
+    skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
+        -- Skip all leading spaces
+        ld A 0x20
+        skippable \end -> loopForever do
+            cp [HL]
+            jp NZ end
+            inc HL
+
+        ld A [HL]
+        cp 0xff
+        jr Z end
+        push BC
+        call parse1
+        pop BC
+        jr Z parseError
+
+        -- Is this a connective? If so, it doesn't count
+        skippable \notConnective -> do
+            ld A [IY]
+            cp connective
+            jp NZ notConnective
+            ld [IY] 0x00
+            jp doesntCount
+        inc IY
+    -- videoOn
+    ret
+
+    -- | Parse one word from [HL] into [IY], advancing `HL` as needed
+    --   Post: flag Z iff parse error
+    parse1 <- labelled mdo
+        ld IX $ getConst . dict $ assets
+        loopForever do
+            ld A [IX]
+            cp 0xff
+            ret Z
+
+            push IY
+            call matchWord
+            pop IY
+            cp 0x00
+            jp NZ found
+
+        found <- label
+        ld [IY] A
+        ret
+    pure ()
+  where
+    connective = 100 -- TODO
