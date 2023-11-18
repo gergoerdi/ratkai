@@ -60,6 +60,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     -- Restore input vector
     ldVia A [0x4002] 0x06
     ldVia A [0x4003] 0x03
+    let printCharA = rst 0x28
 
     ldVia A [gameVars] 0x00
 
@@ -234,7 +235,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         message1 1
         jp readLine
 
-    dbgPrintParseBuf <- labelled do
+    dbgPrintParseBuf <- labelled $ unless release do
         -- DEBUG: print parse buffer
         ld IY parseBuf
         replicateM_ 5 do
@@ -362,51 +363,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     findByRoom <- labelled $ findByRoom_ locations
     findByWords <- labelled $ findByWords_ locations
 
-    -- Are there any items at location `D`? If yes, set Z
-    -- Clobbers `IY`, `A`, `B`
-    anyItemsAtD <- labelled do
-        ld IY $ gameVars + fromIntegral maxItem
-        decLoopB (maxItem - minItem) $ skippable \notHere -> do
-            dec IY
-            ld A [IY]
-            cp D
-            ret Z
-        ld A 0
-        cp 1
-        ret
-
-    -- Print all items at location `D`.
-    -- Clobbers `IY`, `A`, `B`
-    printItemsAtD <- labelled do
-        ld IY $ gameVars + fromIntegral maxItem
-        decLoopB (maxItem - minItem) $ skippable \next -> do
-            dec IY
-            ld A [IY]
-            cp D
-            jp NZ next
-            ld IX text2
-            push BC
-            ld A B
-            add A $ minItem - 1
-            ld B A
-            call printlnZ
-            pop BC
-        ret
-
-    -- Move all items at location `D` to location `E`. `C` is number of items moved.
-    -- Clobbers `IY`, `A`, `B`
-    moveItemsDE <- labelled do
-        ld IY $ gameVars + fromIntegral maxItem
-        ld C 0
-        decLoopB (maxItem - minItem) $ skippable \next -> do
-            dec IY
-            ld A [IY]
-            cp D
-            jp NZ next
-            inc C
-            ld [IY] E
-        ret
-
     let locations = Locations{ printMessage = printlnZ, .. }
 
     runEnter <- labelled $ runEnter_ assetLocs locations
@@ -416,27 +372,12 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     runInteractiveGlobal <- labelled $ runInteractiveGlobal_ assetLocs locations
     runInteractive <- labelled $ runInteractive_ assetLocs locations
 
-    let fetch :: (Load r [HL]) => r -> Z80ASM
-        fetch r = do
-            ld r [HL]
-            inc HL
-
-    -- Run a Rat script starting at IX, with text bank HL
     runRatScript <- labelled $ runRatScript_ locations
     resetGameVars <- labelled $ resetGameVars_ assetLocs locations
 
-    -- Pre: E is the variable's index
-    -- Post: IY is the variable's address
-    -- Clobbers: D, A, IY
-    varIY <- labelled do
-        ld IY gameVars
-        ld D 0
-        add IY DE
-        ret
-
-    getLocation <- labelled do
-        ld A [playerLoc]
-        ret
+    anyItemsAtD <- labelled $ anyItemsAtD_ assetLocs locations
+    printItemsAtD <- labelled $ printItemsAtD_ assetLocs locations
+    varIY <- labelled $ varIY_ locations
 
     printScore <- labelled $ printScore_ locations
     printBCDPercent <- labelled $ when supportScore do
@@ -487,8 +428,17 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unless release nop -- To see real memory usage instead of just image size
     pure ()
 
+-- data Platform = Platform
+--     { printMessage :: Location
+--     , matchWord :: Location
+--     }
 
-
+-- data Vars = Vars
+--     { moved
+--     , inputBuf, parseBuf
+--     , gameVars, playerScore, playerHealth, playerStatus, playerLoc
+--     , savedVars :: Location
+--     }
 
 data Locations = Locations
     { gameVars, moved :: Location
@@ -504,6 +454,7 @@ data Locations = Locations
     , printMessage :: Location
     , matchWord :: Location
     , parseError :: Location
+    , printCharA :: Z80ASM
     }
 
 
@@ -990,7 +941,7 @@ runInteractiveBuiltin_ assets Locations{..} = mdo
         decLoopB (fromIntegral $ length s) do
             ld A [IY]
             inc IY
-            rst 0x28
+            printCharA
         ld A [playerHealth]
         call printBCDPercent
         jp printScore
@@ -1185,3 +1136,47 @@ parseLine_ assets Locations{..} = mdo
     pure ()
   where
     connective = 100 -- TODO
+
+-- | Print all items at location `D`.
+--   Clobbers `IY`, `A`, `B`
+printItemsAtD_ :: Game (Const Location) -> Locations -> Z80ASM
+printItemsAtD_ Game{..} Locations{..} = do
+    ld IY $ gameVars + fromIntegral maxItem
+    decLoopB (maxItem - minItem) $ skippable \next -> do
+        dec IY
+        ld A [IY]
+        cp D
+        jp NZ next
+        ld IX $ getConst msgs2
+        push BC
+        ld A B
+        add A $ minItem - 1
+        ld B A
+        call printMessage
+        pop BC
+    ret
+
+
+-- | Are there any items at location `D`? If yes, set Z
+--   Clobbers `IY`, `A`, `B`
+anyItemsAtD_ :: Game (Const Location) -> Locations -> Z80ASM
+anyItemsAtD_ Game{..} Locations{..} = do
+    ld IY $ gameVars + fromIntegral maxItem
+    decLoopB (maxItem - minItem) $ skippable \notHere -> do
+        dec IY
+        ld A [IY]
+        cp D
+        ret Z
+    ld A 0
+    cp 1
+    ret
+
+-- | Pre: `E is the variable's index
+--   Post: `IY` is the variable's address
+--   Clobbers: `D`, `A`, `IY`
+varIY_ :: Locations -> Z80ASM
+varIY_ Locations{..} = do
+    ld IY gameVars
+    ld D 0
+    add IY DE
+    ret
