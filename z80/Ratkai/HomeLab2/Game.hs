@@ -40,41 +40,14 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     -- Restore input vector
     ldVia A [0x4002] 0x06
     ldVia A [0x4003] 0x03
-
-    let dbgPrintA = unless release do
-            push AF
-            call 0x01a5
-            pop AF
-
-        videoOn = ld [0x3f00] A
-        videoOff = ld [0x3e00] A
-
-        printCharA = rst 0x28
-        printString s = skippable \end -> mdo
-            ld IY lbl
-            decLoopB (fromIntegral $ length s) do
-                ld A [IY]
-                inc IY
-                printCharA
-            jr end
-            lbl <- labelled $ db $ map (fromIntegral . ord) s
-            pure ()
-
-        waitEnter = do
-            -- message1 13
-            withLabel \loop -> do
-                rst 0x18
-                cp 0x0d
-                jp NZ loop
-            ret
-
-
     ldVia A [gameVars vars] 0x00
 
+    -- Initialize state
     call $ resetGameVars routines
     when supportQSave $ call $ qsave routines
     ldVia A [shiftState] 0
 
+    -- Run the game
     routines <- gameLoop assetLocs platform vars
 
     clearScreen <- labelled do
@@ -160,7 +133,10 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
     parseError <- labelled do
         videoOn
-        message1 1
+
+        ld IX $ getConst . msgs1 $ assetLocs
+        ld B 1
+        call $ printMessage platform
         jp readLine
 
     -- dbgPrintParseBuf <- labelled $ unless release do
@@ -240,11 +216,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             ret
         pure ()
 
-    let message1 msg = do
-            ld IX $ getConst . msgs1 $ assetLocs
-            ld B msg
-            call $ printMessage platform
-
     -- Input: IX contains the message bank, B is the message ID
     printlnZ <- labelled do
         call printZ
@@ -279,7 +250,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                     call decodeZ1
                     skippable \unprintable -> do
                         jr Z unprintable
-                        call 0x28
+                        rst 0x28
                 ld A [unpackIsLast]
                 cp 0
                 ret NZ
@@ -287,6 +258,10 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
     unpackZ <- labelled $ unpackZ_ unpackBuf unpackIsLast
     decodeZ1 <- labelled $ decodeZ1_ shiftState
+
+    unpackBuf <- labelled $ db [0, 0, 0]
+    unpackIsLast <- labelled $ db [0]
+    shiftState <- labelled $ db [0]
 
     printBCDPercent <- labelled $ when supportScore do -- XXX
         call 0x01a5
@@ -323,12 +298,8 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             , helpMap = Const help
             }
 
-    unpackBuf <- labelled $ db [0, 0, 0]
-    unpackIsLast <- labelled $ db [0]
-    shiftState <- labelled $ db [0]
     dictBuf <- labelled $ resb 5
 
-    -- let vars = Vars{..}
     vars <- do
         moved <- labelled $ db [0]
         inputBuf <- labelled $ resb 40
@@ -341,5 +312,32 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         savedVars <- if supportQSave then fmap Just . labelled $ resb 256 else pure Nothing
         undoVars <- if supportUndo then fmap Just . labelled $ resb 256 else pure Nothing
         return Vars{..}
+
     unless release nop -- To see real memory usage instead of just image size
     pure ()
+  where
+    dbgPrintA = unless release do
+        push AF
+        call 0x01a5
+        pop AF
+
+    videoOn = ld [0x3f00] A
+    videoOff = ld [0x3e00] A
+
+    printCharA = rst 0x28
+    printString s = skippable \end -> mdo
+        ld IY lbl
+        decLoopB (fromIntegral $ length s) do
+            ld A [IY]
+            inc IY
+            printCharA
+        jr end
+        lbl <- labelled $ db $ map (fromIntegral . ord) s
+        pure ()
+
+    waitEnter = do
+        withLabel \loop -> do
+            rst 0x18
+            cp 0x0d
+            jp NZ loop
+        ret
