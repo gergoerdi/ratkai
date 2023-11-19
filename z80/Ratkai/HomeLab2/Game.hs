@@ -227,7 +227,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         videoOn
         ret
 
-        parseLine' <- labelled $ parseLine_ assetLocs locations
+        parseLine' <- labelled $ parseLine_ assetLocs platform vars locations
         pure ()
 
     parseError <- labelled do
@@ -360,26 +360,28 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unpackZ <- labelled $ unpackZ_ unpackBuf unpackIsLast
     decodeZ1 <- labelled $ decodeZ1_ shiftState
 
-    findByRoom <- labelled $ findByRoom_ locations
-    findByWords <- labelled $ findByWords_ locations
+    findByRoom <- labelled $ findByRoom_ vars locations
+    findByWords <- labelled $ findByWords_ vars locations
 
-    let locations = Locations{ printMessage = printlnZ, .. }
+    let platform = Platform{ printMessage = printlnZ, .. }
+        vars = Vars{..}
+        locations = Routines{.. }
 
-    runEnter <- labelled $ runEnter_ assetLocs locations
+    runEnter <- labelled $ runEnter_ assetLocs platform vars locations
     runAfter <- labelled $ runAfter_ assetLocs locations
-    runInteractiveBuiltin <- labelled $ runInteractiveBuiltin_ assetLocs locations
+    runInteractiveBuiltin <- labelled $ runInteractiveBuiltin_ assetLocs platform vars locations
     runInteractiveLocal <- labelled $ runInteractiveLocal_ assetLocs locations
     runInteractiveGlobal <- labelled $ runInteractiveGlobal_ assetLocs locations
     runInteractive <- labelled $ runInteractive_ assetLocs locations
 
-    runRatScript <- labelled $ runRatScript_ locations
-    resetGameVars <- labelled $ resetGameVars_ assetLocs locations
+    runRatScript <- labelled $ runRatScript_ platform vars locations
+    resetGameVars <- labelled $ resetGameVars_ assetLocs vars locations
 
-    anyItemsAtD <- labelled $ anyItemsAtD_ assetLocs locations
-    printItemsAtD <- labelled $ printItemsAtD_ assetLocs locations
-    varIY <- labelled $ varIY_ locations
+    anyItemsAtD <- labelled $ anyItemsAtD_ assetLocs vars locations
+    printItemsAtD <- labelled $ printItemsAtD_ assetLocs platform vars locations
+    varIY <- labelled $ varIY_ vars locations
 
-    printScore <- labelled $ printScore_ locations
+    printScore <- labelled $ printScore_ vars locations
     printBCDPercent <- labelled $ when supportScore do
         call 0x01a5
         ld A $ fromIntegral . ord $ '%'
@@ -428,39 +430,33 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unless release nop -- To see real memory usage instead of just image size
     pure ()
 
--- data Platform = Platform
---     { printMessage :: Location
---     , matchWord :: Location
---     }
+data Platform = Platform
+    { printMessage :: Location
+    , matchWord :: Location
+    , parseError :: Location
+    }
 
--- data Vars = Vars
---     { moved
---     , inputBuf, parseBuf
---     , gameVars, playerScore, playerHealth, playerStatus, playerLoc
---     , savedVars :: Location
---     }
+data Vars = Vars
+    { moved
+    , inputBuf, parseBuf
+    , gameVars, playerScore, playerHealth, playerStatus, playerLoc
+    , savedVars :: Location
+    }
 
-data Locations = Locations
-    { gameVars, moved :: Location
-    , inputBuf :: Location
-    , playerScore, playerHealth, playerStatus, playerLoc :: Location
-    , varIY :: Location
+data Routines = Routines
+    { varIY :: Location
     , printItemsAtD, anyItemsAtD :: Location
     , findByRoom, findByWords :: Location
     , runRatScript :: Location
     , runInteractive :: Location
     , printScore, printBCDPercent :: Location
-    , savedVars, parseBuf :: Location
-    , printMessage :: Location
-    , matchWord :: Location
-    , parseError :: Location
     , printCharA :: Z80ASM
     }
 
 
 -- | Run a Rat script starting at IX, with text bank HL
-runRatScript_ :: Locations -> Z80ASM
-runRatScript_ Locations{..} = mdo
+runRatScript_ :: Platform -> Vars -> Routines -> Z80ASM
+runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
     runRatScript <- labelled do
         fetch A
         cp 0x18
@@ -691,8 +687,8 @@ runRatScript_ Locations{..} = mdo
         ld r [HL]
         inc HL
 
-resetGameVars_ :: Game (Const Location) -> Locations -> Z80ASM
-resetGameVars_ assets Locations{..} = mdo
+resetGameVars_ :: Game (Const Location) -> Vars -> Routines -> Z80ASM
+resetGameVars_ assets Vars{..} Routines{..} = mdo
     ld DE gameVars
     ld A 0x00
     decLoopB 256 do
@@ -718,22 +714,22 @@ resetGameVars_ assets Locations{..} = mdo
       } = assets
 
 -- | Returns NZ iff there was a matching command
-runInteractiveLocal_ :: Game (Const Location) -> Locations -> Z80ASM
-runInteractiveLocal_ assets Locations{..} = do
+runInteractiveLocal_ :: Game (Const Location) -> Routines -> Z80ASM
+runInteractiveLocal_ assets Routines{..} = do
     ld HL $ getConst $ interactiveLocal assets
     call findByRoom
     inc HL
     jp runInteractive
 
 -- | Returns NZ iff there was a matching command
-runInteractiveGlobal_ :: Game (Const Location) -> Locations -> Z80ASM
-runInteractiveGlobal_ assets Locations{..} = do
+runInteractiveGlobal_ :: Game (Const Location) -> Routines -> Z80ASM
+runInteractiveGlobal_ assets Routines{..} = do
     ld HL $ getConst $ interactiveGlobal assets
     jp runInteractive
 
 -- | Returns NZ iff there was a matching command
-runInteractive_ :: Game (Const Location) -> Locations -> Z80ASM
-runInteractive_ assets Locations{..} = do
+runInteractive_ :: Game (Const Location) -> Routines -> Z80ASM
+runInteractive_ assets Routines{..} = do
     call findByWords
     ret Z
 
@@ -746,8 +742,8 @@ runInteractive_ assets Locations{..} = do
 
 
 -- | Returns Z iff there was a matching command
-runInteractiveBuiltin_ :: Game (Const Location) -> Locations -> Z80ASM
-runInteractiveBuiltin_ assets Locations{..} = mdo
+runInteractiveBuiltin_ :: Game (Const Location) -> Platform -> Vars -> Routines -> Z80ASM
+runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
     ld A [parseBuf]
     skippable \notMove -> do
         cp 0x0c
@@ -976,8 +972,8 @@ labelledString s = do
     l <- labelled $ db $ map (fromIntegral . ord) s
     pure (l, s)
 
-printScore_ :: Locations -> Z80ASM
-printScore_ Locations{..} = when supportScore mdo
+printScore_ :: Vars -> Routines -> Z80ASM
+printScore_ Vars{..} Routines{..} = when supportScore mdo
     ld IY lbl
     decLoopB (fromIntegral $ length s) do
         ld A [IY]
@@ -994,8 +990,8 @@ printScore_ Locations{..} = when supportScore mdo
 -- | Find data corresponding to the current room, starting at `HL`
 --   Afterwards, HL points to the *length* of the current room's data,
 --   and the actual data starts afterwards
-findByRoom_ :: Locations -> Z80ASM
-findByRoom_ Locations{..} = do
+findByRoom_ :: Vars -> Routines -> Z80ASM
+findByRoom_ Vars{..} Routines{..} = do
     ld A [playerLoc]
     ld B 0
     loopForever do
@@ -1006,8 +1002,8 @@ findByRoom_ Locations{..} = do
 
 -- Find data corresponding to the current input in parseBuf, starting at HL
 -- Afterwards: Z iff no mach
-findByWords_ :: Locations -> Z80ASM
-findByWords_ Locations{..} = mdo
+findByWords_ :: Vars -> Routines -> Z80ASM
+findByWords_ Vars{..} Routines{..} = mdo
     ld D 0 -- We'll use DE as an offset to add to HL
 
     loopForever mdo
@@ -1050,8 +1046,8 @@ findByWords_ Locations{..} = mdo
     pure ()
 
 -- | Run "enter" script for current room
-runEnter_ :: Game (Const Location) -> Locations -> Z80ASM
-runEnter_ assets Locations{..} = do
+runEnter_ :: Game (Const Location) -> Platform -> Vars -> Routines -> Z80ASM
+runEnter_ assets Platform{..} Vars{..} Routines{..} = do
     ld HL $ getConst . enterRoom $ assets
     call findByRoom
     inc HL
@@ -1067,17 +1063,14 @@ runEnter_ assets Locations{..} = do
     call printMessage
     jp printItemsAtD
 
-runAfter_ :: Game (Const Location) -> Locations -> Z80ASM
-runAfter_ assets Locations{..} = do
+runAfter_ :: Game (Const Location) -> Routines -> Z80ASM
+runAfter_ assets Routines{..} = do
     ld HL $ getConst . afterTurn $ assets
     ld IX $ getConst . msgs1 $ assets
     jp runRatScript
 
-parseLine_ :: Game (Const Location) -> Locations -> Z80ASM
-parseLine_ assets Locations{..} = mdo
-    -- -- For a bit of extra zoom-zoom
-    -- videoOff
-
+parseLine_ :: Game (Const Location) -> Platform -> Vars -> Routines -> Z80ASM
+parseLine_ assets Platform{..} Vars{..} Routines{..} = mdo
     -- Clear out `parseBuf`
     ld IY parseBuf
     ld A 0x00
@@ -1139,8 +1132,8 @@ parseLine_ assets Locations{..} = mdo
 
 -- | Print all items at location `D`.
 --   Clobbers `IY`, `A`, `B`
-printItemsAtD_ :: Game (Const Location) -> Locations -> Z80ASM
-printItemsAtD_ Game{..} Locations{..} = do
+printItemsAtD_ :: Game (Const Location) -> Platform -> Vars -> Routines -> Z80ASM
+printItemsAtD_ Game{..} Platform{..} Vars{..} Routines{..} = do
     ld IY $ gameVars + fromIntegral maxItem
     decLoopB (maxItem - minItem) $ skippable \next -> do
         dec IY
@@ -1159,8 +1152,8 @@ printItemsAtD_ Game{..} Locations{..} = do
 
 -- | Are there any items at location `D`? If yes, set Z
 --   Clobbers `IY`, `A`, `B`
-anyItemsAtD_ :: Game (Const Location) -> Locations -> Z80ASM
-anyItemsAtD_ Game{..} Locations{..} = do
+anyItemsAtD_ :: Game (Const Location) -> Vars -> Routines -> Z80ASM
+anyItemsAtD_ Game{..} Vars{..} Routines{..} = do
     ld IY $ gameVars + fromIntegral maxItem
     decLoopB (maxItem - minItem) $ skippable \notHere -> do
         dec IY
@@ -1174,8 +1167,8 @@ anyItemsAtD_ Game{..} Locations{..} = do
 -- | Pre: `E is the variable's index
 --   Post: `IY` is the variable's address
 --   Clobbers: `D`, `A`, `IY`
-varIY_ :: Locations -> Z80ASM
-varIY_ Locations{..} = do
+varIY_ :: Vars -> Routines -> Z80ASM
+varIY_ Vars{..} Routines{..} = do
     ld IY gameVars
     ld D 0
     add IY DE
