@@ -24,14 +24,17 @@ supportScore = True
 moveIsFinal :: Bool
 moveIsFinal = True
 
+dictWordLength :: Word8
+dictWordLength = 5
+
 data Platform = Platform
     { printMessage :: Location
     , matchWord :: Location
-    , parseError :: Location
+    , beforeParseError :: Z80ASM
     , printString :: String -> Z80ASM
     , waitEnter :: Z80ASM
     , clearScreen :: Z80ASM
-    , readLine :: Z80ASM
+    , readLine :: Location
     , printBCDPercent :: Location
     }
 
@@ -700,6 +703,15 @@ parseLine_ assets Platform{..} Vars{..} Routines{..} = mdo
         found <- label
         ld [IY] A
         ret
+
+    parseError <- labelled do
+        beforeParseError
+
+        ld IX $ getConst . msgs1 $ assets
+        ld B 1
+        call printMessage
+        jp readLine
+
     pure ()
   where
     connective = 100 -- TODO
@@ -781,7 +793,7 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
         cp 0
         jp NZ gameOver
 
-        readLine
+        call readLine
         -- call dbgPrintParseBuf
 
         ld A [parseBuf]
