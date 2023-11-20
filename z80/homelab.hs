@@ -18,7 +18,7 @@ main = do
     let inputPath = "game/bosszu/part1"
     assets <- loadTextFiles inputPath
     -- assets <- pure $ mapStmts (\_ -> restoreBlocks) assets
-    emit "_build/ratkai" . org (16700 - 60) $ Ratkai.game assets
+    emit "_build/homelab2/ratkai" . org (16700 - 60) $ Ratkai.game assets
 
 emit :: String -> ASMBlock -> IO ()
 emit name block = do

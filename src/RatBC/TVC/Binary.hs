@@ -7,6 +7,8 @@ import RatBC.Words
 import RatBC.Text
 import RatBC.Game
 
+import RatBC.TVC.Text
+
 import Control.Monad.Identity
 import Control.Monad.RevState hiding (put)
 import qualified Control.Monad.RevState as RSt
@@ -64,7 +66,7 @@ assemble game@Game{..} = game
   where
     putStmts = mapM_ put . ensureRet
 
-    text = runPut . mapM_ (putWord8 . fromIntegral . ord)
+    text = runPut . mapM_ (putWord8 . tvcChar)
 
     msgs = map (runPut . withLength8 . putLazyByteString . text)
 
