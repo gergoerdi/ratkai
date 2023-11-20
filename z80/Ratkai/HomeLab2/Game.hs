@@ -130,14 +130,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
         parseLine' <- labelled $ parseLine_ assetLocs platform vars routines
         pure ()
-
-    parseError <- labelled do
-        videoOn
-
-        ld IX $ getConst . msgs1 $ assetLocs
-        ld B 1
-        call $ printMessage platform
-        jp readLine
+    let beforeParseError = videoOn
 
     -- dbgPrintParseBuf <- labelled $ unless release do
     --     -- DEBUG: print parse buffer
@@ -271,7 +264,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         rst 0x28
         ret
 
-    let platform = Platform{ printMessage = printlnZ, clearScreen = call clearScreen, readLine = call readLine, .. }
+    let platform = Platform{ printMessage = printlnZ, clearScreen = call clearScreen, .. }
 
     assetLocs <- do
         let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 40 . preprocessGame $ assets
@@ -335,9 +328,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         lbl <- labelled $ db $ map (fromIntegral . ord) s
         pure ()
 
-    waitEnter = do
-        withLabel \loop -> do
-            rst 0x18
-            cp 0x0d
-            jp NZ loop
-        ret
+    waitEnter = withLabel \loop -> do
+        rst 0x18
+        cp 0x0d
+        jp NZ loop
