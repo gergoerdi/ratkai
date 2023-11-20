@@ -35,6 +35,13 @@ executables:
       - z80
       - ratkai
 
+  ratkai-tvc:
+    main: tvc.hs
+    source-dirs: z80
+    dependencies:
+      - z80
+      - ratkai
+
   ratbc-disasm:
     main: src/ratbc-disasm.hs
     dependencies:
