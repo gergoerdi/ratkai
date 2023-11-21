@@ -41,8 +41,9 @@ data Platform = Platform
     , waitEnter :: Z80ASM
     , clearScreen :: Z80ASM
     , readLine :: Location
-    , printBCDPercent :: Location
+    , printlnBCDPercent :: Location
     , space :: Word8
+    , newline :: Z80ASM
     }
 
 data Vars = Vars
@@ -541,7 +542,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
     printStatus <- labelled $ when supportScore mdo
         printString "Erőnlét:  "
         ld A [playerHealth]
-        call printBCDPercent
+        call printlnBCDPercent
         jp printScore
 
     pure ()
@@ -563,7 +564,8 @@ printScore_ :: Platform -> Vars -> Routines -> Z80ASM
 printScore_ Platform{..} Vars{..} Routines{..} = when supportScore mdo
     printString "Pontszám: "
     ld A [playerScore]
-    call printBCDPercent
+    call printlnBCDPercent
+    newline
     setZ  -- So that the built-in handler for `SCORE` doesn't have to do this
     ret
 

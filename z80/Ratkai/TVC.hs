@@ -89,15 +89,20 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 decLoopB (fromIntegral $ length s) do
                     ld C [IY]
                     inc IY
+                    push BC
+                    push IY
                     printCharC
+                    pop IY
+                    pop BC
                 jr end
-                lbl <- labelled $ db $ map (fromIntegral . ord) s
+                lbl <- labelled $ db $ map tvcChar s
                 pure ()
 
             beforeParseError = pure ()
-            waitEnter = pure ()
-            clearScreen = pure ()
+            waitEnter = pure () -- XXX
+            clearScreen = pure () -- XXX
             space = tvcChar ' '
+            newline = call newLine
 
     call setMainColor
     routines <- gameLoop assetLocs platform vars
@@ -229,7 +234,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         keyData <- labelled $ db $ toByteMap keymap
         pure ()
 
-    printByte <- labelled $ printByte_ printCharC -- XXX
+    printByte <- labelled $ printByte_ printCharC
 
     -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
     -- After: `A` contains the word code (or 0 on non-match), and
@@ -301,8 +306,12 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     setMainColor <- labelled $ setMainColor_ videoLocs
     setInputColor <- labelled $ setInputColor_ videoLocs
 
-    printBCDPercent <- labelled do
-        ret -- TODO
+    printlnBCDPercent <- labelled do
+        call printByte
+        ld C $ tvcChar '%'
+        printCharC
+        call newLine
+        ret
 
     printMessage <- labelled mdo
         push BC

@@ -256,15 +256,22 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unpackIsLast <- labelled $ db [0]
     shiftState <- labelled $ db [0]
 
-    printBCDPercent <- labelled $ when supportScore do -- XXX
+    printlnBCDPercent <- labelled $ when supportScore do -- XXX
         call 0x01a5
         ld A $ fromIntegral . ord $ '%'
         rst 0x28
-        ld A $ fromIntegral . ord $ '\r'
-        rst 0x28
+        cr
         ret
 
-    let platform = Platform{ printMessage = printlnZ, clearScreen = call clearScreen, space = 0x20, .. }
+    let cr = do
+            ld A $ fromIntegral . ord $ '\r'
+            rst 0x28
+
+    let platform = Platform{ clearScreen = call clearScreen, .. }
+          where
+            printMessage = printlnZ
+            space = 0x20
+            newline = cr
 
     assetLocs <- do
         let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 40 . preprocessGame $ assets
