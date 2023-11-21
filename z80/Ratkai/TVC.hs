@@ -93,51 +93,30 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 lbl <- labelled $ db $ map (fromIntegral . ord) s
                 pure ()
 
+            beforeParseError = pure ()
             waitEnter = pure ()
             clearScreen = pure ()
-            readLine = do
-                -- call newLine
-                ld C $ tvcChar '>'
-                printCharC
-                loopForever $ pure ()
+            space = tvcChar ' '
 
+    call setMainColor
     routines <- gameLoop assetLocs platform vars
-
-    -- -- Test starts here
-    -- call setMainColor
-
-    -- ld IX $ getConst . msgs2 $ assetLocs
-    -- ld B 1
-    -- call printMessage
-    -- call newLine
-    -- call newLine
-
-    -- ld IX $ getConst . msgs2 $ assetLocs
-    -- ld B 160
-    -- call printMessage
-    -- call newLine
-    -- call newLine
-
-    -- ld HL str'
-    -- call printStr
-    -- call newLine
-    -- call newLine
-
-    -- loopForever do
-    --     call newLine
-    --     ld HL inputBuf
-    --     call inputLine
-    --     call newLine
-    --     call newLine
-
-    --     ld HL str2
-    --     call printStr
-    --     call newLine
 
     pageVideoIn <- labelled pageVideoIn_
     pageVideoOut <- labelled pageVideoOut_
     displayPicture <- labelled $ displayPicture_ videoLocs
     intHandler <- labelled $ intHandler_ kbdBuf
+
+    parseLine <- labelled $ parseLine_ assetLocs platform vars routines
+
+    readLine <- labelled do
+        ld HL $ inputBuf vars
+        call inputLine
+        call newLine
+        -- forM_ [0..4] \i -> do
+        --     ld A [inputBuf vars + i]
+        --     call printByte
+        call newLine
+        jp parseLine
 
     -- Input one line of text, store result in `[HL]`
     -- Mangles `HL`, `A`, and `B`
@@ -178,14 +157,17 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             -- Normal character: print and record
             dec B
             jr Z noMoreRoom
+
+            ld [HL] A
+            inc HL
+
             ld C A
             push BC
             push HL
             printCharC
             pop HL
             pop BC
-            ld [HL] A
-            inc HL
+
             jr loop
 
             noMoreRoom <- labelled do
@@ -246,6 +228,65 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         keyData <- labelled $ db $ toByteMap keymap
         pure ()
 
+    printByte <- labelled $ printByte_ printCharC -- XXX
+
+    -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
+    -- After: `A` contains the word code (or 0 on non-match), and
+    -- `HL` is the rest of the input
+    -- Clobbers: `BC`, `IY`
+    matchWord <- labelled mdo
+        -- Are we beyond the last word?
+        ld A [IX]
+        cp 0xff
+        ld A 0
+        ret Z
+
+        push IX
+        pop DE
+
+        ld BC 5
+        add IX BC
+        -- Note: IX now points to the code of the word we're trying to match
+        -- while DE points to the start of the word
+
+        push IX
+        push HL
+        -- Match the first 5 characters of HL, or until there is a space
+        decLoopB dictWordLength do
+            ld A [DE]
+            inc DE
+            ld C [HL]
+            cp C
+            jp NZ noMatch
+            cp $ tvcChar ' ' -- If next char to match is a space, then we're done
+            jp Z match
+            inc HL
+
+        match <- labelled do
+            -- Skip all remaining characters of the current word
+            skippable \end -> loopForever do
+                ld A [HL]
+                cp 0x20
+                jp Z end
+                inc HL
+
+            pop IX -- Discard pushed IX, since we want to "commit" our progress
+            pop IX
+            ld A [IX]
+            ret
+
+        noMatch <- labelled do
+            pop HL
+            pop IX
+            inc IX
+            ld A 0
+            ret
+
+        -- noMoreWords <- labelled do
+        --     ld A 0
+        --     ret
+        pure ()
+
     videoLocs <- do
         charset <- labelled $ db $ BL.toStrict . charSet $ assets'
         lineNum <- labelled $ db [0]
@@ -304,8 +345,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     -- picData <- labelled $ db pic
     kbdBuf <- labelled $ db $ replicate (fromIntegral kbdBufLen) 0xff
 
-    inputBuf <- labelled $ db $ replicate (fromIntegral maxInput) 0xff
-
     assetLocs <- do
         let asset sel = labelled $ db $ getConst . sel $ assets'
         text1 <- asset msgs1
@@ -332,7 +371,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
     vars <- do
         moved <- labelled $ db [0]
-        inputBuf <- labelled $ resb 40
+        inputBuf <- labelled $ resb (fromIntegral maxInput)
         parseBuf <- labelled $ resb 5
         gameVars <- labelled $ resb 256
         let playerScore = gameVars + 0xfc
@@ -346,12 +385,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
 toByteMap :: [(Word8, Word8)] -> BS.ByteString
 toByteMap vals = BS.pack [ fromMaybe 0xff val | addr <- [0..255], let val = lookup addr vals ]
-
-
-
-
-
-
 
 pageVideoIn_ :: Z80ASM
 pageVideoIn_ = do
@@ -449,8 +482,8 @@ toHex_ = mdo
     add A $ tvcChar 'a' - 10
     ret
 
-printByte_ :: Z80ASM
-printByte_ = mdo
+printByte_ :: Z80ASM -> Z80ASM
+printByte_ printCharC = mdo
     push BC
 
     push AF
@@ -473,110 +506,3 @@ printByte_ = mdo
 
     toHex <- labelled toHex_
     pure ()
-
--- -- | Input one line of text, store result in `[HL]`
--- --   Mangles `HL`, `A`, and `B`
--- inputLine_ = do
-    --     -- Set color for user input
-    --     call setInputColor
-
-    --     -- Draw prompt
-    --     push HL
-    --     ld C $ tvcChar '>'
-    --     printCharC
-    --     pop HL
-
-    --     ld B maxInput
-    --     withLabel \loop -> mdo
-    --         ld [HL] 0xff
-
-    --         push BC
-    --         push HL
-
-    --         push BC
-    --         ld C $ tvcChar '_'
-    --         printCharC
-    --         call printBack
-    --         pop BC
-
-    --         withLabel \waitForInput -> do
-    --             call readChar
-    --             jp Z waitForInput
-    --         pop HL
-    --         pop BC
-
-    --         cp $ tvcChar '\n' -- End of line
-    --         jr Z enter
-    --         cp $ tvcChar '\DEL' -- Backspace
-    --         jr Z backspace
-
-    --         -- Normal character: print and record
-    --         dec B
-    --         jr Z noMoreRoom
-    --         ld C A
-    --         push BC
-    --         push HL
-    --         printCharC
-    --         pop HL
-    --         pop BC
-    --         ld [HL] A
-    --         inc HL
-    --         jr loop
-
-    --         noMoreRoom <- labelled do
-    --             inc B -- So that next `dec B` will trigger `Z` again
-    --         --     dec HL
-    --         --     ld [HL] A
-
-    --         --     -- Erase previous character
-
-    --         --     ld A 0x07 -- Erase previous last character
-    --         --     rst 0x28
-    --         --     ld A [HL] -- Print new last character
-    --         --     inc HL
-    --         --     rst 0x28
-    --             jr loop
-
-    --         backspace <- labelled do
-    --             -- Try to increase B
-    --             inc B
-    --             skippable \inRange -> do
-    --                 ld A B
-    --                 cp (maxInput + 1)
-    --                 jr NZ inRange
-    --                 dec B
-    --                 jr loop
-
-    --             -- Replace last printed character with a space
-    --             push HL
-    --             push BC
-    --             ld C $ tvcChar ' '
-    --             printCharC
-    --             replicateM_ 2 $ call printBack
-    --             ld C $ tvcChar ' '
-    --             printCharC
-    --             call printBack
-    --             pop BC
-    --             pop HL
-
-    --             ld [HL] 0x00
-    --             dec HL
-    --             jr loop
-
-    --         enter <- labelled do
-    --             ld [HL] 0x20
-    --             inc HL
-    --             ld [HL] 0xff
-
-    --             -- Remove cursor
-    --             ld C $ tvcChar ' '
-    --             printCharC
-
-    --             -- Restore color
-    --             jp setMainColor
-    --         pure ()
-
-    -- readChar <- labelled $ mdo
-    --     readChar_ keyData kbdBuf
-    --     keyData <- labelled $ db $ toByteMap keymap
-    --     pure ()

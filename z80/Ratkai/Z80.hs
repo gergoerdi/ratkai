@@ -36,6 +36,7 @@ data Platform = Platform
     , clearScreen :: Z80ASM
     , readLine :: Location
     , printBCDPercent :: Location
+    , space :: Word8
     }
 
 data Vars = Vars
@@ -218,7 +219,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             jp runRatScript
 
         let unimplemented n = labelled do
-                replicateM_ n $ inc IX
+                replicateM_ n $ inc HL
                 jp runRatScript
 
             unsupported :: Z80 Location
@@ -660,7 +661,7 @@ parseLine_ assets Platform{..} Vars{..} Routines{..} = mdo
     ld IY parseBuf
     skippable \end -> decLoopB 5 $ withLabel \doesntCount -> do
         -- Skip all leading spaces
-        ld A 0x20
+        ld A space
         skippable \end -> loopForever do
             cp [HL]
             jp NZ end

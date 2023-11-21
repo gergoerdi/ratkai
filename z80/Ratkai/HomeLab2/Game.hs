@@ -264,7 +264,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         rst 0x28
         ret
 
-    let platform = Platform{ printMessage = printlnZ, clearScreen = call clearScreen, .. }
+    let platform = Platform{ printMessage = printlnZ, clearScreen = call clearScreen, space = 0x20, .. }
 
     assetLocs <- do
         let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 40 . preprocessGame $ assets
