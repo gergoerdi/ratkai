@@ -9,6 +9,7 @@ import RatBC.Words
 import RatBC.Text
 import RatBC.Game
 import RatBC.Pretty
+import RatBC.Game.Parse
 
 import Text.Read
 import Control.Monad.Identity
@@ -43,15 +44,15 @@ writeTextFiles outputPath game = do
       layoutPretty defaultLayoutOptions{ layoutPageWidth = Unbounded } . getConst
     bin fileName = BL.writeFile (outputPath </> fileName <.> "bin")
 
-parseGame :: Game (Const String) -> Game Identity
-parseGame game@Game{..} = game
-    { msgs1 = Identity . parseMessages "text1" . getConst $ msgs1
-    , msgs2 = Identity . parseMessages "text2" . getConst $ msgs2
-    , dict = Identity . parseWords . getConst $ dict
-    , enterRoom = Identity . fromList . parse "enter" . getConst $ enterRoom
-    , afterTurn = Identity . parse "after" . getConst $ afterTurn
-    , interactiveGlobal = Identity . parse "interactive-global" . getConst $ interactiveGlobal
-    , interactiveLocal =  Identity . fromList . parse "interactive-local" . getConst $ interactiveLocal
+readGame :: Game (Const String) -> Game Identity
+readGame game@Game{..} = game
+    { msgs1 = Identity . readMessages "text1" . getConst $ msgs1
+    , msgs2 = Identity . readMessages "text2" . getConst $ msgs2
+    , dict = Identity . readWords . getConst $ dict
+    , enterRoom = Identity . fromList . readFrom "enter" . getConst $ enterRoom
+    , afterTurn = Identity . readFrom "after" . getConst $ afterTurn
+    , interactiveGlobal = Identity . readFrom "interactive-global" . getConst $ interactiveGlobal
+    , interactiveLocal =  Identity . fromList . readFrom "interactive-local" . getConst $ interactiveLocal
     , resetState = Identity . BL.pack . read . getConst $ resetState
     , helpMap = Identity . fromList . read . getConst $ helpMap
     }
@@ -59,15 +60,15 @@ parseGame game@Game{..} = game
     fromList :: [a] -> Array Word8 a
     fromList xs = listArray (1, fromIntegral $ length xs) xs
 
-    parse :: (Read a, Show a) => String -> String -> a
-    parse tag s = case reads s of
+    readFrom :: (Read a, Show a) => String -> String -> a
+    readFrom tag s = case reads s of
         [(x, s')] | all isSpace s' -> x
-        ps -> error $ printf "Parse error in '%s'" tag
+        ps -> error $ printf "Read error in '%s'" tag
 
-    parseMessages tag s = let xs = parse tag s
+    readMessages tag s = let xs = readFrom tag s
       in array (1, fromIntegral $ length xs) xs
 
-    parseWords = M.fromList . parse "dict"
+    readWords = M.fromList . readFrom "dict"
 
 removeComments :: String -> String
 removeComments = unlines . map removeComment . lines

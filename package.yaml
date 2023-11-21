@@ -23,6 +23,8 @@ dependencies:
   - rev-state
   - exceptions
   - pqueue
+  - trifecta
+  - OneTuple
 
 library:
   source-dirs: src
