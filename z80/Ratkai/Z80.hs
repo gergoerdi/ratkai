@@ -21,6 +21,12 @@ supportHelp = True
 supportScore :: Bool
 supportScore = True
 
+supportSound :: Bool
+supportSound = True
+
+supportGraphics :: Bool
+supportGraphics = True
+
 moveIsFinal :: Bool
 moveIsFinal = True
 
@@ -225,12 +231,10 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             unsupported :: Z80 Location
             unsupported = pure 0x0000
 
-        opSetScreen <- unsupported
-        opSpriteOn <- unsupported
-        opSpriteOff <- unsupported
-        opChime <- unsupported
-        opMachineCode <- unsupported
-        opCopyProtection <- unsupported
+        opSetScreen <- if supportGraphics then unimplemented 3 else unsupported
+        opSpriteOn <- if supportGraphics then unimplemented 5 else unsupported
+        opSpriteOff <- if supportGraphics then unimplemented 1 else unsupported
+        opChime <- if supportSound then unimplemented 1 else unsupported
 
         opTable <- labelled $ dw
             [ opRet             -- 00
@@ -256,8 +260,6 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             , opChime           -- 14
             , opSleep           -- 15
             , opIncIfNot0       -- 16
-            , opMachineCode     -- 17
-            , opCopyProtection  -- 18
             ]
 
         -- Add to counter in `[IY]`
