@@ -2,7 +2,7 @@
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
-module Ratkai.HomeLab2.Game (game) where
+module Ratkai.HomeLab2 (game) where
 
 import RatBC.Game
 import RatBC.HomeLab2.Strip
