@@ -43,7 +43,9 @@ printCharC4_ Locations{..} = mdo
         ld A [colNum]
         cp charsPerRow
         jp C sameLine
+        push BC
         call newLine
+        pop BC
 
     -- A = 8 * lineNum
     ld A [lineNum]
