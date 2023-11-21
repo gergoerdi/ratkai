@@ -539,7 +539,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
         ret
 
     printStatus <- labelled $ when supportScore mdo
-        printString "ERONLET:  "
+        printString "Erőnlét:  "
         ld A [playerHealth]
         call printBCDPercent
         jp printScore
@@ -561,7 +561,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
 
 printScore_ :: Platform -> Vars -> Routines -> Z80ASM
 printScore_ Platform{..} Vars{..} Routines{..} = when supportScore mdo
-    printString "PONTSZAM: "
+    printString "Pontszám: "
     ld A [playerScore]
     call printBCDPercent
     setZ  -- So that the built-in handler for `SCORE` doesn't have to do this

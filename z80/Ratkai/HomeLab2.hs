@@ -22,7 +22,7 @@ import Control.Monad
 import Data.Functor.Const
 import System.FilePath
 import Data.Word
-import Data.Char (ord)
+import Data.Char (ord, toUpper, isLower)
 
 release :: Bool
 release = True
@@ -325,8 +325,21 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             inc IY
             printCharA
         jr end
-        lbl <- labelled $ db $ map (fromIntegral . ord) s
+        lbl <- labelled $ db $ map toHL2 s
         pure ()
+      where
+        toHL2 c
+          | isLower c = toHL2 (toUpper c)
+          | c == 'Á' = toHL2 'A'
+          | c == 'É' = toHL2 'E'
+          | c == 'Í' = toHL2 'I'
+          | c == 'Ó' = toHL2 'O'
+          | c == 'Ú' = toHL2 'U'
+          | c == 'Ö' = toHL2 'O'
+          | c == 'Ő' = toHL2 'O'
+          | c == 'Ü' = toHL2 'U'
+          | c == 'Ű' = toHL2 'U'
+          | otherwise = fromIntegral . ord $ c
 
     waitEnter = withLabel \loop -> do
         rst 0x18
