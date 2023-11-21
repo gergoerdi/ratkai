@@ -7,6 +7,7 @@ module Ratkai.TVC (game) where
 import RatBC.Game
 import RatBC.TVC.Binary
 import RatBC.TVC.Text
+import RatBC.TVC.Strip
 
 import Ratkai.Z80
 import TVC
@@ -39,7 +40,7 @@ supportQSave = True
 
 game :: Game Identity -> Z80ASM
 game assets@Game{ minItem, maxItem, startRoom } = mdo
-    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 $ assets
+    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
 
     let printCharC = call printCharC4
 
