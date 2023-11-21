@@ -83,11 +83,12 @@
   , InputDispatch [0x28] -- "vár"
       [ Message 22                     -- 02 16                -- "Telik az idő... "
       , Sleep 5                        -- 15 05
-      , If00 3 9                       -- 0a 03 09
-      , AssignFF 3                     -- 04 03
-      , Message 23                     -- 02 17                -- "A fosztogatók elvonultak. "
-      , Chime 5                        -- 14 05
-      , AddScore 1                     -- 10 01
+      , When00 3
+          [ AssignFF 3                     -- 04 03
+          , Message 23                     -- 02 17                -- "A fosztogatók elvonultak. "
+          , Chime 5                        -- 14 05
+          , AddScore 1                     -- 10 01
+          ]
       ]
   , InputDispatch [0x2d, 0x69, 0xa6] -- "mászi |69| fa"
       [ Message 24                     -- 02 18                -- "Megpróbálod, de leesel. "
@@ -480,11 +481,12 @@
       [ Skip 5                         -- 09 05
       ]
   , InputDispatch [0x0c] -- "ki"
-      [ If00 14 9                      -- 0a 0e 09
-      , If00 8 17                      -- 0a 08 11
-      , MoveTo 17                      -- 0c 11
-      , Assign00 13                    -- 03 0d
-      , Ret                            -- 00
+      [ When00 14
+          [ If00 8 17                      -- 0a 08 11
+          , MoveTo 17                      -- 0c 11
+          , Assign00 13                    -- 03 0d
+          , Ret                            -- 00
+          ]
       , Message 44                     -- 02 2c                -- "A katonák betörik az ajtót és beözönlenek a szobába. "
       , Sleep 5                        -- 15 05
       , Message 45                     -- 02 2d                -- "Pillanatok alatt végeznek veled... "
@@ -578,11 +580,13 @@
   [ InputDispatch [0x28] -- "vár"
       [ Message 22                     -- 02 16                -- "Telik az idő... "
       , Sleep 5                        -- 15 05
-      , If00 67 10                     -- 0a 43 0a
-      , If00 9 7                       -- 0a 09 07
-      , AssignFF 9                     -- 04 09
-      , Message 55                     -- 02 37                -- "Az őr továbbmegy. "
-      , SpriteOff 1                    -- 13 01
+      , When00 67
+          [ When00 9
+              [ AssignFF 9                     -- 04 09
+              , Message 55                     -- 02 37                -- "Az őr továbbmegy. "
+              , SpriteOff 1                    -- 13 01
+              ]
+          ]
       , Chime 5                        -- 14 05
       ]
   , InputDispatch [0x0a] -- "le"
@@ -595,8 +599,9 @@
       [ Skip 6                         -- 09 06
       ]
   , InputDispatch [0x0b, 0xb6] -- "be ablak"
-      [ If00 67 4                      -- 0a 43 04
-      , IfFF 9 6                       -- 0b 09 06
+      [ When00 67
+          [ IfFF 9 6                       -- 0b 09 06
+          ]
       , Message 4                      -- 02 04                -- "OK. "
       , MoveTo 89                      -- 0c 59
       , Ret                            -- 00
@@ -650,9 +655,10 @@
       , MoveTo 31                      -- 0c 1f
       ]
   , InputDispatch [0x05] -- "d"
-      [ If00 28 4                      -- 0a 1c 04
-      , MoveTo 24                      -- 0c 18
-      , Ret                            -- 00
+      [ When00 28
+          [ MoveTo 24                      -- 0c 18
+          , Ret                            -- 00
+          ]
       , SetPlayerStatus 255            -- 0d ff
       ]
   , InputDispatch [0x2a] -- "ugrik"
@@ -865,8 +871,9 @@
       ]
   , InputDispatch [0x3e, 0x7d] -- "mutat gyűrű"
       [ CopyProtection 35 153 192 113  -- 18 23 99 c0 71
-      , If00 31 4                      -- 0a 1f 04
-      , Assert00 125 6                 -- 06 7d 06             -- "Nincs nálad az a tárgy. "
+      , When00 31
+          [ Assert00 125 6                 -- 06 7d 06             -- "Nincs nálad az a tárgy. "
+          ]
       , AssignFF 23                    -- 04 17
       , Message 72                     -- 02 48                -- "A ninják eltüntek... "
       , SpriteOff 1                    -- 13 01
@@ -952,15 +959,16 @@
       [ Skip 6                         -- 09 06
       ]
   , InputDispatch [0x40, 0xbb] -- "vág vitor"
-      [ If00 32 17                     -- 0a 20 11
-      , Assert00 121 2                 -- 06 79 02             -- "Nem teheted meg. "
-      , Message 4                      -- 02 04                -- "OK. "
-      , Assign00 134                   -- 03 86
-      , AssignFF 32                    -- 04 20
-      , Chime 6                        -- 14 06
-      , Chime 10                       -- 14 0a
-      , AddScore 1                     -- 10 01
-      , Ret                            -- 00
+      [ When00 32
+          [ Assert00 121 2                 -- 06 79 02             -- "Nem teheted meg. "
+          , Message 4                      -- 02 04                -- "OK. "
+          , Assign00 134                   -- 03 86
+          , AssignFF 32                    -- 04 20
+          , Chime 6                        -- 14 06
+          , Chime 10                       -- 14 0a
+          , AddScore 1                     -- 10 01
+          , Ret                            -- 00
+          ]
       , Message 75                     -- 02 4b                -- "A kormányos észreveszi miben mesterkedsz és hozzádvág egy követ. "
       , Hurt 8                         -- 0f 08
       ]
@@ -1005,10 +1013,12 @@
       , Chime 12                       -- 14 0c
       ]
   , InputDispatch [0x0c] -- "ki"
-      [ If00 26 7                      -- 0a 1a 07
-      , If00 19 4                      -- 0a 13 04
-      , MoveTo 35                      -- 0c 23
-      , Ret                            -- 00
+      [ When00 26
+          [ When00 19
+              [ MoveTo 35                      -- 0c 23
+              , Ret                            -- 00
+              ]
+          ]
       , MoveTo 38                      -- 0c 26
       ]
   ]
@@ -1164,12 +1174,14 @@
       ]
   , InputDispatch [0x2d, 0xbe] -- "mászi kerít"
       [ CopyProtection 133 120 192 7   -- 18 85 78 c0 07
-      , IfFF 25 11                     -- 0b 19 0b
-      , If00 49 8                      -- 0a 31 08
-      , Message 91                     -- 02 5b                -- "Valaki egy kést dob a hátadba. "
-      , Sleep 5                        -- 15 05
-      , SetPlayerStatus 255            -- 0d ff
-      , Ret                            -- 00
+      , WhenFF 25
+          [ When00 49
+              [ Message 91                     -- 02 5b                -- "Valaki egy kést dob a hátadba. "
+              , Sleep 5                        -- 15 05
+              , SetPlayerStatus 255            -- 0d ff
+              , Ret                            -- 00
+              ]
+          ]
       , Message 4                      -- 02 04                -- "OK. "
       , MoveTo 38                      -- 0c 26
       , Chime 13                       -- 14 0d
@@ -1302,11 +1314,12 @@
       ]
   , InputDispatch [0x2c, 0xa1] -- "öl ember"
       [ Assert00 40 2                  -- 06 28 02             -- "Nem teheted meg. "
-      , If00 55 8                      -- 0a 37 08
-      , Message 124                    -- 02 7c                -- "Megsebesülsz... "
-      , Hurt 5                         -- 0f 05
-      , Chime 2                        -- 14 02
-      , Ret                            -- 00
+      , When00 55
+          [ Message 124                    -- 02 7c                -- "Megsebesülsz... "
+          , Hurt 5                         -- 0f 05
+          , Chime 2                        -- 14 02
+          , Ret                            -- 00
+          ]
       , AssignFF 40                    -- 04 28
       , Message 125                    -- 02 7d                -- "Szétzavartad a verekedőket. "
       , AssignLoc 137                  -- 05 89
@@ -1450,22 +1463,25 @@
       , Chime 4                        -- 14 04
       ]
   , InputDispatch [0x0e, 0x8d] -- "f kő"
-      [ If00 43 8                      -- 0a 2b 08
-      , Message 100                    -- 02 64                -- "A skorpió megcsípett... "
-      , SetPlayerStatus 255            -- 0d ff
-      , Sleep 5                        -- 15 05
-      , Ret                            -- 00
-      , If00 44 12                     -- 0a 2c 0c
-      , Assign00 141                   -- 03 8d
-      , AssignFF 44                    -- 04 2c
-      , Message 4                      -- 02 04                -- "OK. "
-      , AddScore 1                     -- 10 01
-      , Chime 5                        -- 14 05
-      , Ret                            -- 00
+      [ When00 43
+          [ Message 100                    -- 02 64                -- "A skorpió megcsípett... "
+          , SetPlayerStatus 255            -- 0d ff
+          , Sleep 5                        -- 15 05
+          , Ret                            -- 00
+          ]
+      , When00 44
+          [ Assign00 141                   -- 03 8d
+          , AssignFF 44                    -- 04 2c
+          , Message 4                      -- 02 04                -- "OK. "
+          , AddScore 1                     -- 10 01
+          , Chime 5                        -- 14 05
+          , Ret                            -- 00
+          ]
       , AssertHere 141 5               -- 08 8d 05             -- "Nem látom itt azt a tárgyat. "
-      , If00 141 4                     -- 0a 8d 04
-      , Message 5                      -- 02 05                -- "Nem látom itt azt a tárgyat. "
-      , Ret                            -- 00
+      , When00 141
+          [ Message 5                      -- 02 05                -- "Nem látom itt azt a tárgyat. "
+          , Ret                            -- 00
+          ]
       , Assign00 141                   -- 03 8d
       , Message 4                      -- 02 04                -- "OK. "
       ]
@@ -1608,11 +1624,12 @@
   ]
 , -- ROOM 58
   [ InputDispatch [0x01] -- "é"
-      [ If00 47 8                      -- 0a 2f 08
-      , Message 116                    -- 02 74                -- "A rablók megöltek. "
-      , SetPlayerStatus 255            -- 0d ff
-      , Sleep 5                        -- 15 05
-      , Ret                            -- 00
+      [ When00 47
+          [ Message 116                    -- 02 74                -- "A rablók megöltek. "
+          , SetPlayerStatus 255            -- 0d ff
+          , Sleep 5                        -- 15 05
+          , Ret                            -- 00
+          ]
       , MoveTo 59                      -- 0c 3b
       ]
   , InputDispatch [0x03] -- "k"
@@ -1786,11 +1803,14 @@
       [ MoveTo 61                      -- 0c 3d
       ]
   , InputDispatch [0x08] -- "ény"
-      [ IfFF 60 10                     -- 0b 3c 0a
-      , IfFF 61 7                      -- 0b 3d 07
-      , IfFF 54 4                      -- 0b 36 04
-      , MoveTo 63                      -- 0c 3f
-      , Ret                            -- 00
+      [ WhenFF 60
+          [ WhenFF 61
+              [ WhenFF 54
+                  [ MoveTo 63                      -- 0c 3f
+                  , Ret                            -- 00
+                  ]
+              ]
+          ]
       , Message 188                    -- 02 bc                -- "Egy szörnyű üvöltést hallasz a pincéből. "
       , SetScreen 10 2 43              -- 11 0a 02 2b
       , Sleep 5                        -- 15 05
@@ -1905,9 +1925,10 @@
       , AssignFF 135                   -- 04 87
       , Message 4                      -- 02 04                -- "OK. "
       , Chime 5                        -- 14 05
-      , IfFF 85 5                      -- 0b 55 05
-      , AssignFF 76                    -- 04 4c
-      , AddScore 2                     -- 10 02
+      , WhenFF 85
+          [ AssignFF 76                    -- 04 4c
+          , AddScore 2                     -- 10 02
+          ]
       ]
   ]
 , -- ROOM 67
@@ -2130,8 +2151,9 @@
       [ Skip 6                         -- 09 06
       ]
   , InputDispatch [0x49, 0xc9] -- "gyújt puska"
-      [ If00 72 4                      -- 0a 48 04
-      , AssertHere 150 6               -- 08 96 06             -- "Nincs nálad az a tárgy. "
+      [ When00 72
+          [ AssertHere 150 6               -- 08 96 06             -- "Nincs nálad az a tárgy. "
+          ]
       , Assert00 148 2                 -- 06 94 02             -- "Nem teheted meg. "
       , AssertFF 62 2                  -- 07 3e 02             -- "Nem teheted meg. "
       , SetPlayerStatus 255            -- 0d ff
@@ -2242,13 +2264,15 @@
       [ Assert00 148 6                 -- 06 94 06             -- "Nincs nálad az a tárgy. "
       , AssignFF 148                   -- 04 94
       , Message 143                    -- 02 8f                -- "Odadobod a fáklyát a kapuhoz... "
-      , IfFF 62 13                     -- 0b 3e 0d
-      , IfFF 72 10                     -- 0b 48 0a
-      , Message 144                    -- 02 90                -- "A puskapor begyullad... Majd egy óriási robbanást hallasz a kapu felől. "
-      , AssignFF 73                    -- 04 49
-      , AddScore 2                     -- 10 02
-      , Chime 4                        -- 14 04
-      , Ret                            -- 00
+      , WhenFF 62
+          [ WhenFF 72
+              [ Message 144                    -- 02 90                -- "A puskapor begyullad... Majd egy óriási robbanást hallasz a kapu felől. "
+              , AssignFF 73                    -- 04 49
+              , AddScore 2                     -- 10 02
+              , Chime 4                        -- 14 04
+              , Ret                            -- 00
+              ]
+          ]
       , MachineCode 23 [169,77,160,148,153,0,32,96] -- 17 a9 4d a0 94 99 00 20 60
       ]
   ]
@@ -2297,9 +2321,10 @@
       , MoveTo 86                      -- 0c 56
       ]
   , InputDispatch [0x07] -- "ny"
-      [ IfFF 87 4                      -- 0b 57 04
-      , MoveTo 81                      -- 0c 51
-      , Ret                            -- 00
+      [ WhenFF 87
+          [ MoveTo 81                      -- 0c 51
+          , Ret                            -- 00
+          ]
       , SetPlayerStatus 255            -- 0d ff
       , Message 179                    -- 02 b3                -- "Valaki egy lándzsát dob a hátadba. "
       ]
@@ -2393,9 +2418,10 @@
       , MoveTo 87                      -- 0c 57
       ]
   , InputDispatch [0x07] -- "ny"
-      [ IfFF 19 4                      -- 0b 13 04
-      , MoveTo 88                      -- 0c 58
-      , Ret                            -- 00
+      [ WhenFF 19
+          [ MoveTo 88                      -- 0c 58
+          , Ret                            -- 00
+          ]
       , Message 182                    -- 02 b6                -- "Őrök jelennek meg és megölnek... "
       , AssignFF 7                     -- 04 07
       , Sleep 5                        -- 15 05
@@ -2490,24 +2516,25 @@
       ]
   , InputDispatch [0x2c, 0xd1] -- "öl hakai"
       [ Message 152                    -- 02 98                -- "Előránt egy kardot és rádtámad. "
-      , If00 154 38                    -- 0a 9a 26
-      , Chime 10                       -- 14 0a
-      , Message 184                    -- 02 b8                -- "Harcolsz vele... "
-      , Sleep 10                       -- 15 0a
-      , Message 154                    -- 02 9a                -- "Kiüti a kardot a kezedből és nekedszögezi a kardját. "
-      , IfFF 56 32                     -- 0b 38 20
-      , IfFF 78 29                     -- 0b 4e 1d
-      , Chime 11                       -- 14 0b
-      , Message 155                    -- 02 9b                -- "Hirtelen Hao Sin és a rab ugrik ki a csapóajtón. Segítenek neked megölni Hakait, a város zsarnokát... "
-      , Sleep 10                       -- 15 0a
-      , Message 156                    -- 02 9c                -- "Megölöd, majd levágod a fejét... "
-      , Sleep 10                       -- 15 0a
-      , Message 157                    -- 02 9d                -- "Megbosszultad végre apád halálát! "
-      , SetPlayerStatus 254            -- 0d fe
-      , SetScreen 2 10 53              -- 11 02 0a 35
-      , AddScore 2                     -- 10 02
-      , Chime 3                        -- 14 03
-      , Ret                            -- 00
+      , When00 154
+          [ Chime 10                       -- 14 0a
+          , Message 184                    -- 02 b8                -- "Harcolsz vele... "
+          , Sleep 10                       -- 15 0a
+          , Message 154                    -- 02 9a                -- "Kiüti a kardot a kezedből és nekedszögezi a kardját. "
+          , IfFF 56 32                     -- 0b 38 20
+          , IfFF 78 29                     -- 0b 4e 1d
+          , Chime 11                       -- 14 0b
+          , Message 155                    -- 02 9b                -- "Hirtelen Hao Sin és a rab ugrik ki a csapóajtón. Segítenek neked megölni Hakait, a város zsarnokát... "
+          , Sleep 10                       -- 15 0a
+          , Message 156                    -- 02 9c                -- "Megölöd, majd levágod a fejét... "
+          , Sleep 10                       -- 15 0a
+          , Message 157                    -- 02 9d                -- "Megbosszultad végre apád halálát! "
+          , SetPlayerStatus 254            -- 0d fe
+          , SetScreen 2 10 53              -- 11 02 0a 35
+          , AddScore 2                     -- 10 02
+          , Chime 3                        -- 14 03
+          , Ret                            -- 00
+          ]
       , Message 153                    -- 02 99                -- "Nincs megfelelő fegyvered, így pillanatok alatt végez veled... "
       , SetPlayerStatus 255            -- 0d ff
       , Ret                            -- 00
@@ -2546,20 +2573,23 @@
 , -- ROOM 96
   [ InputDispatch [0x03] -- "k"
       [ IncIfNot0 82                   -- 16 52
-      , IfFF 82 13                     -- 0b 52 0d
-      , AssignFF 81                    -- 04 51
-      , MoveTo 96                      -- 0c 60
-      , If00 80 5                      -- 0a 50 05
-      , SetPlayerStatus 255            -- 0d ff
-      , Message 160                    -- 02 a0                -- "A cápa rádtámad és leharapja a fejed... "
-      , Ret                            -- 00
+      , WhenFF 82
+          [ AssignFF 81                    -- 04 51
+          , MoveTo 96                      -- 0c 60
+          , When00 80
+              [ SetPlayerStatus 255            -- 0d ff
+              , Message 160                    -- 02 a0                -- "A cápa rádtámad és leharapja a fejed... "
+              ]
+          , Ret                            -- 00
+          ]
       , MoveTo 96                      -- 0c 60
       ]
   , InputDispatch [0x02] -- "ék"
-      [ IfFF 81 6                      -- 0b 51 06
-      , MoveTo 35                      -- 0c 23
-      , Message 163                    -- 02 a3                -- "Egy ismerős kikötőben érsz partot. "
-      , Ret                            -- 00
+      [ WhenFF 81
+          [ MoveTo 35                      -- 0c 23
+          , Message 163                    -- 02 a3                -- "Egy ismerős kikötőben érsz partot. "
+          , Ret                            -- 00
+          ]
       , MoveTo 96                      -- 0c 60
       ]
   , InputDispatch [0x01] -- "é"

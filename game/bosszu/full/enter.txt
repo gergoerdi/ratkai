@@ -19,23 +19,25 @@
   , AssertFF 3 74                  -- 07 03 4a             -- "Kiabálást és lódobogást hallasz a falu felől... "
   ]
 , -- ROOM 5
-  [ If00 3 16                      -- 0a 03 10
-  , SetScreen 10 2 43              -- 11 0a 02 2b
-  , Message 79                     -- 02 4f                -- "Felfegyverzett katonák vesznek körül. "
-  , Chime 1                        -- 14 01
-  , Sleep 15                       -- 15 0f
-  , SetPlayerStatus 255            -- 0d ff
-  , Message 182                    -- 02 b6                -- "A katonák megölnek. "
-  , Ret                            -- 00
+  [ When00 3
+      [ SetScreen 10 2 43              -- 11 0a 02 2b
+      , Message 79                     -- 02 4f                -- "Felfegyverzett katonák vesznek körül. "
+      , Chime 1                        -- 14 01
+      , Sleep 15                       -- 15 0f
+      , SetPlayerStatus 255            -- 0d ff
+      , Message 182                    -- 02 b6                -- "A katonák megölnek. "
+      , Ret                            -- 00
+      ]
   , SetScreen 9 8 14               -- 11 09 08 0e
   , Message 5                      -- 02 05                -- "Egy lerombolt faluban vagy egy leégett ház előtt. Utak indulnak északra és délre. "
   ]
 , -- ROOM 6
-  [ If00 4 10                      -- 0a 04 0a
-  , SetScreen 10 2 255             -- 11 0a 02 ff
-  , Message 75                     -- 02 4b                -- "Egy szikra pattan egy izzó gerendáról a ruhádra és meggyújtja azt. Elevenen elégsz... "
-  , SetPlayerStatus 255            -- 0d ff
-  , Ret                            -- 00
+  [ When00 4
+      [ SetScreen 10 2 255             -- 11 0a 02 ff
+      , Message 75                     -- 02 4b                -- "Egy szikra pattan egy izzó gerendáról a ruhádra és meggyújtja azt. Elevenen elégsz... "
+      , SetPlayerStatus 255            -- 0d ff
+      , Ret                            -- 00
+      ]
   , SetScreen 7 8 255              -- 11 07 08 ff
   , SpriteOn 1 15 0 100 100        -- 12 01 0f 00 64 64
   , SpriteOn 2 16 0 148 100        -- 12 02 10 00 94 64
@@ -45,9 +47,10 @@
 , -- ROOM 7
   [ SetScreen 8 9 255              -- 11 08 09 ff
   , Message 7                      -- 02 07                -- "A pincében vagy. "
-  , If00 5 9                       -- 0a 05 09
-  , Message 183                    -- 02 b7                -- "Egy egér futkos a fal mellett. "
-  , SpriteOn 1 1 15 50 80          -- 12 01 01 0f 32 50
+  , When00 5
+      [ Message 183                    -- 02 b7                -- "Egy egér futkos a fal mellett. "
+      , SpriteOn 1 1 15 50 80          -- 12 01 01 0f 32 50
+      ]
   ]
 , -- ROOM 8
   [ SpriteOff 1                    -- 13 01
@@ -77,9 +80,10 @@
 , -- ROOM 13
   [ SetScreen 13 5 27              -- 11 0d 05 1b
   , Message 8                      -- 02 08                -- "Egy napfényes úton gyalogolsz valahol Japánban. Gátak és rizsföldek vannak körülötted. Keskeny utak indulnak minden irányba. "
-  , If00 12 9                      -- 0a 0c 09
-  , Message 77                     -- 02 4d                -- "Egy vándor áll az út szélén. "
-  , SpriteOn 1 25 0 114 96         -- 12 01 19 00 72 60
+  , When00 12
+      [ Message 77                     -- 02 4d                -- "Egy vándor áll az út szélén. "
+      , SpriteOn 1 25 0 114 96         -- 12 01 19 00 72 60
+      ]
   ]
 , -- ROOM 14
   [ SetScreen 8 7 33               -- 11 08 07 21
@@ -92,10 +96,11 @@
   , SpriteOn 1 50 0 132 90         -- 12 01 32 00 84 5a
   ]
 , -- ROOM 16
-  [ If00 7 8                       -- 0a 07 08
-  , SetScreen 7 8 28               -- 11 07 08 1c
-  , Message 11                     -- 02 0b                -- "A piacon vagy. Csak kelet felé hagyhatod el a teret. "
-  , Ret                            -- 00
+  [ When00 7
+      [ SetScreen 7 8 28               -- 11 07 08 1c
+      , Message 11                     -- 02 0b                -- "A piacon vagy. Csak kelet felé hagyhatod el a teret. "
+      , Ret                            -- 00
+      ]
   , SetScreen 7 8 43               -- 11 07 08 2b
   , Message 11                     -- 02 0b                -- "A piacon vagy. Csak kelet felé hagyhatod el a teret. "
   , Message 79                     -- 02 4f                -- "Felfegyverzett katonák vesznek körül. "
@@ -106,14 +111,16 @@
   ]
 , -- ROOM 18
   [ Message 13                     -- 02 0d                -- "Tomodachi házában vagy. "
-  , IfFF 8 6                       -- 0b 08 06
-  , SetScreen 11 12 255            -- 11 0b 0c ff
-  , Ret                            -- 00
+  , WhenFF 8
+      [ SetScreen 11 12 255            -- 11 0b 0c ff
+      , Ret                            -- 00
+      ]
   , SetScreen 6 4 17               -- 11 06 04 11
-  , If00 14 15                     -- 0a 0e 0f
-  , SpriteOn 1 51 0 166 70         -- 12 01 33 00 a6 46
-  , SpriteOn 2 52 10 166 70        -- 12 02 34 0a a6 46
-  , Message 80                     -- 02 50                -- "Tomodachi van itt. "
+  , When00 14
+      [ SpriteOn 1 51 0 166 70         -- 12 01 33 00 a6 46
+      , SpriteOn 2 52 10 166 70        -- 12 02 34 0a a6 46
+      , Message 80                     -- 02 50                -- "Tomodachi van itt. "
+      ]
   , SpriteOn 3 54 0 210 100        -- 12 03 36 00 d2 64
   , SpriteOn 4 55 7 210 100        -- 12 04 37 07 d2 64
   , Message 185                    -- 02 b9                -- "Itt egy lámpa. "
@@ -129,31 +136,36 @@
 , -- ROOM 21
   [ SetScreen 9 8 29               -- 11 09 08 1d
   , Message 16                     -- 02 10                -- "Egy erős ágon állsz, közel az ablakhoz. Könnyedén átléphetsz innen az ablakpárkányra. "
-  , If00 67 12                     -- 0a 43 0c
-  , If00 9 9                       -- 0a 09 09
-  , Message 81                     -- 02 51                -- "Egy alakot látsz a falon. "
-  , SpriteOn 1 45 0 110 78         -- 12 01 2d 00 6e 4e
+  , When00 67
+      [ When00 9
+          [ Message 81                     -- 02 51                -- "Egy alakot látsz a falon. "
+          , SpriteOn 1 45 0 110 78         -- 12 01 2d 00 6e 4e
+          ]
+      ]
   ]
 , -- ROOM 22
   [ Message 17                     -- 02 11                -- "Egy kis kunyhóban vagy. A kijárati ajtó keletre van. "
   , SetScreen 2 4 30               -- 11 02 04 1e
-  , If00 16 37                     -- 0a 10 25
-  , SpriteOn 1 15 0 190 98         -- 12 01 0f 00 be 62
-  , SpriteOn 2 16 0 238 98         -- 12 02 10 00 ee 62
-  , Message 186                    -- 02 ba                -- "Egy lány van itt. Beszél hozzád: - Alig hiszem el, hogy élsz. A katonák kegyetlenül összevertek és kidobtak az emeletről. Nagyon szerencsés voltál. De most aludnod kell... "
-  , Sleep 30                       -- 15 1e
-  , Message 187                    -- 02 bb                -- "Elalszol. "
-  , SetScreen 11 11 255            -- 11 0b 0b ff
-  , Sleep 15                       -- 15 0f
-  , Message 188                    -- 02 bc                -- "Felébredtél. Sokkal erősebbnek érzed magad. "
-  , Message 17                     -- 02 11                -- "Egy kis kunyhóban vagy. A kijárati ajtó keletre van. "
-  , SetScreen 2 4 30               -- 11 02 04 1e
-  , Heal 20                        -- 0e 14
-  , AssignFF 16                    -- 04 10
-  , If00 17 7                      -- 0a 11 07
-  , SpriteOn 3 10 0 104 98         -- 12 03 0a 00 68 62
-  , If00 18 7                      -- 0a 12 07
-  , SpriteOn 4 11 8 128 118        -- 12 04 0b 08 80 76
+  , When00 16
+      [ SpriteOn 1 15 0 190 98         -- 12 01 0f 00 be 62
+      , SpriteOn 2 16 0 238 98         -- 12 02 10 00 ee 62
+      , Message 186                    -- 02 ba                -- "Egy lány van itt. Beszél hozzád: - Alig hiszem el, hogy élsz. A katonák kegyetlenül összevertek és kidobtak az emeletről. Nagyon szerencsés voltál. De most aludnod kell... "
+      , Sleep 30                       -- 15 1e
+      , Message 187                    -- 02 bb                -- "Elalszol. "
+      , SetScreen 11 11 255            -- 11 0b 0b ff
+      , Sleep 15                       -- 15 0f
+      , Message 188                    -- 02 bc                -- "Felébredtél. Sokkal erősebbnek érzed magad. "
+      , Message 17                     -- 02 11                -- "Egy kis kunyhóban vagy. A kijárati ajtó keletre van. "
+      , SetScreen 2 4 30               -- 11 02 04 1e
+      , Heal 20                        -- 0e 14
+      , AssignFF 16                    -- 04 10
+      ]
+  , When00 17
+      [ SpriteOn 3 10 0 104 98         -- 12 03 0a 00 68 62
+      ]
+  , When00 18
+      [ SpriteOn 4 11 8 128 118        -- 12 04 0b 08 80 76
+      ]
   , Message 82                     -- 02 52                -- "Egy csinos lány van itt. "
   , Assert00 19 80                 -- 06 13 50             -- "Tomodachi van itt. "
   ]
@@ -168,10 +180,12 @@
 , -- ROOM 25
   [ SetScreen 8 9 6                -- 11 08 09 06
   , Message 19                     -- 02 13                -- "Egy észak-dél irányú erdei úton vagy. "
-  , If00 36 8                      -- 0a 24 08
-  , If00 21 5                      -- 0a 15 05
-  , Message 83                     -- 02 53                -- "Valami zajt hallasz! "
-  , AssignFF 28                    -- 04 1c
+  , When00 36
+      [ When00 21
+          [ Message 83                     -- 02 53                -- "Valami zajt hallasz! "
+          , AssignFF 28                    -- 04 1c
+          ]
+      ]
   ]
 , -- ROOM 26
   [ SetScreen 9 8 7                -- 11 09 08 07
@@ -195,10 +209,11 @@
   ]
 , -- ROOM 30
   [ Message 114                    -- 02 72                -- "Egy napfényes tisztáson állsz. Ösvények vezetnek délre és északnyugatra. "
-  , If00 22 8                      -- 0a 16 08
-  , SetScreen 5 13 41              -- 11 05 0d 29
-  , Message 84                     -- 02 54                -- "Oshinoko, a néma yakuza áll veled szemben. "
-  , Ret                            -- 00
+  , When00 22
+      [ SetScreen 5 13 41              -- 11 05 0d 29
+      , Message 84                     -- 02 54                -- "Oshinoko, a néma yakuza áll veled szemben. "
+      , Ret                            -- 00
+      ]
   , SetScreen 9 8 7                -- 11 09 08 07
   , SpriteOff 1                    -- 13 01
   ]
@@ -210,11 +225,12 @@
 , -- ROOM 32
   [ Message 22                     -- 02 16                -- "Egy erdei úton állsz. Északkeletre és délnyugatra tudsz menni. "
   , SetScreen 8 9 31               -- 11 08 09 1f
-  , If00 23 17                     -- 0a 17 11
-  , Message 85                     -- 02 55                -- "Két ninja áll az úton. "
-  , SpriteOn 1 5 0 136 90          -- 12 01 05 00 88 5a
-  , SpriteOn 2 5 0 186 94          -- 12 02 05 00 ba 5e
-  , Chime 1                        -- 14 01
+  , When00 23
+      [ Message 85                     -- 02 55                -- "Két ninja áll az úton. "
+      , SpriteOn 1 5 0 136 90          -- 12 01 05 00 88 5a
+      , SpriteOn 2 5 0 186 94          -- 12 02 05 00 ba 5e
+      , Chime 1                        -- 14 01
+      ]
   ]
 , -- ROOM 33
   [ Message 23                     -- 02 17                -- "Egy sötét üreg előtt állsz. Az út dél felé vezet. "
@@ -251,14 +267,15 @@
   ]
 , -- ROOM 40
   [ Message 30                     -- 02 1e                -- "Egy kínai város főutcáján állsz. Egy hosszú, magas kerítést látsz észak felé. A lehetséges irányok nyugat és délkelet. "
-  , IfFF 25 16                     -- 0b 19 10
-  , Message 194                    -- 02 c2                -- "Az üldözők utolértek. "
-  , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
-  , SetScreen 2 10 45              -- 11 02 0a 2d
-  , Sleep 5                        -- 15 05
-  , Message 191                    -- 02 bf                -- "Megöltek téged. "
-  , SetPlayerStatus 255            -- 0d ff
-  , Ret                            -- 00
+  , WhenFF 25
+      [ Message 194                    -- 02 c2                -- "Az üldözők utolértek. "
+      , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
+      , SetScreen 2 10 45              -- 11 02 0a 2d
+      , Sleep 5                        -- 15 05
+      , Message 191                    -- 02 bf                -- "Megöltek téged. "
+      , SetPlayerStatus 255            -- 0d ff
+      , Ret                            -- 00
+      ]
   , SetScreen 7 8 34               -- 11 07 08 22
   ]
 , -- ROOM 41
@@ -268,33 +285,37 @@
   ]
 , -- ROOM 42
   [ Message 32                     -- 02 20                -- "Egy téren vagy. Utak indulnak északra, keletre és délre. "
-  , IfFF 25 19                     -- 0b 19 13
-  , If00 37 16                     -- 0a 25 10
-  , Message 194                    -- 02 c2                -- "Az üldözők utolértek. "
-  , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
-  , SetScreen 2 10 45              -- 11 02 0a 2d
-  , Sleep 5                        -- 15 05
-  , Message 191                    -- 02 bf                -- "Megöltek téged. "
-  , SetPlayerStatus 255            -- 0d ff
-  , Ret                            -- 00
+  , WhenFF 25
+      [ When00 37
+          [ Message 194                    -- 02 c2                -- "Az üldözők utolértek. "
+          , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
+          , SetScreen 2 10 45              -- 11 02 0a 2d
+          , Sleep 5                        -- 15 05
+          , Message 191                    -- 02 bf                -- "Megöltek téged. "
+          , SetPlayerStatus 255            -- 0d ff
+          , Ret                            -- 00
+          ]
+      ]
   , SetScreen 7 8 19               -- 11 07 08 13
   ]
 , -- ROOM 43
   [ Assign00 37                    -- 03 25
   , Message 33                     -- 02 21                -- "Egy kis, csendes utcában vagy, ami észak felé fut. Egy sikátor vezet innen kelet felé. "
   , SetScreen 8 9 12               -- 11 08 09 0c
-  , If00 38 9                      -- 0a 26 09
-  , SpriteOn 1 35 0 216 110        -- 12 01 23 00 d8 6e
-  , Message 88                     -- 02 58                -- "Egy koldust látsz a sarkon ücsörögni. "
+  , When00 38
+      [ SpriteOn 1 35 0 216 110        -- 12 01 23 00 d8 6e
+      , Message 88                     -- 02 58                -- "Egy koldust látsz a sarkon ücsörögni. "
+      ]
   , Assert00 25 195                -- 06 19 c3             -- "Az üldözők lemaradtak. "
   ]
 , -- ROOM 44
   [ Message 34                     -- 02 22                -- "Zsákutcába jutottál. Egy magas kerítés zárja el az utat. A sikátor nyugat felé vezet. "
-  , If00 49 13                     -- 0a 31 0d
-  , IfFF 25 11                     -- 0b 19 0b
-  , SetScreen 2 10 45              -- 11 02 0a 2d
-  , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
-  , Assign 39 248                  -- 01 27 f8
+  , When00 49
+      [ IfFF 25 11                     -- 0b 19 0b
+      , SetScreen 2 10 45              -- 11 02 0a 2d
+      , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
+      , Assign 39 248                  -- 01 27 f8
+      ]
   , Ret                            -- 00
   , SetScreen 12 15 255            -- 11 0c 0f ff
   ]
@@ -310,10 +331,11 @@
   ]
 , -- ROOM 47
   [ Message 35                     -- 02 23                -- "A piacon vagy. Árusok és vásárlók tolonganak mindenfele. Asztalok és pultok állnak körülötted "
-  , If00 40 8                      -- 0a 28 08
-  , SetScreen 8 7 26               -- 11 08 07 1a
-  , Message 90                     -- 02 5a                -- "Oh! Egy utcai verekedés! "
-  , Ret                            -- 00
+  , When00 40
+      [ SetScreen 8 7 26               -- 11 08 07 1a
+      , Message 90                     -- 02 5a                -- "Oh! Egy utcai verekedés! "
+      , Ret                            -- 00
+      ]
   , SetScreen 7 8 28               -- 11 07 08 1c
   , Assert00 25 193                -- 06 19 c1             -- "Hallod az üldözők lépteit magad mögött. "
   ]
@@ -324,14 +346,15 @@
   ]
 , -- ROOM 49
   [ Message 36                     -- 02 24                -- "Egy lepény-árus pultja előtt állsz, a piacon. "
-  , IfFF 25 17                     -- 0b 19 11
-  , IfFF 41 25                     -- 0b 29 19
-  , SetScreen 2 10 45              -- 11 02 0a 2d
-  , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
-  , Sleep 5                        -- 15 05
-  , Message 191                    -- 02 bf                -- "Megöltek téged. "
-  , SetPlayerStatus 255            -- 0d ff
-  , Ret                            -- 00
+  , WhenFF 25
+      [ IfFF 41 25                     -- 0b 29 19
+      , SetScreen 2 10 45              -- 11 02 0a 2d
+      , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
+      , Sleep 5                        -- 15 05
+      , Message 191                    -- 02 bf                -- "Megöltek téged. "
+      , SetPlayerStatus 255            -- 0d ff
+      , Ret                            -- 00
+      ]
   , SetScreen 8 7 16               -- 11 08 07 10
   , SpriteOn 4 36 1 120 116        -- 12 04 24 01 78 74
   , Ret                            -- 00
@@ -339,14 +362,15 @@
   ]
 , -- ROOM 50
   [ Message 37                     -- 02 25                -- "A városba vezető úton állsz. Utak vezetnek észak és nyugat felé is. "
-  , IfFF 25 16                     -- 0b 19 10
-  , Message 194                    -- 02 c2                -- "Az üldözők utolértek. "
-  , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
-  , SetScreen 2 10 45              -- 11 02 0a 2d
-  , Sleep 5                        -- 15 05
-  , Message 191                    -- 02 bf                -- "Megöltek téged. "
-  , SetPlayerStatus 255            -- 0d ff
-  , Ret                            -- 00
+  , WhenFF 25
+      [ Message 194                    -- 02 c2                -- "Az üldözők utolértek. "
+      , Message 89                     -- 02 59                -- "Dühös városiak vesznek körül. "
+      , SetScreen 2 10 45              -- 11 02 0a 2d
+      , Sleep 5                        -- 15 05
+      , Message 191                    -- 02 bf                -- "Megöltek téged. "
+      , SetPlayerStatus 255            -- 0d ff
+      , Ret                            -- 00
+      ]
   , SetScreen 13 5 35              -- 11 0d 05 23
   ]
 , -- ROOM 51
@@ -356,10 +380,11 @@
   ]
 , -- ROOM 52
   [ Message 39                     -- 02 27                -- "Egy észak-déli hegyi ösvényen sétálsz. "
-  , If00 45 8                      -- 0a 2d 08
-  , SetScreen 12 15 40             -- 11 0c 0f 28
-  , Message 91                     -- 02 5b                -- "Egy óriási kígyó tekereg előtted. "
-  , Ret                            -- 00
+  , When00 45
+      [ SetScreen 12 15 40             -- 11 0c 0f 28
+      , Message 91                     -- 02 5b                -- "Egy óriási kígyó tekereg előtted. "
+      , Ret                            -- 00
+      ]
   , SetScreen 15 12 24             -- 11 0f 0c 18
   ]
 , -- ROOM 53
@@ -400,10 +425,11 @@
   ]
 , -- ROOM 60
   [ Message 47                     -- 02 2f                -- "Egy börtöncellában vagy. Össze vagy kötözve és fejjel lefelé lógsz egy kötélen. "
-  , If00 48 9                      -- 0a 30 09
-  , SetScreen 11 12 4              -- 11 0b 0c 04
-  , AssertFF 48 107                -- 07 30 6b             -- "Egy gyertyát látsz a falon. "
-  , Ret                            -- 00
+  , When00 48
+      [ SetScreen 11 12 4              -- 11 0b 0c 04
+      , AssertFF 48 107                -- 07 30 6b             -- "Egy gyertyát látsz a falon. "
+      , Ret                            -- 00
+      ]
   , SetScreen 15 12 255            -- 11 0f 0c ff
   ]
 , -- ROOM 61
@@ -414,14 +440,18 @@
   , Message 96                     -- 02 60                -- "Egy őr van itt. "
   ]
 , -- ROOM 62
-  [ If00 147 6                     -- 0a 93 06
-  , If00 54 3                      -- 0a 36 03
-  , Skip 7                         -- 09 07
-  , If00 148 11                    -- 0a 94 0b
-  , IfFF 62 8                      -- 0b 3e 08
-  , Message 49                     -- 02 31                -- "Egy dohos és homályos északnyugat-délkeleti folyosón vagy. "
-  , SetScreen 15 12 47             -- 11 0f 0c 2f
-  , Ret                            -- 00
+  [ When00 147
+      [ When00 54
+          [ Skip 7                         -- 09 07
+          ]
+      ]
+  , When00 148
+      [ WhenFF 62
+          [ Message 49                     -- 02 31                -- "Egy dohos és homályos északnyugat-délkeleti folyosón vagy. "
+          , SetScreen 15 12 47             -- 11 0f 0c 2f
+          , Ret                            -- 00
+          ]
+      ]
   , Message 184                    -- 02 b8                -- "Sötét van. "
   , Message 202                    -- 02 ca                -- "Bevered a fejed valamibe..."
   , SetScreen 12 11 255            -- 11 0c 0b ff
@@ -429,10 +459,11 @@
   ]
 , -- ROOM 63
   [ Message 50                     -- 02 32                -- "Egy folyosón állsz egy súlyos faajtó előtt. Az ajtó keletre van. Északra és délre tudsz menni a folyosón. "
-  , If00 63 8                      -- 0a 3f 08
-  , SetScreen 9 8 41               -- 11 09 08 29
-  , Message 84                     -- 02 54                -- "Oshinoko, a néma yakuza áll veled szemben. "
-  , Ret                            -- 00
+  , When00 63
+      [ SetScreen 9 8 41               -- 11 09 08 29
+      , Message 84                     -- 02 54                -- "Oshinoko, a néma yakuza áll veled szemben. "
+      , Ret                            -- 00
+      ]
   , SetScreen 9 8 255              -- 11 09 08 ff
   ]
 , -- ROOM 64
@@ -442,8 +473,9 @@
 , -- ROOM 65
   [ Message 52                     -- 02 34                -- "Keresztfolyosóhoz értél. Északra, keletre, délre és nyugatra mehetsz. "
   , SetScreen 2 4 9                -- 11 02 04 09
-  , IfFF 61 4                      -- 0b 3d 04
-  , IfFF 54 2                      -- 0b 36 02
+  , WhenFF 61
+      [ IfFF 54 2                      -- 0b 36 02
+      ]
   , Ret                            -- 00
   , Message 180                    -- 02 b4                -- "Egy üvöltést hallasz a pince felől. Katonák vesznek körül és megölnek... "
   , SetPlayerStatus 255            -- 0d ff
@@ -468,19 +500,22 @@
   ]
 , -- ROOM 70
   [ Message 57                     -- 02 39                -- "A kertben vagy. "
-  , If00 65 15                     -- 0a 41 0f
-  , If00 64 6                      -- 0a 40 06
-  , Message 101                    -- 02 65                -- "Valaki leszúrt hátulról. "
-  , SetPlayerStatus 255            -- 0d ff
-  , Ret                            -- 00
-  , Message 115                    -- 02 73                -- "Valami illatot érzel... "
-  , Assign 66 253                  -- 01 42 fd
-  , Ret                            -- 00
-  , IfFF 73 10                     -- 0b 49 0a
-  , Message 181                    -- 02 b5                -- "A katonák és a felkelők harcolnak körülötted. "
-  , AssignFF 74                    -- 04 4a
-  , SetScreen 8 7 26               -- 11 08 07 1a
-  , Ret                            -- 00
+  , When00 65
+      [ When00 64
+          [ Message 101                    -- 02 65                -- "Valaki leszúrt hátulról. "
+          , SetPlayerStatus 255            -- 0d ff
+          , Ret                            -- 00
+          ]
+      , Message 115                    -- 02 73                -- "Valami illatot érzel... "
+      , Assign 66 253                  -- 01 42 fd
+      , Ret                            -- 00
+      ]
+  , WhenFF 73
+      [ Message 181                    -- 02 b5                -- "A katonák és a felkelők harcolnak körülötted. "
+      , AssignFF 74                    -- 04 4a
+      , SetScreen 8 7 26               -- 11 08 07 1a
+      , Ret                            -- 00
+      ]
   , SetScreen 8 5 20               -- 11 08 05 14
   ]
 , -- ROOM 71
@@ -499,9 +534,10 @@
 , -- ROOM 74
   [ Message 57                     -- 02 39                -- "A kertben vagy. "
   , SetScreen 8 5 20               -- 11 08 05 14
-  , If00 68 9                      -- 0a 44 09
-  , Message 103                    -- 02 67                -- "Egy megrémült őr áll veled szemben. "
-  , SpriteOn 1 26 0 202 106        -- 12 01 1a 00 ca 6a
+  , When00 68
+      [ Message 103                    -- 02 67                -- "Egy megrémült őr áll veled szemben. "
+      , SpriteOn 1 26 0 202 106        -- 12 01 1a 00 ca 6a
+      ]
   ]
 , -- ROOM 75
   [ Message 59                     -- 02 3b                -- "A kertben vagy, egy kis tó mellett. "
@@ -511,10 +547,11 @@
 , -- ROOM 76
   [ Message 57                     -- 02 39                -- "A kertben vagy. "
   , SetScreen 8 5 20               -- 11 08 05 14
-  , If00 69 8                      -- 0a 45 08
-  , Assign 70 250                  -- 01 46 fa
-  , AssignFF 71                    -- 04 47
-  , Message 104                    -- 02 68                -- "Két vérszomjas véreb vicsorog rád. "
+  , When00 69
+      [ Assign 70 250                  -- 01 46 fa
+      , AssignFF 71                    -- 04 47
+      , Message 104                    -- 02 68                -- "Két vérszomjas véreb vicsorog rád. "
+      ]
   ]
 , -- ROOM 77
   [ Message 60                     -- 02 3c                -- "A kapunál vagy. Ösvények vezetnek északkeletre, keletre és délkeletre. "
@@ -528,9 +565,10 @@
 , -- ROOM 79
   [ Message 63                     -- 02 3f                -- "A folyosó nyugati végén vagy. Egy ajtót látsz észak felé. "
   , SetScreen 9 8 8                -- 11 09 08 08
-  , If00 75 13                     -- 0a 4b 0d
-  , SpriteOn 1 41 1 176 72         -- 12 01 29 01 b0 48
-  , SpriteOn 2 41 1 176 80         -- 12 02 29 01 b0 50
+  , When00 75
+      [ SpriteOn 1 41 1 176 72         -- 12 01 29 01 b0 48
+      , SpriteOn 2 41 1 176 80         -- 12 02 29 01 b0 50
+      ]
   ]
 , -- ROOM 80
   [ Message 64                     -- 02 40                -- "Egy hosszú kelet-nyugati folyosón állsz a lépcső mellett. Egy ablak van itt, amely a kertre néz. "
@@ -564,24 +602,27 @@
   , SetScreen 4 2 8                -- 11 04 02 08
   , SpriteOn 3 41 1 176 80         -- 12 03 29 01 b0 50
   , SpriteOn 4 41 1 176 72         -- 12 04 29 01 b0 48
-  , If00 73 15                     -- 0a 49 0f
-  , Message 201                    -- 02 c9                -- "Két őr áll előtted. "
-  , SpriteOn 1 50 0 140 90         -- 12 01 32 00 8c 5a
-  , SpriteOn 2 50 0 180 90         -- 12 02 32 00 b4 5a
+  , When00 73
+      [ Message 201                    -- 02 c9                -- "Két őr áll előtted. "
+      , SpriteOn 1 50 0 140 90         -- 12 01 32 00 8c 5a
+      , SpriteOn 2 50 0 180 90         -- 12 02 32 00 b4 5a
+      ]
   ]
 , -- ROOM 87
   [ Message 72                     -- 02 48                -- "A tea-szobában vagy. Egy nagy szekrényt látsz. Ajtók vezetnek északra és délre. "
   , SetScreen 2 4 17               -- 11 02 04 11
-  , If00 19 3                      -- 0a 13 03
-  , Message 111                    -- 02 6f                -- "Hakai áll itt. "
+  , When00 19
+      [ Message 111                    -- 02 6f                -- "Hakai áll itt. "
+      ]
   ]
 , -- ROOM 88
   [ Message 70                     -- 02 46                -- "A folyosó déli végében állsz. Ajtók nyílnak keletre és délre. "
   , SetScreen 12 15 8              -- 11 0c 0f 08
-  , If00 76 10                     -- 0a 4c 0a
-  , SpriteOn 1 50 0 174 92         -- 12 01 32 00 ae 5c
-  , Message 96                     -- 02 60                -- "Egy őr van itt. "
-  , Ret                            -- 00
+  , When00 76
+      [ SpriteOn 1 50 0 174 92         -- 12 01 32 00 ae 5c
+      , Message 96                     -- 02 60                -- "Egy őr van itt. "
+      , Ret                            -- 00
+      ]
   , SpriteOn 1 46 0 208 100        -- 12 01 2e 00 d0 64
   , Message 198                    -- 02 c6                -- "Egy alvó őr fekszik az ajtó előtt. "
   ]
@@ -592,12 +633,13 @@
 , -- ROOM 90
   [ Message 71                     -- 02 47                -- "A fal tetején állsz. Egy ajtó vezet északra az épületbe. "
   , SetScreen 9 5 46               -- 11 09 05 2e
-  , If00 67 10                     -- 0a 43 0a
-  , Message 96                     -- 02 60                -- "Egy őr van itt. "
-  , Sleep 5                        -- 15 05
-  , Message 108                    -- 02 6c                -- "Ő leszúr téged. "
-  , SetPlayerStatus 255            -- 0d ff
-  , Ret                            -- 00
+  , When00 67
+      [ Message 96                     -- 02 60                -- "Egy őr van itt. "
+      , Sleep 5                        -- 15 05
+      , Message 108                    -- 02 6c                -- "Ő leszúr téged. "
+      , SetPlayerStatus 255            -- 0d ff
+      , Ret                            -- 00
+      ]
   , Message 112                    -- 02 70                -- "Egy halott őrt látsz itt. "
   ]
 , -- ROOM 91
@@ -607,8 +649,9 @@
 , -- ROOM 92
   [ Message 100                    -- 02 64                -- "Egy börtön-cellában vagy. A kijárat nyugatra van. "
   , SetScreen 12 11 10             -- 11 0c 0b 0a
-  , If00 91 4                      -- 0a 5b 04
-  , AssertFF 78 99                 -- 07 4e 63             -- "Egy rab van a falhoz láncolva. "
+  , When00 91
+      [ AssertFF 78 99                 -- 07 4e 63             -- "Egy rab van a falhoz láncolva. "
+      ]
   ]
 , -- ROOM 93
   [ SetScreen 11 12 47             -- 11 0b 0c 2f
@@ -623,18 +666,20 @@
 , -- ROOM 95
   [ SetScreen 12 15 10             -- 11 0c 0f 0a
   , Message 95                     -- 02 5f                -- "Egy börtön-cellában vagy. "
-  , If00 79 15                     -- 0a 4f 0f
-  , Message 162                    -- 02 a2                -- "Egy nagy bezárt ajtót látsz északra. "
-  , SpriteOn 1 53 9 170 58         -- 12 01 35 09 aa 3a
-  , SpriteOn 2 53 9 170 84         -- 12 02 35 09 aa 54
+  , When00 79
+      [ Message 162                    -- 02 a2                -- "Egy nagy bezárt ajtót látsz északra. "
+      , SpriteOn 1 53 9 170 58         -- 12 01 35 09 aa 3a
+      , SpriteOn 2 53 9 170 84         -- 12 02 35 09 aa 54
+      ]
   ]
 , -- ROOM 96
   [ SetScreen 6 14 50              -- 11 06 0e 32
   , Message 118                    -- 02 76                -- "A napfényes tengerben úszol egy árbócdarabba kapaszkodva. "
   , AssertFF 80 119                -- 07 50 77             -- "Egy cápa köröz körülötted... "
-  , IfFF 81 9                      -- 0b 51 09
-  , Message 106                    -- 02 6a                -- "Látod a Japán partokat északkelet felé! "
-  , SpriteOn 1 21 5 160 86         -- 12 01 15 05 a0 56
+  , WhenFF 81
+      [ Message 106                    -- 02 6a                -- "Látod a Japán partokat északkelet felé! "
+      , SpriteOn 1 21 5 160 86         -- 12 01 15 05 a0 56
+      ]
   ]
 , -- ROOM 97
   [ Message 116                    -- 02 74                -- "A viharos tengerben vagy. "
