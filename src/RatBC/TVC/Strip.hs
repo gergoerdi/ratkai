@@ -11,7 +11,7 @@ import Control.Monad.Identity
 import Data.Maybe
 
 preprocessGame :: Game Identity -> Game Identity
-preprocessGame = fixupSkips . {- stripGame . -} stripScript
+preprocessGame = fixupSkips . stripGame . stripScript
 
 stripScript :: Game Identity -> Game Identity
 stripScript = transformStmts (mapMaybe stripStmt)
