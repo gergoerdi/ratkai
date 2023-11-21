@@ -316,6 +316,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     printMessage <- labelled mdo
         push BC
         push DE
+        push IY
         ld D 0
         withLabel \next -> do
             -- Is this the message we want?
@@ -347,6 +348,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             next <- label
             pop BC
             djnz loop
+        pop IY
         pop DE
         pop BC
         call newLine

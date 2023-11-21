@@ -148,12 +148,18 @@ newLine_ Locations{..} = do
         ld [lineNum] A
         ret
 
+    push BC
+    push DE
+    push HL
     call pageVideoIn
     ld HL $ videoStart + (fromIntegral firstLine + 1) * rowStride * fromIntegral charHeight
     ld DE $ videoStart + fromIntegral firstLine * rowStride * fromIntegral charHeight
     ld BC $ (fromIntegral $ lastLine - firstLine) * rowStride * fromIntegral charHeight
     ldir
     call pageVideoOut
+    pop HL
+    pop DE
+    pop BC
     ret
 
 setMainColor_ :: Locations -> Z80ASM
