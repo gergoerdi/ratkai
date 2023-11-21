@@ -10,6 +10,7 @@ import RatBC.TVC.Text
 import RatBC.TVC.Strip
 
 import Ratkai.Z80
+import Ratkai.TVC.Picture as Picture
 import TVC
 import TVC.Keyboard
 import TVC.Video as Video
@@ -66,12 +67,13 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     -- Clear screen
     syscall 0x05
 
-    -- Set border color
-    ld A 0b00_00_10_00
-    out [0x00] A
+    -- -- Set border color
+    -- ld A 0b00_00_10_00
+    -- out [0x00] A
 
     -- ld HL picData
-    ld A 0b00_11_11_00
+    ld B 0b00_11_11_00
+    ld A 0b00_00_10_00
     call displayPicture
 
     ldVia A [lineNum videoLocs] firstLine
@@ -109,7 +111,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
     pageVideoIn <- labelled pageVideoIn_
     pageVideoOut <- labelled pageVideoOut_
-    displayPicture <- labelled $ displayPicture_ videoLocs
+    displayPicture <- labelled $ displayPicture_ pictureLocs
     intHandler <- labelled $ intHandler_ kbdBuf
 
     parseLine <- labelled $ parseLine_ assetLocs platform vars routines
@@ -299,6 +301,8 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         colNum <- labelled $ db [0]
         drawColorIsInput <- labelled $ db [0]
         pure Video.Locations{..}
+
+    pictureLocs <- pure Picture.Locations{..}
 
     printCharC4 <- labelled $ printCharC4_ videoLocs
     printBack <- labelled $ printBack_ videoLocs
