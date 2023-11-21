@@ -41,7 +41,7 @@ parseGame game@Game{..} = game
     fromList xs = listArray (1, fromIntegral $ length xs) xs
 
     parseFrom :: (Parse a, Show a) => String -> String -> a
-    parseFrom tag s = case parseString (spaces *> parse) mempty s of
+    parseFrom tag s = case parseString (spaces *> parse <* eof) mempty s of
         Success x -> x
         Failure ErrInfo{..} ->
           error $ printf "Parse error in '%s': %s" tag (show _errDoc)
@@ -87,12 +87,12 @@ instance Parse Stmt where
         , p1 "CompactMessage" CompactMessage
         ]
       where
-        p0 s x = try $ symbol s *> pure x
-        p1 s f = try $ symbol s *> (f <$> parse)
-        p2 s f = try $ symbol s *> (f <$> parse <*> parse)
-        p3 s f = try $ symbol s *> (f <$> parse <*> parse <*> parse)
-        p4 s f = try $ symbol s *> (f <$> parse <*> parse <*> parse <*> parse)
-        p5 s f = try $ symbol s *> (f <$> parse <*> parse <*> parse <*> parse <*> parse)
+        p0 s x = try $ keyword s *> pure x
+        p1 s f = try $ keyword s *> (f <$> parse)
+        p2 s f = try $ keyword s *> (f <$> parse <*> parse)
+        p3 s f = try $ keyword s *> (f <$> parse <*> parse <*> parse)
+        p4 s f = try $ keyword s *> (f <$> parse <*> parse <*> parse <*> parse)
+        p5 s f = try $ keyword s *> (f <$> parse <*> parse <*> parse <*> parse <*> parse)
 
 instance Parse (Solo String) where
     parse = Solo <$> stringLiteral
@@ -110,4 +110,7 @@ instance Parse Word16 where
     parse = fromIntegral <$> natural
 
 instance Parse a => Parse (InputDispatch a) where
-    parse = symbol "InputDispatch" *> (InputDispatch <$> parse <*> parse)
+    parse = keyword "InputDispatch" *> (InputDispatch <$> parse <*> parse)
+
+keyword :: String -> Parser String
+keyword s = token $ string s <* notFollowedBy alphaNum
