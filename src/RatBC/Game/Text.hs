@@ -10,6 +10,7 @@ import RatBC.Text
 import RatBC.Game
 import RatBC.Pretty
 
+import Text.Read
 import Control.Monad.Identity
 import Prettyprinter
 import Prettyprinter.Render.String
@@ -21,6 +22,8 @@ import qualified Data.Map as M
 import Data.Word
 import Data.Array (Array, array, listArray)
 import Data.List.Split
+import Data.Char (isSpace)
+import Text.Printf
 
 writeTextFiles :: FilePath -> Game Identity -> IO ()
 writeTextFiles outputPath game = do
@@ -42,13 +45,13 @@ writeTextFiles outputPath game = do
 
 parseGame :: Game (Const String) -> Game Identity
 parseGame game@Game{..} = game
-    { msgs1 = Identity . parseMessages . getConst $ msgs1
-    , msgs2 = Identity . parseMessages . getConst $ msgs2
+    { msgs1 = Identity . parseMessages "text1" . getConst $ msgs1
+    , msgs2 = Identity . parseMessages "text2" . getConst $ msgs2
     , dict = Identity . parseWords . getConst $ dict
-    , enterRoom = Identity . fromList . read . getConst $ enterRoom
-    , afterTurn = Identity . read . getConst $ afterTurn
-    , interactiveGlobal = Identity . read . getConst $ interactiveGlobal
-    , interactiveLocal =  Identity . fromList . read . getConst $ interactiveLocal
+    , enterRoom = Identity . fromList . parse "enter" . getConst $ enterRoom
+    , afterTurn = Identity . parse "after" . getConst $ afterTurn
+    , interactiveGlobal = Identity . parse "interactive-global" . getConst $ interactiveGlobal
+    , interactiveLocal =  Identity . fromList . parse "interactive-local" . getConst $ interactiveLocal
     , resetState = Identity . BL.pack . read . getConst $ resetState
     , helpMap = Identity . fromList . read . getConst $ helpMap
     }
@@ -56,10 +59,15 @@ parseGame game@Game{..} = game
     fromList :: [a] -> Array Word8 a
     fromList xs = listArray (1, fromIntegral $ length xs) xs
 
-    parseMessages s = let xs = read s
+    parse :: (Read a, Show a) => String -> String -> a
+    parse tag s = case reads s of
+        [(x, s')] | all isSpace s' -> x
+        ps -> error $ printf "Parse error in '%s'" tag
+
+    parseMessages tag s = let xs = parse tag s
       in array (1, fromIntegral $ length xs) xs
 
-    parseWords = M.fromList . read
+    parseWords = M.fromList . parse "dict"
 
 removeComments :: String -> String
 removeComments = unlines . map removeComment . lines
