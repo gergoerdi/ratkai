@@ -272,6 +272,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             printMessage = printlnZ
             space = 0x20
             newline = cr
+            setScreen = Nothing
 
     assetLocs <- do
         let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 40 . preprocessGame $ assets

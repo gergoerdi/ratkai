@@ -67,14 +67,14 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     -- Clear screen
     syscall 0x05
 
-    -- -- Set border color
-    -- ld A 0b00_00_10_00
-    -- out [0x00] A
+    -- -- -- Set border color
+    -- -- ld A 0b00_00_10_00
+    -- -- out [0x00] A
 
-    -- ld HL picData
-    ld B 0b00_11_11_00
-    ld A 0b00_00_10_00
-    call displayPicture
+    -- -- ld HL picData
+    -- ld B 0b00_11_11_00 -- Background
+    -- ld A 0b00_00_10_00 -- Border
+    -- call displayPicture
 
     ldVia A [lineNum videoLocs] firstLine
     ldVia A [colNum videoLocs] 0
@@ -99,6 +99,16 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 jr end
                 lbl <- labelled $ db $ map tvcChar s
                 pure ()
+
+            setScreen = Just do
+                push HL
+                push IX
+                push IY
+                -- TODO: compute HL
+                call displayPicture
+                pop IY
+                pop IX
+                pop HL
 
             beforeParseError = pure ()
             waitEnter = pure () -- XXX

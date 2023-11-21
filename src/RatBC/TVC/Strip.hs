@@ -5,6 +5,7 @@ import RatBC.Syntax
 import RatBC.Game
 import RatBC.Strip
 import RatBC.TVC.Binary (fixupSkips)
+import RatBC.TVC.Picture
 
 import Control.Monad.Identity
 import Data.Maybe
@@ -17,6 +18,7 @@ stripScript = transformStmts (mapMaybe stripStmt)
 
 stripStmt :: Stmt -> Maybe Stmt
 stripStmt = \case
+    SetScreen border bg pic -> Just $ SetScreen (toBorderColor border) (toBackgroundColor bg) pic
     Chime{} -> Nothing
     Sleep n -> Just $ Sleep $ min 10 n
     CopyProtection{} -> Nothing

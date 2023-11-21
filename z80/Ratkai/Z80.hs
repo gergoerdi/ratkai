@@ -44,6 +44,7 @@ data Platform = Platform
     , printlnBCDPercent :: Location
     , space :: Word8
     , newline :: Z80ASM
+    , setScreen :: Maybe Z80ASM
     }
 
 data Vars = Vars
@@ -232,7 +233,14 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             unsupported :: Z80 Location
             unsupported = pure 0x0000
 
-        opSetScreen <- if supportGraphics then unimplemented 3 else unsupported
+        opSetScreen <- case setScreen of
+            Nothing -> unsupported
+            Just setScreen -> labelled do
+                fetch A -- Border color
+                fetch B -- Background color
+                fetch C -- Picture number
+                setScreen
+                jp runRatScript
         opSpriteOn <- if supportGraphics then unimplemented 5 else unsupported
         opSpriteOff <- if supportGraphics then unimplemented 1 else unsupported
         opChime <- if supportSound then unimplemented 1 else unsupported
