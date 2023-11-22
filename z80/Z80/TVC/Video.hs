@@ -1,10 +1,10 @@
 {-# LANGUAGE BlockArguments, NumericUnderscores, BinaryLiterals, RecursiveDo #-}
 {-# LANGUAGE RecordWildCards #-}
-module TVC.Video where
+module Z80.TVC.Video where
 
 import Z80
 import Z80.Utils
-import TVC
+import Z80.TVC
 
 import Data.Word
 import Control.Monad

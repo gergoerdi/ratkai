@@ -11,13 +11,12 @@ import RatBC.TVC.Strip
 
 import Ratkai.Z80
 import Ratkai.TVC.Picture as Picture
-import TVC
-import TVC.Keyboard
-import TVC.Video as Video
+import Z80.TVC
+import Z80.TVC.Keyboard
+import Z80.TVC.Video as Video
 
 import Z80
 import Z80.Utils
-import HL2
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Bifunctor

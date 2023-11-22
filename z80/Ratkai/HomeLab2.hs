@@ -13,7 +13,7 @@ import Ratkai.HomeLab2.ZSCII
 
 import Z80
 import Z80.Utils
-import HL2
+import Z80.HomeLab2
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Bifunctor

@@ -3,7 +3,7 @@
 module Main where
 
 import qualified Ratkai.TVC as Ratkai
-import TVC.Format (cas)
+import Z80.TVC.Format (cas)
 
 import RatBC.Game.Text
 

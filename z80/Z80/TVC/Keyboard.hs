@@ -1,5 +1,5 @@
 {-# LANGUAGE BlockArguments, NumericUnderscores, BinaryLiterals, RecursiveDo #-}
-module TVC.Keyboard where
+module Z80.TVC.Keyboard where
 
 import Z80
 import Z80.Utils

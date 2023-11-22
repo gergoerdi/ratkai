@@ -3,12 +3,12 @@
 {-# LANGUAGE RecordWildCards #-}
 module Ratkai.TVC.Picture where
 
-import TVC
-import RatBC.Picture
-import RatBC.TVC.Picture
-
 import Z80
 import Z80.Utils
+
+import Z80.TVC
+import RatBC.Picture
+import RatBC.TVC.Picture
 
 import Data.Bifunctor
 import Control.Monad

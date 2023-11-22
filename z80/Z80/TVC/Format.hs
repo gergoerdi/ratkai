@@ -1,9 +1,6 @@
 {-# LANGUAGE NumericUnderscores, BlockArguments, BinaryLiterals #-}
 {-# LANGUAGE RecursiveDo, ViewPatterns #-}
-module TVC.Format where
-
-import qualified Ratkai.TVC as Ratkai
-import RatBC.Game.Text
+module Z80.TVC.Format where
 
 import Z80
 import Data.Word
