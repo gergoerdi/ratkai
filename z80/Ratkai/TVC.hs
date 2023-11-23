@@ -47,10 +47,6 @@ game assets@Game{ minItem, maxItem, startRoom } pics = mdo
     let printCharC = call printCharC4
 
     di
-    ld SP 0xffff
-
-    -- Decompress pictures
-    picData <- preparePicData
 
     -- Save current graphics settings
     ld A [0x0b13]
@@ -58,8 +54,6 @@ game assets@Game{ minItem, maxItem, startRoom } pics = mdo
     -- Set video mode 4
     ld C 1
     syscall 4
-    setInterruptHandler intHandler
-    ei
 
     -- Set palette 1 (foreground) for text
     ld A 0b11_11_11_11
@@ -72,6 +66,12 @@ game assets@Game{ minItem, maxItem, startRoom } pics = mdo
     -- Clear screen
     syscall 0x05
 
+    call pageVideoOut
+    -- Decompress pictures
+    picData <- preparePicData
+
+    setInterruptHandler intHandler
+    ei
     -- -- -- Set border color
     -- -- ld A 0b00_00_10_00
     -- -- out [0x00] A
@@ -435,14 +435,14 @@ toByteMap vals = BS.pack [ fromMaybe 0xff val | addr <- [0..255], let val = look
 
 pageVideoIn_ :: Z80ASM
 pageVideoIn_ = do
-    ld A 0x50
+    ld A 0x90
     ld [0x03] A
     out [0x02] A
     ret
 
 pageVideoOut_ :: Z80ASM
 pageVideoOut_ = do
-    ld A 0x70
+    ld A 0xb0
     ld [0x03] A
     out [0x02] A
     ret
