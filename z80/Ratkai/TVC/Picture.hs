@@ -17,14 +17,8 @@ import Data.Word
 import Data.Array (Array, (!), listArray)
 import Data.Bits
 
-picWidth :: (Num a) => a
-picWidth = 80
-
-picHeight :: (Num a) => a
-picHeight = 40
-
 picData :: Word8 -> BS.ByteString -> BS.ByteString
-picData picNum bs = colormap' <> reorder' bitmap
+picData picNum bs = reorder' bitmap <> colormap'
   where
     reorder' = BS.pack . reorder picWidth picWidth picHeight . BS.unpack
 
@@ -81,8 +75,8 @@ displayPicture_ Locations{..} = mdo
     -- IY: pointer to video memory
     push HL
     pop IX
-    ld DE $ picWidth `div` 8 * picHeight `div` 8
-    add HL DE
+    ld DE $ picWidth `div` 8 * picHeight
+    add IX DE
     ld IY $ videoStart + (8 * 64) + ((64 - 40) `div` 2)
     decLoopB (picHeight `div` 8) do
         push BC

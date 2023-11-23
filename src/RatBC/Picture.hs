@@ -6,8 +6,17 @@ import Data.Word
 
 type RGBA8 = (Word8, Word8, Word8, Word8)
 
+picWidth :: (Num a) => a
+picWidth = 80
+
+picHeight :: (Num a) => a
+picHeight = 40
+
+picRowstride :: (Num a) => a
+picRowstride = 80
+
 hiresPixels :: BS.ByteString -> BS.ByteString -> [Word8]
-hiresPixels = hiresPixels' (10 * 8) (5 * 8) (10 * 8)
+hiresPixels = hiresPixels' picWidth picHeight picRowstride
 
 hiresPixels' :: Int -> Int -> Int -> BS.ByteString -> BS.ByteString -> [Word8]
 hiresPixels' w h rowstride colors12 bitmap =
