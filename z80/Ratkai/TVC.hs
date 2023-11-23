@@ -16,6 +16,9 @@ import Z80.TVC.Keyboard
 import Z80.TVC.Video as Video
 import Z80.ZX0 as ZX0
 
+import Debug.Trace
+import Text.Printf
+
 import Z80
 import Z80.Utils
 import qualified Data.ByteString as BS
@@ -39,21 +42,14 @@ supportUndo = False
 supportQSave :: Bool
 supportQSave = True
 
-compressedPics :: Bool
-compressedPics = True
+compressedData :: Bool
+compressedData = True
 
-game :: Game Identity -> BS.ByteString -> Z80ASM
-game assets@Game{ minItem, maxItem, startRoom } pics = mdo
+game :: Game Identity -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Z80ASM
+game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 pics = mdo
     let printCharC = call printCharC4
 
     di
-
-    -- Save current graphics settings
-    ld A [0x0b13]
-
-    -- Set video mode 4
-    ld C 1
-    syscall 4
 
     -- Set palette 1 (foreground) for text
     ld A 0b11_11_11_11
@@ -67,19 +63,10 @@ game assets@Game{ minItem, maxItem, startRoom } pics = mdo
     syscall 0x05
 
     call pageVideoOut
-    -- Decompress pictures
-    picData <- preparePicData
+    call decompressData
 
     setInterruptHandler intHandler
     ei
-    -- -- -- Set border color
-    -- -- ld A 0b00_00_10_00
-    -- -- out [0x00] A
-
-    -- -- ld HL picData
-    -- ld B 0b00_11_11_00 -- Background
-    -- ld A 0b00_00_10_00 -- Border
-    -- call displayPicture
 
     ldVia A [lineNum videoLocs] firstLine
     ldVia A [colNum videoLocs] 0
@@ -376,8 +363,6 @@ game assets@Game{ minItem, maxItem, startRoom } pics = mdo
 
     assetLocs <- do
         let asset sel = labelled $ db $ getConst . sel $ assets'
-        text1 <- asset msgs1
-        text2 <- asset msgs2
         dict_ <- asset dict
         scriptEnter <- asset enterRoom
         scriptAfter <- asset afterTurn
@@ -410,25 +395,59 @@ game assets@Game{ minItem, maxItem, startRoom } pics = mdo
         savedVars <- Just <$> pure 0x0400
         undoVars <- Just <$> pure 0x0500
         return Vars{..}
+
+    decompressData <- labelled mdo
+        msgAt 1
+        ld HL picsEnd
+        ld DE pics'
+        call decompress
+
+        msgAt 2
+        ld HL text2End
+        ld DE text2'
+        call decompress
+
+        msgAt 3
+        ld HL text1End
+        ld DE text1'
+        call decompress
+
+        msgAt 4
+        ret
+
+        let s = "Decompressing..."
+        sptr <- labelled $ db $ map (fromIntegral . ord) s
+        let msgAt line = do
+                ld B 0x01
+                ld C line
+                syscall 0x03
+                ld DE sptr
+                ld BC $ fromIntegral $ length s
+                syscall 0x02
+        pure ()
+    decompress <- labelled do
+        ZX0.standardBack
+
+    compressStart <- label
+    text1End <- fmap (subtract 1) $ db compressedText1 *> label
+    text2End <- fmap (subtract 1) $ db compressedText2 *> label
+    picsEnd <- fmap (subtract 1) $ db pics *> label
+
+    traceM $ printf "text1: %04x..%04x -> %04x..%04x" compressStart text1End text1 text1'
+    traceM $ printf "text2: %04x..%04x -> %04x..%04x" text1End text2End text2 text2'
+    traceM $ printf "pics:  %04x..%04x -> %04x..%04x" text2End picsEnd picData pics'
+
+    (text1, text1') <- decompressedAddr compressStart $ fromIntegral . BS.length . getConst . msgs1 $ assets'
+    (text2, text2') <- decompressedAddr text1' $ fromIntegral . BS.length . getConst . msgs2 $ assets'
+    (picData, pics') <- decompressedAddr text2' $ 450 * 54 -- TODO: numPics
     pure ()
   where
     assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
 
-    preparePicData
-        | compressedPics = mdo
-              db pics
-              picData0 <- label
-              let picData = 0xff00
-              ld HL afterDecompressor
-              jp decompressor
-              ld HL picData0
-              ld DE picData
-              decompressor <- labelled ZX0.standardBack
-              afterDecompressor <- label
-              return picData
-        | otherwise = do
-              labelled $ db pics
-
+    decompressedAddr src uncompressedLen = pure (start, start + uncompressedLen - 1)
+      where
+        delta = 3 -- TODO
+        start = src + delta
 
 toByteMap :: [(Word8, Word8)] -> BS.ByteString
 toByteMap vals = BS.pack [ fromMaybe 0xff val | addr <- [0..255], let val = lookup addr vals ]

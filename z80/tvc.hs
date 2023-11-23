@@ -20,8 +20,10 @@ main = do
     let inputPath = "game/bosszu/full"
 
     assets <- loadTextFiles inputPath
+    text1 <- BS.readFile (inputPath </> "text1.bin.zx0")
+    text2 <- BS.readFile (inputPath </> "text2.bin.zx0")
     pics <- BS.readFile (inputPath </> "pics-tvc.bin.zx0")
-    emit "_build/tvc/ratkai" $ Ratkai.game assets pics
+    emit "_build/tvc/ratkai" $ Ratkai.game assets text1 text2 pics
 
 emit :: String -> Z80ASM -> IO ()
 emit name prog = do

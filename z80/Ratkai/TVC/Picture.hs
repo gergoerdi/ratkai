@@ -29,6 +29,16 @@ displayPicture_ Locations{..} = mdo
     -- Set border
     out [0x00] A
 
+    -- Move picture data to a region outside the video RAM
+    push BC
+    push DE
+    ld DE 0x0800
+    ld BC 450 -- TODO compute this nicer
+    ldir
+    pop DE
+    pop BC
+    ld HL 0x0800
+
     call pageVideoIn
 
     -- Set palette 0 (background) for text
