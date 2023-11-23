@@ -1,9 +1,23 @@
 {-# LANGUAGE BinaryLiterals #-}
-module RatBC.TVC.Picture (toTVCColor, toBorderColor, toBackgroundColor) where
+module RatBC.TVC.Picture where
+
+import RatBC.Picture
 
 import Data.Word
 import Data.Array (Array, listArray, (!))
 import Data.Bits
+import qualified Data.ByteString as BS
+
+fromC64 :: BS.ByteString -> BS.ByteString
+fromC64 bs = bitmap' <> colormap'
+  where
+    (bitmap, colormap) = BS.splitAt ((picRowstride `div` 8) * picHeight) bs
+
+    bitmap' = reorder' bitmap
+    reorder' = BS.pack . reorder picWidth picHeight picRowstride . BS.unpack
+
+    colormap' = BS.map toTVCColors colormap
+    toTVCColors = fromNybbles . both toTVCColor . nybbles
 
 toTVCColor :: Word8 -> Word8
 toTVCColor = (tvcPalette !)
@@ -40,6 +54,9 @@ toBorderColor = (`interleave` 0x00) . toTVCColor
 
 toBackgroundColor :: Word8 -> Word8
 toBackgroundColor c = let c' = toTVCColor c in interleave c' c'
+
+fromNybbles :: (Word8, Word8) -> Word8
+fromNybbles (n1, n0) = (n1 `shiftL` 4) .|. (n0 `shiftL` 0)
 
 interleave :: Word8 -> Word8 -> Word8
 interleave x y = (x' `shiftL` 1) .|. y'

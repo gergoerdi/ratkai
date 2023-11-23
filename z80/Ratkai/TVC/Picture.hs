@@ -17,26 +17,6 @@ import Data.Word
 import Data.Array (Array, (!), listArray)
 import Data.Bits
 
-picData :: Word8 -> BS.ByteString -> BS.ByteString
-picData picNum bs = reorder' bitmap <> colormap'
-  where
-    reorder' = BS.pack . reorder picWidth picWidth picHeight . BS.unpack
-
-    size = picHeight * (picWidth `div` 8)
-    colorSize = size `div` 8
-    bitmapAddr = 0xa000 + fromIntegral (picNum - 1) * (size + colorSize)
-    colormapAddr = bitmapAddr + size
-    bitmap = BS.take size . BS.drop bitmapAddr $ bs
-    colormap = BS.take colorSize . BS.drop colormapAddr $ bs
-
-    colormap' = BS.map toTVCColors colormap
-
-    toTVCColors :: Word8 -> Word8
-    toTVCColors = fromNybbles . both toTVCColor . nybbles
-
-fromNybbles :: (Word8, Word8) -> Word8
-fromNybbles (n1, n0) = (n1 `shiftL` 4) .|. (n0 `shiftL` 0)
-
 data Locations = Locations
     { pageVideoIn, pageVideoOut :: Location
     }

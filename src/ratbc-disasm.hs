@@ -11,6 +11,7 @@ import RatBC.Game
 import RatBC.Pretty
 import RatBC.Game.FromImage
 import RatBC.Game.Text
+import RatBC.Picture
 
 import Prettyprinter
 import Prettyprinter.Render.String
@@ -37,6 +38,14 @@ main = do
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
+
+    let numPics = 54 -- TODO
+        picBase = 0xa000
+        picLen = (picRowstride `div` 8) * picHeight
+        colorLen = picLen `div` 8
+        picsLen = numPics * (picLen + colorLen)
+    BL.writeFile (outputPath </> "pics-c64.bin") $ BL.take picsLen . BL.drop picBase $ bs
+
 
 options :: Parser Options
 options = do

@@ -11,7 +11,9 @@ import RatBC.Game.Text
 
 import RatBC.Strip
 import RatBC.TVC.Binary as TVC
+import RatBC.TVC.Picture as TVC
 
+import qualified Data.ByteString as BS
 import Options.Applicative
 import Control.Monad.Identity
 import System.Directory
@@ -36,6 +38,16 @@ main = do
 
     game <- pure $ reflowMessages 31 game
     TVC.writeFiles outputPath game
+
+    pics <- BS.readFile (inputPath </> "pics-c64.bin")
+    let numPics = 54 -- TODO
+    BS.writeFile (outputPath </> "pics-tvc.bin") $ mconcat
+        [ TVC.fromC64 bs
+        | i <- take numPics [0..]
+        , let size = 450
+        , let addr = i * size
+        , let bs = BS.take size . BS.drop addr $ pics
+        ]
 
 options :: Parser Options
 options = do

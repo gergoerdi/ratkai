@@ -40,13 +40,3 @@ setInterruptHandler addr = do
     ld [HL] hi
   where
     (lo, hi) = wordBytes addr
-
-interleave :: Word8 -> Word8 -> Word8
-interleave x y = (x' `shiftL` 1) .|. y'
-  where
-    x' = spread x
-    y' = spread y
-
--- https://graphics.stanford.edu/~seander/bithacks.html#InterleaveBMN
-spread :: Word8 -> Word8
-spread b = foldr (\(s, m) b -> (b .|. (b `shiftL` s)) .&. m) b (zip [1, 2, 4] [0x55, 0x33, 0x0f])
