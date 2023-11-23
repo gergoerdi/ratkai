@@ -14,6 +14,7 @@ import Ratkai.TVC.Picture as Picture
 import Z80.TVC
 import Z80.TVC.Keyboard
 import Z80.TVC.Video as Video
+import Z80.ZX0 as ZX0
 
 import Z80
 import Z80.Utils
@@ -38,13 +39,18 @@ supportUndo = False
 supportQSave :: Bool
 supportQSave = True
 
-game :: Game Identity -> Z80ASM
-game assets@Game{ minItem, maxItem, startRoom } = mdo
-    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
+compressedPics :: Bool
+compressedPics = True
 
+game :: Game Identity -> BS.ByteString -> Z80ASM
+game assets@Game{ minItem, maxItem, startRoom } pics = mdo
     let printCharC = call printCharC4
 
     di
+    ld SP 0xffff
+
+    -- Decompress pictures
+    picData <- preparePicData
 
     -- Save current graphics settings
     ld A [0x0b13]
@@ -104,6 +110,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 push IX
                 push IY
                 -- TODO: compute HL
+                ld HL $ picData + 450 * (42 - 1)
                 call displayPicture
                 pop IY
                 pop IX
@@ -367,9 +374,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         call newLine
         jp newLine
 
-    -- picData <- labelled $ db pic
-    kbdBuf <- labelled $ db $ replicate (fromIntegral kbdBufLen) 0xff
-
     assetLocs <- do
         let asset sel = labelled $ db $ getConst . sel $ assets'
         text1 <- asset msgs1
@@ -380,7 +384,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         scriptGlobal <- asset interactiveGlobal
         scriptLocal <-  asset interactiveLocal
         help <- asset helpMap
-        resetVars <- asset resetState
         resetData <- asset resetState
         return assets
             { msgs1 = Const text1
@@ -394,19 +397,38 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             , helpMap = Const help
             }
 
+    kbdBuf <- labelled $ db $ replicate (fromIntegral kbdBufLen) 0xff
     vars <- do
-        moved <- labelled $ db [0]
-        inputBuf <- labelled $ resb (fromIntegral maxInput)
-        parseBuf <- labelled $ resb 5
-        gameVars <- labelled $ resb 256
+        moved <- pure 0x0100
+        inputBuf <- pure 0x0101
+        parseBuf <- pure 0x0200
+        gameVars <- pure 0x0300
         let playerScore = gameVars + 0xfc
             playerHealth = gameVars + 0xfd
             playerStatus = gameVars + 0xfe
             playerLoc = gameVars + 0xff
-        savedVars <- if supportQSave then fmap Just . labelled $ resb 256 else pure Nothing
-        undoVars <- if supportUndo then fmap Just . labelled $ resb 256 else pure Nothing
+        savedVars <- Just <$> pure 0x0400
+        undoVars <- Just <$> pure 0x0500
         return Vars{..}
     pure ()
+  where
+    assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
+
+    preparePicData
+        | compressedPics = mdo
+              db pics
+              picData0 <- label
+              let picData = 0xff00
+              ld HL afterDecompressor
+              jp decompressor
+              ld HL picData0
+              ld DE picData
+              decompressor <- labelled ZX0.standardBack
+              afterDecompressor <- label
+              return picData
+        | otherwise = do
+              labelled $ db pics
+
 
 toByteMap :: [(Word8, Word8)] -> BS.ByteString
 toByteMap vals = BS.pack [ fromMaybe 0xff val | addr <- [0..255], let val = lookup addr vals ]
