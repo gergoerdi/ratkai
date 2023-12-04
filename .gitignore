@@ -1,2 +1,4 @@
 /*.cabal
 /_build
+
+game/**/*.zx0
