@@ -94,24 +94,30 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
 
             setScreen = Just do
                 push DE
-                push HL
-                push IX
-                push IY
-                -- Compute picData offset as 450 * (C - 1)
-                ld DE 450
-                ld HL 0
-                dec C
-                replicateM_ 8 do
-                    srl C
-                    unlessFlag NC $ add HL DE
-                    sla E
-                    rl D
-                ld DE picData
-                add HL DE
-                call displayPicture
-                pop IY
-                pop IX
-                pop HL
+                call setColors
+
+                -- Picture #255 means blank screen
+                ld A C
+                inc A
+                unlessFlag Z do
+                    push HL
+                    push IX
+                    push IY
+                    -- Compute picData offset as 450 * (C - 1)
+                    ld DE 450
+                    ld HL 0
+                    dec C
+                    replicateM_ 8 do
+                        srl C
+                        unlessFlag NC $ add HL DE
+                        sla E
+                        rl D
+                    ld DE picData
+                    add HL DE
+                    call displayPicture
+                    pop IY
+                    pop IX
+                    pop HL
                 pop DE
 
             beforeParseError = pure ()
@@ -141,6 +147,7 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
     pageVideoIn <- labelled pageVideoIn_
     pageVideoOut <- labelled pageVideoOut_
     displayPicture <- labelled $ displayPicture_ pictureLocs
+    setColors <- labelled $ setColors_ pictureLocs
     intHandler <- labelled $ intHandler_ kbdBuf
 
     parseLine <- labelled $ parseLine_ assetLocs platform vars routines

@@ -21,23 +21,13 @@ data Locations = Locations
     { pageVideoIn, pageVideoOut :: Location
     }
 
--- | Pre: `HL` is the start of the picture data (colormap <> bitmap)
+
 -- | Pre: `A` is the border color
 -- | Pre: `B` is the background color
-displayPicture_ :: Locations -> Z80ASM
-displayPicture_ Locations{..} = mdo
+setColors_ :: Locations -> Z80ASM
+setColors_ Locations{..} = mdo
     -- Set border
     out [0x00] A
-
-    -- Move picture data to a region outside the video RAM
-    push BC
-    push DE
-    ld DE 0x0800
-    ld BC 450 -- TODO compute this nicer
-    ldir
-    pop DE
-    pop BC
-    ld HL 0x0800
 
     call pageVideoIn
 
@@ -53,11 +43,25 @@ displayPicture_ Locations{..} = mdo
             ld [DE] A
             inc DE
         pop BC
-    let nextRow = do
-            ld A (64 - 40)
-            add A E
-            ld E A
-            unlessFlag NC $ inc D
+
+    jp pageVideoOut
+
+-- | Pre: `HL` is the start of the picture data (colormap <> bitmap)
+-- | Pre: `A` is the border color
+-- | Pre: `B` is the background color
+displayPicture_ :: Locations -> Z80ASM
+displayPicture_ Locations{..} = mdo
+    -- Move picture data to a region outside the video RAM
+    push BC
+    push DE
+    ld DE 0x0800
+    ld BC 450 -- TODO compute this nicer
+    ldir
+    pop DE
+    pop BC
+    ld HL 0x0800
+
+    call pageVideoIn
 
     -- Draw picture
     -- IX: pointer to colormap
