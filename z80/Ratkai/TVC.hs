@@ -93,15 +93,26 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
                 pure ()
 
             setScreen = Just do
+                push DE
                 push HL
                 push IX
                 push IY
-                -- TODO: compute HL
-                ld HL $ picData + 450 * (42 - 1)
+                -- Compute picData offset as 450 * (C - 1)
+                ld DE 450
+                ld HL 0
+                dec C
+                replicateM_ 8 do
+                    srl C
+                    unlessFlag NC $ add HL DE
+                    sla E
+                    rl D
+                ld DE picData
+                add HL DE
                 call displayPicture
                 pop IY
                 pop IX
                 pop HL
+                pop DE
 
             beforeParseError = pure ()
             waitEnter = pure () -- XXX
