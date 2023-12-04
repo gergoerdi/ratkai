@@ -116,7 +116,22 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
 
             beforeParseError = pure ()
             waitEnter = pure () -- XXX
-            clearScreen = pure () -- XXX
+            clearScreen = do
+                call pageVideoIn
+                push BC
+                push HL
+                ld HL $ videoStart + fromIntegral firstLine * rowStride * fromIntegral charHeight
+                let bytesToClear = fromIntegral (lastLine - firstLine) * rowStride * fromIntegral charHeight
+                    (b1, b2) = wordBytes bytesToClear
+                decLoopB b1 do
+                    ld C B
+                    decLoopB b2 do
+                        ld [HL] 0
+                        inc HL
+                    ld B C
+                pop HL
+                pop BC
+                call pageVideoOut
             space = tvcChar ' '
             newline = call newLine
 
