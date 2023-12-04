@@ -157,7 +157,7 @@
 , (156 ,"Megölöd, majd levágod a fejét... ")
 , (157 ,"Megbosszultad végre apád halálát! ")
 , (158 ,"- Ez a játék Japánban játszódik a középkorban. A japánok nagyon vérszomjasak voltak azokban az időkben! Legyél nagyon óvatos és használd gyakran a QSAVE és a BOM funkciót! Sok szerencsét! ")
-, (159 ,"  Kitalálta, kidolgozta, megtervezte megrajzolta, összehozta, programozta       Rátkai István         Zene:    Mohos Zoltán & Rátkai Tamás ")
+, (159 ,"  Kitalálta, kidolgozta, megtervezte megrajzolta, szkriptelte: Rátkai István\n\nTVC-re programozta: Érdi Gergő")
 , (160 ,"A cápa rádtámad és leharapja a fejed... ")
 , (161 ,"Megölted a cápát a szigonnyal. ")
 , (162 ,"Puszta kézzel? ")
