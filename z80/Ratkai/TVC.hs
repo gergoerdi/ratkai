@@ -31,7 +31,7 @@ import System.FilePath
 import Data.Word
 import Data.Char (ord)
 import Data.Maybe (fromMaybe)
-import Data.List (intercalate)
+import Data.List (intercalate, mapAccumL)
 
 release :: Bool
 release = True
@@ -41,9 +41,6 @@ supportUndo = False
 
 supportQSave :: Bool
 supportQSave = True
-
-compressedData :: Bool
-compressedData = True
 
 type CompressedBS = (BS.ByteString, BS.ByteString, Word16)
 
@@ -114,7 +111,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                         unlessFlag NC $ add HL DE
                         sla E
                         rl D
-                    ld DE decompressedPics
+                    ld DE pics'
                     add HL DE
                     call displayPicture
                     pop IY
@@ -406,8 +403,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
         help <- asset helpMap
         resetData <- asset resetState
         return assets
-            { msgs1 = Const decompressedText1
-            , msgs2 = Const decompressedText2
+            { msgs1 = Const text1'
+            , msgs2 = Const text2'
             , dict = Const dict_
             , enterRoom = Const scriptEnter
             , afterTurn = Const scriptAfter
@@ -435,22 +432,11 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
         ZX0.standardBack
 
     decompressData <- labelled mdo
-        msgAt 1
-        ld HL picsEnd
-        ld DE pics'
-        call decompress
-
-        msgAt 2
-        ld HL text2End
-        ld DE text2'
-        call decompress
-
-        msgAt 3
-        ld HL text1End
-        ld DE text1'
-        call decompress
-
-        msgAt 4
+        forM_ (zip [1..] $ reverse compressedItems) \(i, (compressedEnd, decompressedEnd, _)) -> do
+            msgAt i
+            ld HL compressedEnd
+            ld DE decompressedEnd
+            call decompress
         ret
 
         let s = "Decompressing..."
@@ -464,27 +450,24 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 syscall 0x02
         pure ()
 
-    compressStart <- label
-    let (origText1, compressedText1, deltaText1) = text1
-    text1End <- fmap (subtract 1) $ db compressedText1 *> label
-    let (origText2, compressedText2, deltaText2) = text2
-    text2End <- fmap (subtract 1) $ db compressedText2 *> label
-    let (origPics, compressedPics, deltaPics) = pics
-    picsEnd <- fmap (subtract 1) $ db compressedPics *> label
-
-    traceM $ printf "text1: %04x..%04x -> %04x..%04x" compressStart text1End decompressedText1 text1'
-    traceM $ printf "text2: %04x..%04x -> %04x..%04x" text1End text2End decompressedText2 text2'
-    traceM $ printf "pics:  %04x..%04x -> %04x..%04x" text2End picsEnd decompressedPics pics'
-
-    (decompressedText1, text1') <- decompressedAddr compressStart $ text1
-    (decompressedText2, text2') <- decompressedAddr text1' text2
-    (decompressedPics, pics') <- decompressedAddr text2' pics
+    ~compressedItems@[(_, _, text1'), (_, _, text2'), (_, _, pics')] <- compressedData [text1, text2, pics]
     pure ()
-  where
-    decompressedAddr src (orig, _, delta) = pure (start, start + uncompressedLen - 1)
-      where
-        uncompressedLen = fromIntegral . BS.length $ orig
-        start = src + delta
+
+compressedData :: [(BS.ByteString, BS.ByteString, Word16)] -> Z80 [(Location, Location, Location)]
+compressedData items = do
+    start <- label
+    items' <- forM items \(orig, compressed, delta) -> do
+        start <- label
+        end <- fmap (subtract 1) $ db compressed *> label
+        pure (start, end, fromIntegral . BS.length $ orig, delta)
+    let decompressedAddr orig (start, end, uncompressedLen, delta) = (end', (start, end, start', end'))
+          where
+            start' = orig + delta
+            end' = start' + uncompressedLen - 1
+    let (_, items'') = mapAccumL decompressedAddr start items'
+    forM items'' \(start, end, start', end') -> do
+        traceM $ printf "%04x..%04x -> %04x..%04x" start end start' end'
+        pure (end, end', start')
 
 toByteMap :: [(Word8, Word8)] -> BS.ByteString
 toByteMap vals = BS.pack [ fromMaybe 0xff val | addr <- [0..255], let val = lookup addr vals ]
