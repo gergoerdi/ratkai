@@ -3,4 +3,4 @@
 	url = git@github.com:gergoerdi/z80-assembler-haskell.git
 [submodule "import/ZX0"]
 	path = import/ZX0
-	url = https://github.com/einar-saukas/ZX0
+	url = git@github.com:gergoerdi/ZX0.git

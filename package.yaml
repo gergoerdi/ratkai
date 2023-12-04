@@ -5,7 +5,9 @@ license: GPL-3
 
 extra-source-files:
   - README.md
-
+  - import/ZX0/src/*.h
+  - import/ZX0/src/*.c
+  
 dependencies:
   - base
   - bytestring
@@ -41,6 +43,10 @@ executables:
     dependencies:
       - z80
       - ratkai
+    c-sources:
+      - import/ZX0/src/compress.c
+      - import/ZX0/src/optimize.c
+      - import/ZX0/src/memory.c
 
   ratbc-disasm:
     main: src/ratbc-disasm.hs

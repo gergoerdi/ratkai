@@ -45,8 +45,10 @@ supportQSave = True
 compressedData :: Bool
 compressedData = True
 
-game :: Game Identity -> BS.ByteString -> BS.ByteString -> BS.ByteString -> Z80ASM
-game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 pics = mdo
+type CompressedBS = (BS.ByteString, BS.ByteString, Word16)
+
+game :: Game (Const BS.ByteString) -> CompressedBS -> CompressedBS -> CompressedBS -> Z80ASM
+game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     let printCharC = call printCharC4
 
     di
@@ -112,7 +114,7 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
                         unlessFlag NC $ add HL DE
                         sla E
                         rl D
-                    ld DE picData
+                    ld DE decompressedPics
                     add HL DE
                     call displayPicture
                     pop IY
@@ -332,7 +334,7 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
         pure ()
 
     videoLocs <- do
-        charset <- labelled $ db $ BL.toStrict . charSet $ assets'
+        charset <- labelled $ db $ BL.toStrict . charSet $ assets
         lineNum <- labelled $ db [0]
         colNum <- labelled $ db [0]
         drawColorIsInput <- labelled $ db [0]
@@ -395,7 +397,7 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
         jp newLine
 
     assetLocs <- do
-        let asset sel = labelled $ db $ getConst . sel $ assets'
+        let asset sel = labelled $ db $ getConst . sel $ assets
         dict_ <- asset dict
         scriptEnter <- asset enterRoom
         scriptAfter <- asset afterTurn
@@ -404,8 +406,8 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
         help <- asset helpMap
         resetData <- asset resetState
         return assets
-            { msgs1 = Const text1
-            , msgs2 = Const text2
+            { msgs1 = Const decompressedText1
+            , msgs2 = Const decompressedText2
             , dict = Const dict_
             , enterRoom = Const scriptEnter
             , afterTurn = Const scriptAfter
@@ -428,6 +430,9 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
         savedVars <- Just <$> pure 0x0400
         undoVars <- Just <$> pure 0x0500
         return Vars{..}
+
+    decompress <- labelled do
+        ZX0.standardBack
 
     decompressData <- labelled mdo
         msgAt 1
@@ -458,28 +463,27 @@ game assets@Game{ minItem, maxItem, startRoom } compressedText1 compressedText2 
                 ld BC $ fromIntegral $ length s
                 syscall 0x02
         pure ()
-    decompress <- labelled do
-        ZX0.standardBack
 
     compressStart <- label
+    let (origText1, compressedText1, deltaText1) = text1
     text1End <- fmap (subtract 1) $ db compressedText1 *> label
+    let (origText2, compressedText2, deltaText2) = text2
     text2End <- fmap (subtract 1) $ db compressedText2 *> label
-    picsEnd <- fmap (subtract 1) $ db pics *> label
+    let (origPics, compressedPics, deltaPics) = pics
+    picsEnd <- fmap (subtract 1) $ db compressedPics *> label
 
-    traceM $ printf "text1: %04x..%04x -> %04x..%04x" compressStart text1End text1 text1'
-    traceM $ printf "text2: %04x..%04x -> %04x..%04x" text1End text2End text2 text2'
-    traceM $ printf "pics:  %04x..%04x -> %04x..%04x" text2End picsEnd picData pics'
+    traceM $ printf "text1: %04x..%04x -> %04x..%04x" compressStart text1End decompressedText1 text1'
+    traceM $ printf "text2: %04x..%04x -> %04x..%04x" text1End text2End decompressedText2 text2'
+    traceM $ printf "pics:  %04x..%04x -> %04x..%04x" text2End picsEnd decompressedPics pics'
 
-    (text1, text1') <- decompressedAddr compressStart $ fromIntegral . BS.length . getConst . msgs1 $ assets'
-    (text2, text2') <- decompressedAddr text1' $ fromIntegral . BS.length . getConst . msgs2 $ assets'
-    (picData, pics') <- decompressedAddr text2' $ 450 * 54 -- TODO: numPics
+    (decompressedText1, text1') <- decompressedAddr compressStart $ text1
+    (decompressedText2, text2') <- decompressedAddr text1' text2
+    (decompressedPics, pics') <- decompressedAddr text2' pics
     pure ()
   where
-    assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
-
-    decompressedAddr src uncompressedLen = pure (start, start + uncompressedLen - 1)
+    decompressedAddr src (orig, _, delta) = pure (start, start + uncompressedLen - 1)
       where
-        delta = 3 -- TODO
+        uncompressedLen = fromIntegral . BS.length $ orig
         start = src + delta
 
 toByteMap :: [(Word8, Word8)] -> BS.ByteString
