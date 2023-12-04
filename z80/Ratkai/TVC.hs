@@ -120,7 +120,37 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 pop DE
 
             beforeParseError = pure ()
-            waitEnter = pure () -- XXX
+            waitEnter = do
+                push BC
+
+                ld A [0x0b11]
+                Z80.and 0xf0
+                Z80.add A 5
+                ld B A
+
+                let checkEnter = do
+                        ld A B
+                        out [0x03] A
+                        in_ A [0x58]
+                        cpl
+                        Z80.and 0b0001_0000
+
+                -- Wait for released Enter key
+                withLabel \loop -> do
+                    checkEnter
+                    jp NZ loop
+
+                -- Wait for pressed Enter key
+                withLabel \loop -> do
+                    checkEnter
+                    jp Z loop
+
+                -- Wait for released Enter key
+                withLabel \loop -> do
+                    checkEnter
+                    jp NZ loop
+                pop BC
+
             clearScreen = do
                 call pageVideoIn
                 push BC
