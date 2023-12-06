@@ -46,7 +46,7 @@ setColors_ Locations{..} = mdo
 
     jp pageVideoOut
 
--- | Pre: `HL` is the start of the picture data (colormap <> bitmap)
+-- | Pre: `HL` is the start of the picture data (bitmap <> colormap)
 -- | Pre: `A` is the border color
 -- | Pre: `B` is the background color
 displayPicture_ :: Locations -> Z80ASM
