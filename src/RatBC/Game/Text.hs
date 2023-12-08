@@ -20,7 +20,8 @@ import System.Directory
 import System.FilePath
 import qualified Data.Map as M
 import Data.Word
-import Data.Array (Array, array, listArray)
+import Data.Array (Array, array, listArray, range, assocs)
+import Data.List (stripPrefix, lookup)
 import Data.List.Split
 import Data.Char (isSpace)
 import Text.Printf
@@ -37,6 +38,8 @@ writeTextFiles outputPath game = do
     write "reset" $ resetState game'
     write "help" $ helpMap game'
     bin "charset" $ charSet game
+    forM_ (assocs $ sprites game) \(i, bs) -> unless (BL.null bs) do
+        bin (printf "sprite-%02d" i) bs
   where
     game' = pprGame game
     write fileName = writeFile (outputPath </> fileName <.> "txt") . renderString .
@@ -95,4 +98,20 @@ loadTextFiles inputPath = do
       <*> pure 160 -- TODO: maxItem
       <*> pure 1 -- TODO: startRoom
       <*> bin "charset"
+      <*> sprites
     return $ parseGame game0
+  where
+    sprites = do
+        files <- listDirectory inputPath
+        let spriteFiles =
+              [ (i, fp)
+              | fp <- files
+              , takeExtension fp == "bin"
+              , Just s <- pure $ stripPrefix "sprite-" (takeBaseName fp)
+              , let i = read s
+              ]
+        let bounds = (minimum . map fst $ spriteFiles, maximum . map fst $ spriteFiles)
+        listArray bounds <$> forM (range bounds) \i ->
+            case lookup i spriteFiles of
+                Nothing -> mempty
+                Just fp -> BL.readFile fp

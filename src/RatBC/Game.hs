@@ -9,6 +9,7 @@ import RatBC.Text
 import Control.Monad.Identity
 import Data.Word
 import Data.Array
+import Data.Foldable
 import qualified Data.ByteString.Lazy as BL
 import qualified Data.Map as M
 
@@ -28,6 +29,7 @@ data Game f = Game
     , minItem, maxItem :: Word8
     , startRoom :: Word8
     , charSet :: BL.ByteString
+    , sprites :: Array Word8 BL.ByteString
     }
 
 data Bank = Bank1 | Bank2
@@ -39,6 +41,13 @@ mapStmts f game@Game{..} = game
     , interactiveGlobal = fmap (fmap (fmap (f Bank1))) interactiveGlobal
     , interactiveLocal = fmap (fmap (fmap (fmap (f Bank1)))) interactiveLocal
     }
+
+traverseStmts_ :: (Applicative m) => (Bank -> [Stmt] -> m ()) -> Game Identity -> m ()
+traverseStmts_ f game@Game{..} =
+    traverse_ (traverse_ (f Bank2)) enterRoom *>
+    traverse_ (f Bank1) afterTurn *>
+    traverse_ (traverse_ (traverse_ (f Bank1))) interactiveGlobal *>
+    traverse_ (traverse_ (traverse_ (traverse_ (f Bank1)))) interactiveLocal
 
 mapStmt :: (Bank -> Stmt -> Stmt) -> Game Identity -> Game Identity
 mapStmt f = mapStmts (\bank -> map (f bank))
