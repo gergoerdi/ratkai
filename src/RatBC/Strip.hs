@@ -1,5 +1,5 @@
 {-# LANGUAGE RecordWildCards, BlockArguments, LambdaCase, ViewPatterns #-}
-module RatBC.Strip (stripGame) where
+module RatBC.Strip (stripGame, gcArray, compactArray) where
 
 import RatBC.Utils
 import RatBC.Syntax
@@ -8,10 +8,12 @@ import RatBC.Text
 import RatBC.Pretty
 import RatBC.Game
 import RatBC.Game.Text
+import RatBC.Game.FromImage (spritesOf)
 
 import Control.Arrow ((>>>))
 import Control.Monad.State
 import Control.Monad.Identity
+import Control.Monad.Writer
 import Data.Array (Array, array, listArray, elems, assocs, bounds, (!), indices)
 import Data.Ix (Ix(..))
 import qualified Data.ByteString.Lazy as BL
@@ -26,7 +28,23 @@ stripGame =
     stripRooms >>>
     stripMessages >>>
     stripWords >>>
-    stripInteractive
+    stripInteractive >>>
+    stripSprites
+
+stripSprites :: Game Identity -> Game Identity
+stripSprites game@Game{ sprites = sprites } = mapStmt (\_ -> remap) game
+    { sprites = compactArray gc sprites }
+  where
+    usedSprites = nub . sort $ execWriter $ traverseStmts_ (\_ -> tell . foldMap spritesOf) game
+    gc@(_, remapSprite) = gcArray (bounds sprites) usedSprites
+
+    remap = \case
+        SpriteOn i addr col x y -> SpriteOn i (f addr) col x y
+        When00 var body -> When00 var $ remap <$> body
+        WhenFF var body -> WhenFF var $ remap <$> body
+        stmt -> stmt
+      where
+        f = fromMaybe (error "Sprite GC screwed up") . remapSprite
 
 both :: (a -> b) -> (a, a) -> (b, b)
 both f (x, y) = (f x, f y)

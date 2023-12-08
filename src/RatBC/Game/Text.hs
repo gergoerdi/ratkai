@@ -106,12 +106,13 @@ loadTextFiles inputPath = do
         let spriteFiles =
               [ (i, fp)
               | fp <- files
-              , takeExtension fp == "bin"
+              , takeExtension fp == ".bin"
               , Just s <- pure $ stripPrefix "sprite-" (takeBaseName fp)
               , let i = read s
               ]
-        let bounds = (minimum . map fst $ spriteFiles, maximum . map fst $ spriteFiles)
+        let bounds | null spriteFiles = (0, 0)
+                   | otherwise = (minimum . map fst $ spriteFiles, maximum . map fst $ spriteFiles)
         listArray bounds <$> forM (range bounds) \i ->
             case lookup i spriteFiles of
                 Nothing -> mempty
-                Just fp -> BL.readFile fp
+                Just fp -> BL.readFile (inputPath </> fp)
