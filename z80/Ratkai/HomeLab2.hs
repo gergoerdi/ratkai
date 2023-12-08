@@ -43,8 +43,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     ldVia A [gameVars vars] 0x00
 
     -- Initialize state
-    call $ resetGameVars routines
-    when supportQSave $ call $ qsave routines
     ldVia A [shiftState] 0
 
     -- Run the game

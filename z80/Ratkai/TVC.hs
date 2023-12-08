@@ -75,10 +75,6 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     ldVia A [lineNum videoLocs] firstLine
     ldVia A [colNum videoLocs] 0
 
-    -- Initialize state
-    call $ resetGameVars routines
-    when supportQSave $ call $ qsave routines
-
     -- Run the game
     let platform = Platform{ setTextColors = Just setTextColors, ..}
           where

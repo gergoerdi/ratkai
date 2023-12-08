@@ -66,7 +66,6 @@ data Routines = Routines
     , runInteractive :: Location
     , printScore :: Location
     , qsave :: Location
-    , resetGameVars :: Location
     }
 
 
@@ -788,16 +787,20 @@ varIY_ Vars{..} Routines{..} = do
     ret
 
 qsave_ :: Vars -> Z80ASM
-qsave_ Vars{..} = forM_ savedVars \savedVars -> do
-    ld DE savedVars
-    ld HL gameVars
-    ld BC 256
-    ldir
+qsave_ Vars{..} = do
+    forM_ savedVars \savedVars -> do
+        ld DE savedVars
+        ld HL gameVars
+        ld BC 256
+        ldir
     ret
 
 gameLoop :: Game (Const Location) -> Platform -> Vars -> Z80 Routines
 gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
     let routines = Routines{..}
+
+    call resetGameVars
+    call qsave
 
     newGame <- label
 
