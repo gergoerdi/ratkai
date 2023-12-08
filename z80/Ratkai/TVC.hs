@@ -50,13 +50,18 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
 
     di
 
-    -- Set palette 1 (foreground) for text
-    ld A 0b11_11_11_11
-    out [0x61] A
+    let setTextColors = do
+            -- Set palette 1 (foreground) for text
+            out [0x61] A
 
-    -- Set palette 2 (user input)
-    ld A 0b00_00_00_00
-    out [0x62] A
+            -- Set palette 2 (user input)
+            ld A B
+            out [0x62] A
+
+    -- Set text color for output and input text
+    ld A 0b11_11_11_11
+    ld B 0b00_00_00_00
+    setTextColors
 
     -- Clear screen
     syscall 0x05
@@ -75,7 +80,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     when supportQSave $ call $ qsave routines
 
     -- Run the game
-    let platform = Platform{..}
+    let platform = Platform{ setTextColors = Just setTextColors, ..}
           where
             printString s = skippable \end -> mdo
                 ld IY lbl

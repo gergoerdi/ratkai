@@ -46,6 +46,8 @@ data Stmt
     | MachineCode Addr [Word8]
     | CopyProtection Val Val Val Val
 
+    | SetTextColors Val Val
+
     | When00 Var [Stmt]
     | WhenFF Var [Stmt]
     | CompactMessage Msg
@@ -59,7 +61,7 @@ instance Binary Stmt where
     put = \case
         Ret -> putWord8 0x00
         Assign var val -> putWord8 0x01 *> put var *> put val
-        CompactMessage msg | msg <= 0x18 -> putWord8 0x02 *> put msg
+        CompactMessage msg | msg <= 0x30 -> putWord8 0x02 *> put msg
                            | otherwise -> putWord8 msg
         Message msg -> putWord8 0x02 *> put msg
         Assign00 var -> putWord8 0x03 *> put var
@@ -86,6 +88,7 @@ instance Binary Stmt where
         IncIfNot0 var -> putWord8 0x16 *> put var
         MachineCode addr bytes -> putWord8 0x17 *> mapM_ putWord8 bytes
         CopyProtection a1 a2 a3 a4 -> putWord8 0x18 *> put a1 *> put a2 *> put a3 *> put a4
+        SetTextColors a1 a2 -> putWord8 0x19 *> put a1 *> put a2
 
 getMachineCode :: Get [Word8]
 getMachineCode = do
@@ -121,6 +124,7 @@ getStmt = getWord8 >>= {- (\x -> pure $ traceShowId x) >>= -} \case
     0x16 -> fmap Right $ IncIfNot0 <$> get
     0x17 -> fmap Right $ MachineCode <$> (fromIntegral <$> bytesRead) <*> getMachineCode
     0x18 -> fmap Right $ CopyProtection <$> get <*> get <*> get <*> get
+    0x19 -> fmap Right $ SetTextColors <$> get <*> get
     tag -> pure $ Left tag
 
 

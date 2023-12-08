@@ -33,6 +33,9 @@ moveIsFinal = True
 dictWordLength :: Word8
 dictWordLength = 5
 
+maxOpCode :: Word8
+maxOpCode = 0x30
+
 data Platform = Platform
     { printMessage :: Location
     , matchWord :: Location
@@ -45,6 +48,7 @@ data Platform = Platform
     , space :: Word8
     , newline :: Z80ASM
     , setScreen :: Maybe Z80ASM
+    , setTextColors :: Maybe Z80ASM
     }
 
 data Vars = Vars
@@ -71,7 +75,7 @@ runRatScript_ :: Platform -> Vars -> Routines -> Z80ASM
 runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
     runRatScript <- labelled do
         fetch A
-        cp 0x18
+        cp maxOpCode
         jp C runRatStmt
     ratMessage <- labelled do
         ld B A
@@ -244,6 +248,13 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
         opSpriteOn <- if supportGraphics then unimplemented 5 else unsupported
         opSpriteOff <- if supportGraphics then unimplemented 1 else unsupported
         opChime <- if supportSound then unimplemented 1 else unsupported
+        opSetTextColors <- case setTextColors of
+            Nothing -> unsupported
+            Just setTextColors -> labelled do
+                fetch A -- Output text color
+                fetch B -- Input text color
+                setTextColors
+                jp runRatScript
 
         opTable <- labelled $ dw
             [ opRet             -- 00
@@ -269,6 +280,9 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             , opChime           -- 14
             , opSleep           -- 15
             , opIncIfNot0       -- 16
+            , 0x0000            -- 17
+            , 0x0000            -- 18
+            , opSetTextColors   -- 19
             ]
 
         -- Add to counter in `[IY]`

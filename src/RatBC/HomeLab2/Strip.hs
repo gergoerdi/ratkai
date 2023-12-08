@@ -23,6 +23,7 @@ toHomeLab = \case
     Chime{} -> Nothing
     Sleep n -> Just $ Sleep $ min 10 n
     CopyProtection{} -> Nothing
+    SetTextColors{} -> Nothing
     MachineCode addr _ -> Just $ MachineCode addr [0x60]
     When00 var body -> When00 var <$> let body' = mapMaybe toHomeLab body in body' <$ guard (not . null $ body')
     WhenFF var body -> WhenFF var <$> let body' = mapMaybe toHomeLab body in body' <$ guard (not . null $ body')

@@ -47,8 +47,6 @@ setColors_ Locations{..} = mdo
     jp pageVideoOut
 
 -- | Pre: `HL` is the start of the picture data (bitmap <> colormap)
--- | Pre: `A` is the border color
--- | Pre: `B` is the background color
 displayPicture_ :: Locations -> Z80ASM
 displayPicture_ Locations{..} = mdo
     -- Move picture data to a region outside the video RAM
