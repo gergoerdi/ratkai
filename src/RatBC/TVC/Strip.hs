@@ -19,6 +19,7 @@ stripScript = transformStmts (mapMaybe stripStmt)
 stripStmt :: Stmt -> Maybe Stmt
 stripStmt = \case
     SetScreen border bg pic -> Just $ SetScreen (toBorderColor border) (toBackgroundColor bg) pic
+    SetTextColors output input -> Just $ SetTextColors (toBackgroundColor output) (toBackgroundColor input)
     Chime{} -> Nothing
     Sleep n -> Just $ Sleep $ min 10 n
     CopyProtection{} -> Nothing
