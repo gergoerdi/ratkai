@@ -50,6 +50,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     let printCharC = call printCharC4
 
     di
+    ld SP $ 0x0eac + 2047
+    let spriteSaveBg = 0x0eac
 
     let setTextColors = do
             -- Set palette 1 (foreground) for text
@@ -121,25 +123,50 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                     pop HL
                 pop DE
 
-            spriteOff = Nothing
+            spriteOff = Just do
+                push IX
+                push IY
+
+                -- Compute sprite backing store address with offset (A - 1) * spriteSize
+                dec A
+                ld BC $ 2 + fromIntegral spriteHeight * fromIntegral spriteWidth `div` 2
+                ld IX spriteSaveBg
+                withLabel \loop -> do
+                    add IX BC
+                    dec A
+                    jp NZ loop
+
+                call hideSprite
+                pop IY
+                pop IX
+
             spriteOn = Just do
                 push HL
                 push IX
                 push IY
 
+                push BC
                 -- Compute sprite address with offset (B - 1) * 64
                 dec B
                 ld HL spriteData
 
-                push BC
                 ld C B
                 ld B 0
                 replicateM_ 6 do -- Multiply BC by 64 = 2^6
                     sla C
                     rl B
                 add HL BC
-                pop BC
 
+                -- Compute sprite backing store address with offset (A - 1) * spriteSize / 2
+                dec A
+                ld BC $ 2 + fromIntegral spriteHeight * fromIntegral spriteWidth `div` 2
+                ld IX spriteSaveBg
+                withLabel \loop -> do
+                    add IX BC
+                    dec A
+                    jp NZ loop
+
+                pop BC
                 call displaySprite
                 pop IY
                 pop IX
@@ -203,6 +230,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     pageVideoOut <- labelled pageVideoOut_
     displayPicture <- labelled $ displayPicture_ pictureLocs
     displaySprite <- labelled $ displaySprite_ pictureLocs
+    hideSprite <- labelled $ hideSprite_ pictureLocs
     setColors <- labelled $ setColors_ pictureLocs
     intHandler <- labelled $ intHandler_ kbdBuf
 

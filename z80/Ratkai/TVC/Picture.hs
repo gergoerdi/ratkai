@@ -169,21 +169,12 @@ spriteHeight = 21
 spriteStride = 3
 spriteWidth = spriteStride * 8
 
--- | Pre: `C` is sprite color
 -- | Pre: `D` is sprite X coordinate
 -- | Pre: `E` is sprite Y coordinate
--- | Pre: `HL` is the start of the sprite bitmap
-displaySprite_ :: Locations -> Z80ASM
-displaySprite_ Locations{..} = do
-    -- Move sprite data to a region outside the video RAM
-    push BC
-    push DE
-    ld DE 0x0800
-    ld BC $ fromIntegral spriteHeight * fromIntegral spriteStride
-    ldir
-    pop DE
-    ld HL 0x0800
-
+-- | Post: `IY` is pointer to video memory
+-- | Clobbers `B`, `C`, `E`
+computeSpriteTarget :: Z80ASM
+computeSpriteTarget = do
     -- Compute target address
     ld IY pictureStart
 
@@ -200,6 +191,29 @@ displaySprite_ Locations{..} = do
     ld C D
     add IY BC
 
+-- | Pre: `C` is sprite color
+-- | Pre: `D` is sprite X coordinate
+-- | Pre: `E` is sprite Y coordinate
+-- | Pre: `HL` is the start of the sprite bitmap
+-- | Pre: `IX` is the start of the sprite backing store
+displaySprite_ :: Locations -> Z80ASM
+displaySprite_ Locations{..} = do
+    -- Move sprite data to a region outside the video RAM
+    push BC
+    push DE
+    ld DE 0x0800
+    ld BC $ fromIntegral spriteHeight * fromIntegral spriteStride
+    ldir
+    pop DE
+    ld HL 0x0800
+
+    -- Save X and Y coordinate
+    ld [IX] D
+    inc IX
+    ld [IX] E
+    inc IX
+
+    computeSpriteTarget
     pop BC
 
     call pageVideoIn
@@ -207,16 +221,26 @@ displaySprite_ Locations{..} = do
     -- Draw sprite
     -- HL: pointer to sprite bitmap
     -- IY: pointer to target video memory
+    -- IX: pointer to sprite backing store
     decLoopB spriteHeight do
         push BC
 
         ld E 2 -- Double scanline counter
         push HL
 
+        push IY
+        decLoopB (fromIntegral spriteWidth `div` 2) do
+            ld A [IY]
+            inc IY
+            ld [IX] A
+            inc IX
+        pop IY
+
         withLabel \loop -> do
-            replicateM_ spriteStride do
+            decLoopB spriteStride do
                 ld D [HL] -- Load next 8 pixels
                 inc HL
+                push BC
                 decLoopB 4 do
                     ld A [IY] -- Load two background pixels
                     -- Should we change first pixel?
@@ -237,6 +261,7 @@ displaySprite_ Locations{..} = do
 
                     ld [IY] A
                     inc IY
+                pop BC
 
             push DE
             ld DE $ (rowStride :: Word16) - fromIntegral spriteWidth `div` 2
@@ -248,6 +273,49 @@ displaySprite_ Locations{..} = do
                 pop HL
                 jp loop
 
+        pop BC
+
+    jp pageVideoOut
+
+-- | Pre: `IX` is the start of the sprite backing store
+hideSprite_ :: Locations -> Z80ASM
+hideSprite_ Locations{..} = do
+    -- Retrieve X and Y coordinate
+    ld D [IX]
+    inc IX
+    ld E [IX]
+    inc IX
+
+    -- Compute target address
+    computeSpriteTarget
+
+    call pageVideoIn
+
+    -- Clear sprite
+    -- IY: pointer to target video memory
+    -- IX: pointer to sprite backing store
+    decLoopB spriteHeight do
+        push BC
+
+        ld E 2 -- Double scanline counter
+        push IX
+
+        withLabel \loop -> do
+            decLoopB (fromIntegral spriteWidth `div` 2) do
+                ld A [IX]
+                inc IX
+                ld [IY] A
+                inc IY
+
+            push DE
+            ld DE $ (rowStride :: Word16) - fromIntegral spriteWidth `div` 2
+            add IY DE
+            pop DE
+
+            dec E
+            unlessFlag Z do
+                pop IX
+                jp loop
         pop BC
 
     jp pageVideoOut
