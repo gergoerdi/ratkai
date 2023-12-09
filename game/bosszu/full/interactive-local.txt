@@ -494,10 +494,10 @@
       , Assign00 14                    -- 03 0e
       , Ret                            -- 00
       , Message 46                     -- 02 2e                -- "Sikerül kiosonnod. "
-      , MoveTo 19                      -- 0c 13
       , Assign00 8                     -- 03 08
       , AddScore 1                     -- 10 01
       , Chime 4                        -- 14 04
+      , MoveTo 19                      -- 0c 13
       ]
   , InputDispatch [0x0e, 0x7c] -- "f lámpa"
       [ Assert00 14 2                  -- 06 0e 02             -- "Nem teheted meg. "
