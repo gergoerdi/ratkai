@@ -23,6 +23,7 @@ import Z80
 import Z80.Utils
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
+import Data.Array (assocs)
 import Data.Bifunctor
 import Control.Monad.Identity
 import Control.Monad
@@ -120,6 +121,30 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                     pop HL
                 pop DE
 
+            spriteOff = Nothing
+            spriteOn = Just do
+                push HL
+                push IX
+                push IY
+
+                -- Compute sprite address with offset (B - 1) * 64
+                dec B
+                ld HL spriteData
+
+                push BC
+                ld C B
+                ld B 0
+                replicateM_ 6 do -- Multiply BC by 64 = 2^6
+                    sla C
+                    rl B
+                add HL BC
+                pop BC
+
+                call displaySprite
+                pop IY
+                pop IX
+                pop HL
+
             beforeParseError = pure ()
             waitEnter = do
                 push BC
@@ -177,6 +202,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     pageVideoIn <- labelled pageVideoIn_
     pageVideoOut <- labelled pageVideoOut_
     displayPicture <- labelled $ displayPicture_ pictureLocs
+    displaySprite <- labelled $ displaySprite_ pictureLocs
     setColors <- labelled $ setColors_ pictureLocs
     intHandler <- labelled $ intHandler_ kbdBuf
 
@@ -444,6 +470,10 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
             , resetState = Const resetData
             , helpMap = Const help
             }
+
+    spriteData <- labelled $ db . BL.toStrict . mconcat $
+        -- Pad sprite data to 64 bytes for easy addressing
+        [ sprite <> BL.singleton 0x00 | (_, sprite) <- assocs $ sprites assets ]
 
     kbdBuf <- labelled $ db $ replicate (fromIntegral kbdBufLen) 0xff
     vars <- do

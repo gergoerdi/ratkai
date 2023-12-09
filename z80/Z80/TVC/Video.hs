@@ -24,7 +24,7 @@ charHeight = 8
 maxInput :: Word8
 maxInput = charsPerRow - 1
 
-rowStride :: Word16
+rowStride :: Num a => a
 rowStride = 64
 
 data Locations = Locations

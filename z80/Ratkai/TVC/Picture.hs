@@ -7,6 +7,7 @@ import Z80
 import Z80.Utils
 
 import Z80.TVC
+import Z80.TVC.Video (rowStride)
 import RatBC.Picture
 import RatBC.TVC.Picture
 
@@ -39,12 +40,15 @@ setColors_ Locations{..} = mdo
     ld DE videoStart
     decLoopB 90 do
         push BC
-        decLoopB 64 do
+        decLoopB rowStride do
             ld [DE] A
             inc DE
         pop BC
 
     jp pageVideoOut
+
+pictureStart :: Word16
+pictureStart = videoStart + (8 * rowStride) + ((rowStride - 40) `div` 2)
 
 -- | Pre: `HL` is the start of the picture data (bitmap <> colormap)
 displayPicture_ :: Locations -> Z80ASM
@@ -69,7 +73,7 @@ displayPicture_ Locations{..} = mdo
     pop IX
     ld DE $ picWidth `div` 8 * picHeight
     add IX DE
-    ld IY $ videoStart + (8 * 64) + ((64 - 40) `div` 2)
+    ld IY pictureStart
     decLoopB (picHeight `div` 8) do
         push BC
         decLoopB 8 do -- 4 double scanlines per colormap row
@@ -160,3 +164,90 @@ displayPicture_ Locations{..} = mdo
     spreads <- labelled $ db [spread x | x <- [0..15]]
 
     pure ()
+
+spriteHeight = 21
+spriteStride = 3
+spriteWidth = spriteStride * 8
+
+-- | Pre: `C` is sprite color
+-- | Pre: `D` is sprite X coordinate
+-- | Pre: `E` is sprite Y coordinate
+-- | Pre: `HL` is the start of the sprite bitmap
+displaySprite_ :: Locations -> Z80ASM
+displaySprite_ Locations{..} = do
+    -- Move sprite data to a region outside the video RAM
+    push BC
+    push DE
+    ld DE 0x0800
+    ld BC $ fromIntegral spriteHeight * fromIntegral spriteStride
+    ldir
+    pop DE
+    ld HL 0x0800
+
+    -- Compute target address
+    ld IY pictureStart
+
+    -- Apply Y coordinate: add rowStride * E to IY
+    ld BC rowStride
+    replicateM_ 8 do
+        srl E
+        unlessFlag NC $ add IY BC
+        sla C
+        rl B
+
+    -- Apply X coordinate: add D to IY
+    ld B 0
+    ld C D
+    add IY BC
+
+    pop BC
+
+    call pageVideoIn
+
+    -- Draw sprite
+    -- HL: pointer to sprite bitmap
+    -- IY: pointer to target video memory
+    decLoopB spriteHeight do
+        push BC
+
+        ld E 2 -- Double scanline counter
+        push HL
+
+        withLabel \loop -> do
+            replicateM_ spriteStride do
+                ld D [HL] -- Load next 8 pixels
+                inc HL
+                decLoopB 4 do
+                    ld A [IY] -- Load two background pixels
+                    -- Should we change first pixel?
+                    sla D
+                    unlessFlag NC do
+                        Z80.and 0b0101_0101
+                        Z80.or C
+                        pure ()
+                    rlc C
+
+                    -- Should we change second pixel?
+                    sla D
+                    unlessFlag NC do
+                        Z80.and 0b1010_1010
+                        Z80.or C
+                        pure ()
+                    rrc C
+
+                    ld [IY] A
+                    inc IY
+
+            push DE
+            ld DE $ (rowStride :: Word16) - fromIntegral spriteWidth `div` 2
+            add IY DE
+            pop DE
+
+            dec E
+            unlessFlag Z do
+                pop HL
+                jp loop
+
+        pop BC
+
+    jp pageVideoOut

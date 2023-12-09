@@ -49,6 +49,8 @@ data Platform = Platform
     , newline :: Z80ASM
     , setScreen :: Maybe Z80ASM
     , setTextColors :: Maybe Z80ASM
+    , spriteOn :: Maybe Z80ASM
+    , spriteOff :: Maybe Z80ASM
     }
 
 data Vars = Vars
@@ -244,8 +246,22 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
                 fetch C -- Picture number
                 setScreen
                 jp runRatScript
-        opSpriteOn <- if supportGraphics then unimplemented 5 else unsupported
-        opSpriteOff <- if supportGraphics then unimplemented 1 else unsupported
+        opSpriteOn <- case spriteOn of
+            Nothing -> unsupported
+            Just spriteOn -> labelled $ do
+                fetch A -- Sprite #
+                fetch B -- Sprite address
+                fetch C -- Sprite color
+                fetch D -- X coordinate
+                fetch E -- Y coordinate
+                spriteOn
+                jp runRatScript
+        opSpriteOff <- case spriteOff of
+            Nothing -> unsupported
+            Just spriteOff -> labelled $ do
+                fetch A -- Sprite #
+                spriteOff
+                jp runRatScript
         opChime <- if supportSound then unimplemented 1 else unsupported
         opSetTextColors <- case setTextColors of
             Nothing -> unsupported
