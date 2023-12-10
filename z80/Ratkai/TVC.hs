@@ -103,17 +103,21 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 lbl <- labelled $ db $ map tvcChar s
                 pure ()
 
-            setScreen = Just do
+            setScreen = Just mdo
                 push DE
+                push HL
+
                 call setColors
 
                 -- Picture #255 means blank screen
-                ld A C
-                inc A
-                unlessFlag Z do
-                    push HL
+                inc C
+                jp Z clearBlitStore
+                dec C
+
+                drawBackground <- labelled do
                     push IX
                     push IY
+
                     -- Compute picData offset as 450 * (C - 1)
                     ld DE 450
                     ld HL 0
@@ -126,9 +130,22 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                     ld DE pics'
                     add HL DE
                     call displayPicture
+
                     pop IY
                     pop IX
-                    pop HL
+                    jp finish
+
+                clearBlitStore <- labelled do
+                    ld HL blitStore
+                    decLoopB picHeight do
+                        ld C B
+                        decLoopB (picWidth `div` 2) do
+                            ld [HL] A
+                            inc HL
+                        ld B C
+
+                finish <- label
+                pop HL
                 pop DE
 
             spriteOff = Just do

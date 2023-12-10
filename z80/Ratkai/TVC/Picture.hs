@@ -27,6 +27,7 @@ data Locations = Locations
 
 -- | Pre: `A` is the border color
 -- | Pre: `B` is the background color
+-- | Post: `A` is the background color
 setColors_ :: Locations -> Z80ASM
 setColors_ Locations{..} = mdo
     -- Set border
@@ -47,7 +48,10 @@ setColors_ Locations{..} = mdo
             inc DE
         pop BC
 
-    jp pageVideoOut
+    push AF
+    call pageVideoOut
+    pop AF
+    ret
 
 pictureStart :: Word16
 pictureStart = videoStart + (8 * rowStride) + ((rowStride - 40) `div` 2)
