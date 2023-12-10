@@ -22,8 +22,8 @@ stripStmt = \case
     SetTextColors output input -> Just $ SetTextColors (toBackgroundColor output) (toBackgroundColor input)
     SpriteOn i addr col x y -> Just $ SpriteOn i addr (toBorderColor col) x' y' -- TODO: transform x and y
       where
-        x' = max 0 $ (x - 106) `div` 4
-        y' = y - 58
+        x' = fromInteger $ max 0 $ (fromIntegral x - 106) `div` 4
+        y' = fromInteger $ max 0 $ fromIntegral y - 58
     Chime{} -> Nothing
     Sleep n -> Just $ Sleep $ min 10 n
     CopyProtection{} -> Nothing
