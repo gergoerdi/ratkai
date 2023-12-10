@@ -20,6 +20,8 @@ import Data.Bits
 
 data Locations = Locations
     { pageVideoIn, pageVideoOut :: Location
+    , blitStore :: Location
+    , blitPicture :: Location
     }
 
 
@@ -50,92 +52,58 @@ setColors_ Locations{..} = mdo
 pictureStart :: Word16
 pictureStart = videoStart + (8 * rowStride) + ((rowStride - 40) `div` 2)
 
--- | Pre: `HL` is the start of the picture data (bitmap <> colormap)
-displayPicture_ :: Locations -> Z80ASM
-displayPicture_ Locations{..} = mdo
-    -- Move picture data to a region outside the video RAM
-    push BC
-    push DE
-    ld DE 0x0800
-    ld BC 450 -- TODO compute this nicer
-    ldir
-    pop DE
-    pop BC
-    ld HL 0x0800
-
-    call pageVideoIn
-
-    -- Draw picture
-    -- IX: pointer to colormap
-    -- HL: pointer to bitmap
-    -- IY: pointer to video memory
-    push HL
-    pop IX
-    ld DE $ picWidth `div` 8 * picHeight
-    add IX DE
-    ld IY pictureStart
+-- | Render the picture as a 80x40 mode-4 rectangle
+-- | Pre: `IX`: pointer to colormap
+-- | Pre: `HL`: pointer to bitmap
+-- | Pre: `IY`: pointer to destination
+renderPicture :: Z80ASM
+renderPicture = skippable \end -> mdo
     decLoopB (picHeight `div` 8) do
         push BC
-        decLoopB 8 do -- 4 double scanlines per colormap row
+        decLoopB 8 do -- 8 lines per colormap row
             push BC
             push IX
 
-            ld E 2 -- Double scanline counter
-            push HL
-            push IX
-            withLabel \loop -> do
-                decLoopB (picWidth `div` 8) do -- One scanline
+            decLoopB (picWidth `div` 8) do -- One scanline
+                push BC
+                ld A [HL]
+                decLoopB 4 do -- 4 * 2 bits per byte
                     push BC
-                    ld A [HL]
-                    decLoopB 4 do -- 4 * 2 bits per byte
-                        push BC
 
-                        -- Shift out even bit's color into C
-                        call shiftOutPixel
-                        ld C A
+                    -- Shift out even bit's color into C
+                    call shiftOutPixel
+                    ld C A
 
-                        ld A B
-                        -- Shift out odd bit's color into D
-                        call shiftOutPixel
-                        ld D A
+                    ld A B
+                    -- Shift out odd bit's color into D
+                    call shiftOutPixel
+                    ld D A
 
-                        -- Combine C and D into A
-                        ld A C
-                        rla
-                        Z80.or D
+                    -- Combine C and D into A
+                    ld A C
+                    rla
+                    Z80.or D
 
-                        ld [IY] A
-                        inc IY
+                    ld [IY] A
+                    inc IY
 
-                        -- Restore A to get ready for next two bits
-                        ld A B
-
-                        pop BC
-                    inc HL
-                    inc IX
+                    -- Restore A to get ready for next two bits
+                    ld A B
 
                     pop BC
+                inc HL
+                inc IX
 
-                push DE
-                ld DE (64 - picWidth `div` 2)
-                add IY DE
-                pop DE
-
-                dec E
-                unlessFlag Z do
-                    pop IX
-                    pop HL
-                    jp loop
+                pop BC
 
             pop IX
             pop BC
 
-        ld DE (picWidth `div` 8)
+        ld DE $ picWidth `div` 8
         add IX DE
 
         pop BC
-
-    jp pageVideoOut
+    jp end
 
     shiftOutPixel <- labelled do
         -- Shift out bit, use it as an index into colormap's two nybbles
@@ -162,8 +130,48 @@ displayPicture_ Locations{..} = mdo
         -- ret
 
     spreads <- labelled $ db [spread x | x <- [0..15]]
-
     pure ()
+
+blitPicture_ :: Locations -> Z80ASM
+blitPicture_ Locations{..}= mdo
+    call pageVideoIn
+
+    ld HL blitStore
+    ld DE pictureStart
+    decLoopB picHeight do
+        push BC
+
+        -- Duplicate each row
+        let blitLine = do
+                ld BC $ picWidth `div` 2 -- 2 pixels / byte
+                ldir
+                ex DE HL
+                ld BC $ 64 - picWidth `div` 2
+                add HL BC
+                ex DE HL
+
+        push HL
+        blitLine
+        pop HL
+        blitLine
+
+        pop BC
+
+    jp pageVideoOut
+
+-- | Pre: `HL` is the start of the picture data (bitmap <> colormap)
+displayPicture_ :: Locations -> Z80ASM
+displayPicture_ Locations{..} = mdo
+    -- Calculate `IX` to point to colormap
+    push HL
+    pop IX
+    ld DE $ picWidth `div` 8 * picHeight
+    add IX DE
+
+    ld IY blitStore
+    renderPicture
+
+    jp blitPicture
 
 spriteHeight = 21
 spriteStride = 3
@@ -191,50 +199,35 @@ computeSpriteTarget = do
     ld C D
     add IY BC
 
--- | Pre: `C` is sprite color
--- | Pre: `D` is sprite X coordinate
--- | Pre: `E` is sprite Y coordinate
--- | Pre: `HL` is the start of the sprite bitmap
--- | Pre: `IX` is the start of the sprite backing store
-displaySprite_ :: Locations -> Z80ASM
-displaySprite_ Locations{..} = do
+-- | Pre: `IX` is the pointer to sprite state
+blitSprite_ :: Locations -> Z80ASM
+blitSprite_ Locations{..} = do
     -- Move sprite data to a region outside the video RAM
-    push BC
-    push DE
+    ld L [IX + 1]
+    ld H [IX + 2]
     ld DE 0x0800
     ld BC $ fromIntegral spriteHeight * fromIntegral spriteStride
     ldir
-    pop DE
     ld HL 0x0800
 
-    -- Save X and Y coordinate
-    ld [IX] D
-    inc IX
-    ld [IX] E
-    inc IX
-
+    -- D: sprite X coordinate
+    -- E: sprite Y coordinate
+    ld D [IX + 4]
+    ld E [IX + 5]
     computeSpriteTarget
-    pop BC
 
     call pageVideoIn
 
     -- Draw sprite
+    -- C: sprite color
     -- HL: pointer to sprite bitmap
     -- IY: pointer to target video memory
-    -- IX: pointer to sprite backing store
+    ld C [IX + 3]
     decLoopB spriteHeight do
         push BC
 
         ld E 2 -- Double scanline counter
         push HL
-
-        push IY
-        decLoopB (fromIntegral spriteWidth `div` 2) do
-            ld A [IY]
-            inc IY
-            ld [IX] A
-            inc IX
-        pop IY
 
         withLabel \loop -> do
             decLoopB spriteStride do
@@ -273,49 +266,6 @@ displaySprite_ Locations{..} = do
                 pop HL
                 jp loop
 
-        pop BC
-
-    jp pageVideoOut
-
--- | Pre: `IX` is the start of the sprite backing store
-hideSprite_ :: Locations -> Z80ASM
-hideSprite_ Locations{..} = do
-    -- Retrieve X and Y coordinate
-    ld D [IX]
-    inc IX
-    ld E [IX]
-    inc IX
-
-    -- Compute target address
-    computeSpriteTarget
-
-    call pageVideoIn
-
-    -- Clear sprite
-    -- IY: pointer to target video memory
-    -- IX: pointer to sprite backing store
-    decLoopB spriteHeight do
-        push BC
-
-        ld E 2 -- Double scanline counter
-        push IX
-
-        withLabel \loop -> do
-            decLoopB (fromIntegral spriteWidth `div` 2) do
-                ld A [IX]
-                inc IX
-                ld [IY] A
-                inc IY
-
-            push DE
-            ld DE $ (rowStride :: Word16) - fromIntegral spriteWidth `div` 2
-            add IY DE
-            pop DE
-
-            dec E
-            unlessFlag Z do
-                pop IX
-                jp loop
         pop BC
 
     jp pageVideoOut

@@ -5,6 +5,7 @@
 module Ratkai.TVC (game) where
 
 import RatBC.Game
+import RatBC.Picture (picWidth, picHeight)
 import RatBC.TVC.Binary
 import RatBC.TVC.Text
 import RatBC.TVC.Strip
@@ -43,6 +44,12 @@ supportUndo = False
 supportQSave :: Bool
 supportQSave = True
 
+numSprites :: Word8
+numSprites = 8
+
+spriteStateSize :: Word16
+spriteStateSize = 6
+
 type CompressedBS = (BS.ByteString, BS.ByteString, Word16)
 
 game :: Game (Const BS.ByteString) -> CompressedBS -> CompressedBS -> CompressedBS -> Z80ASM
@@ -50,8 +57,9 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     let printCharC = call printCharC4
 
     di
-    ld SP $ 0x0eac + 2047
-    let spriteSaveBg = 0x0eac
+    let blitStore = 0x0eac
+        spriteState = blitStore + picWidth `div` 2 * picHeight
+    ld SP $ blitStore + 2047
 
     let setTextColors = do
             -- Set palette 1 (foreground) for text
@@ -124,21 +132,39 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 pop DE
 
             spriteOff = Just do
+                push HL
                 push IX
                 push IY
 
-                -- Compute sprite backing store address with offset (A - 1) * spriteSize
+                -- IX := sprite state address
+                ld IX spriteState
                 dec A
-                ld BC $ 2 + fromIntegral spriteHeight * fromIntegral spriteWidth `div` 2
-                ld IX spriteSaveBg
-                withLabel \loop -> do
-                    add IX BC
-                    dec A
-                    jp NZ loop
+                skippable \end -> do
+                    jp Z end
+                    ld BC spriteStateSize
+                    withLabel \loop -> do
+                        add IX BC
+                        dec A
+                        jp NZ loop
 
-                call hideSprite
+                -- Turn off sprite
+                ld [IX] 0
+
+                call blitPicture
+                ld IX spriteState
+                decLoopB numSprites do -- Max sprite number
+                    ld A [IX]
+                    cp 0
+                    push BC
+                    call NZ blitSprite
+                    pop BC
+                    ld DE spriteStateSize
+                    add IX DE
+
                 pop IY
                 pop IX
+                pop HL
+                pure ()
 
             spriteOn = Just do
                 push HL
@@ -146,10 +172,10 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 push IY
 
                 push BC
-                -- Compute sprite address with offset (B - 1) * 64
+
+                -- HL := sprite address with offset (B - 1) * 64
                 dec B
                 ld HL spriteData
-
                 ld C B
                 ld B 0
                 replicateM_ 6 do -- Multiply BC by 64 = 2^6
@@ -157,20 +183,33 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                     rl B
                 add HL BC
 
-                -- Compute sprite backing store address with offset (A - 1) * spriteSize / 2
+                -- IX := sprite state address
+                ld IX spriteState
                 dec A
-                ld BC $ 2 + fromIntegral spriteHeight * fromIntegral spriteWidth `div` 2
-                ld IX spriteSaveBg
-                withLabel \loop -> do
-                    add IX BC
-                    dec A
-                    jp NZ loop
+                skippable \end -> do
+                    jp Z end
+                    ld BC spriteStateSize
+                    withLabel \loop -> do
+                        add IX BC
+                        dec A
+                        jp NZ loop
+
 
                 pop BC
-                call displaySprite
+
+                -- Update sprite state
+                ldVia A [IX] 0xff
+                ld [IX + 1] L
+                ld [IX + 2] H
+                ld [IX + 3] C
+                ld [IX + 4] D
+                ld [IX + 5] E
+
+                call blitSprite
                 pop IY
                 pop IX
                 pop HL
+                pure ()
 
             beforeParseError = pure ()
             waitEnter = do
@@ -229,8 +268,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     pageVideoIn <- labelled pageVideoIn_
     pageVideoOut <- labelled pageVideoOut_
     displayPicture <- labelled $ displayPicture_ pictureLocs
-    displaySprite <- labelled $ displaySprite_ pictureLocs
-    hideSprite <- labelled $ hideSprite_ pictureLocs
+    blitPicture <- labelled $ blitPicture_ pictureLocs
+    blitSprite <- labelled $ blitSprite_ pictureLocs
     setColors <- labelled $ setColors_ pictureLocs
     intHandler <- labelled $ intHandler_ kbdBuf
 
