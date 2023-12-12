@@ -4,6 +4,7 @@
 module Main where
 
 import RatBC.Engine
+import RatBC.Engine.ZSCII
 
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
