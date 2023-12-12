@@ -8,7 +8,6 @@ import RatBC.Engine.ZSCII
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.RWS
-import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import Data.Word
@@ -29,7 +28,7 @@ data R = MkR
   }
 
 newtype Engine m a = Engine{ unEngine :: RWST R Any () m a }
-    deriving (Functor, Applicative, Monad, MonadIO, MonadCatch, MonadThrow, MonadMask, MonadWriter Any)
+    deriving (Functor, Applicative, Monad, MonadIO, MonadWriter Any, MonadTrans)
 
 class (Monad m) => MonadMessage m where
     printMessage :: Bank -> Word8 -> m ()

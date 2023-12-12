@@ -6,10 +6,10 @@ module Main where
 
 import RatBC.Game (Bank(..))
 import RatBC.Engine
+import RatBC.Engine.GameLoop
 import RatBC.Engine.ZSCII
 
 import Control.Monad.Reader
-import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import Options.Applicative
@@ -19,10 +19,6 @@ import System.Console.Haskeline
 import Data.Word
 import Data.Array.IO
 import Data.Array
-import Data.List.Split
-import Text.Printf
-import Control.Monad
-import Control.Monad.RWS
 import Data.Char
 import Data.List (find)
 import System.IO
@@ -34,15 +30,15 @@ data Options = Options
     , debug :: Bool
     }
 
-newtype ZSCIIMessage m a = ZSCIIMessage{ unZSCIIMessages :: ReaderT (ByteString, ByteString) m a }
-    deriving (Functor, Applicative, Monad, MonadIO, MonadCatch, MonadThrow, MonadMask)
+newtype ZSCIIMessages m a = ZSCIIMessages{ unZSCIIMessages :: ReaderT (ByteString, ByteString) m a }
+    deriving (Functor, Applicative, Monad, MonadIO, MonadTrans)
 
-instance (MonadIO m) => MonadMessage (ZSCIIMessage m) where
-    printMessage bank msg = ZSCIIMessage do
+instance (MonadIO m) => MonadMessage (ZSCIIMessages m) where
+    printMessage bank msg = ZSCIIMessages do
         (bank1, bank2) <- ask
         printlnZ (case bank of Bank1 -> bank1; Bank2 -> bank2) msg
 
-runZSCIIMessage :: ByteString -> ByteString -> ZSCIIMessage m a -> m a
+runZSCIIMessage :: ByteString -> ByteString -> ZSCIIMessages m a -> m a
 runZSCIIMessage bank1 bank2 act = runReaderT (unZSCIIMessages act) (bank1, bank2)
 
 main :: IO ()
@@ -64,30 +60,12 @@ main = do
         maxItem = 160 - 1
         startRoom = 1
 
-    let parseWord = mkParser dict
+    let parseWord = mkParser dict . map toUpper
 
     vars <- newArray (minBound, maxBound) 0x00
     forM_ (zip [minItem..] (BS.unpack resetState)) \(i, x) -> do
         writeArray vars i x
     writeArray vars playerLoc startRoom
-
-    let runInput :: (MonadIO m, MonadMessage m) => String -> Engine m Bool
-        runInput line = do
-            let words = parseLine parseWord line
-            ((), Any moved) <- listen $ case words of
-                Nothing -> liftIO $ putStrLn "parse error"
-                Just [] -> pure ()
-                Just words -> do
-                    localBC <- findByRoom localBCs
-                    let mb_bc = msum
-                          [ findByInput words localBC
-                          , findByInput words globalBC
-                          ]
-                    case mb_bc of
-                        Just bc -> runTerp Bank1 bc
-                        Nothing -> runBuiltin words
-            runTerp Bank2 afterBC
-            pure moved
 
     initialTranscript <- case transcriptPath of
         Nothing -> pure []
@@ -97,34 +75,12 @@ main = do
             Just fileName -> withFile fileName AppendMode \h -> body $ hPutStrLn h
 
     withAppendMaybe transcriptPath \appendLine -> do
-        void $ runZSCIIMessage bank1 bank2 $ runEngine vars helpMap $ runInputT defaultSettings $ do
-            let loop lines moved = do
-                    when debug $ lift dumpVars
-                    when moved $ lift do
-                        bc <- findByRoom enterBC
-                        runTerp Bank2 bc
-                        here <- getVar' playerLoc
-                        itemsHere <- filterM (\i -> (here ==) <$> getVar' i) [minItem..maxItem]
-                        liftIO $ unless (null itemsHere) $ do
-                            printlnZ bank1 11
-                            mapM_ (printlnZ bank2) itemsHere
-                    (mline, lines') <- case lines of
-                        (line:lines') -> do
-                            liftIO $ putStrLn $ "RatBC> " <> line
-                            pure (Just line, lines')
-                        [] -> do
-                            mline <- getInputLine "RatBC> "
-                            liftIO $ traverse_ appendLine mline
-                            pure (mline, [])
-                    case mline of
-                        Nothing -> return ()
-                        Just line -> do
-                            moved <- lift $ runInput line
-                            loop lines' moved
-            loop initialTranscript True
-
-tokenize :: String -> [String]
-tokenize = split (dropBlanks $ dropDelims $ oneOf [' ']) . map toUpper
+        void $ runInputT defaultSettings $ runZSCIIMessage bank1 bank2 $ runEngine vars helpMap do
+            runGame
+                enterBC afterBC localBCs globalBC parseWord
+                (liftIO . appendLine)
+                (lift . getInputLine)
+                initialTranscript
 
 mkParser :: ByteString -> String -> Maybe Word8
 mkParser bs = \input -> snd <$> find (matchWord input . fst) dict
@@ -135,12 +91,6 @@ mkParser bs = \input -> snd <$> find (matchWord input . fst) dict
         ([], ' ':w) -> matchWord [] w
         (i:is, c:cs) | i == c -> matchWord is cs
         _ -> False
-
-parseLine :: (String -> Maybe Word8) -> String -> Maybe [Word8]
-parseLine parseWord = fmap (filter (/= 100)) . mapM parseWord . tokenize
-
-matchWord :: ByteString -> Int -> String -> Bool
-matchWord bs ptr s = undefined
 
 options :: Parser Options
 options = do
