@@ -2,6 +2,7 @@
 {-# LANGUAGE BlockArguments, LambdaCase #-}
 module RatBC.Engine where
 
+import RatBC.Game (Bank(..))
 import RatBC.Engine.ZSCII
 
 import Control.Monad.State
@@ -24,15 +25,20 @@ type Ptr = Int
 
 data R = MkR
   { vars :: IOArray Word8 Word8
-  , bank1, bank2 :: ByteString
   , helpMap :: ByteString
   }
 
 newtype Engine m a = Engine{ unEngine :: RWST R Any () m a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadCatch, MonadThrow, MonadMask, MonadWriter Any)
 
-runEngine :: (Monad m) => IOArray Word8 Word8 -> ByteString -> ByteString -> ByteString -> Engine m a -> m (a, Any)
-runEngine vars bank1 bank2 helpMap engine = evalRWST (unEngine engine) (MkR vars bank1 bank2 helpMap) ()
+class (Monad m) => MonadMessage m where
+    printMessage :: Bank -> Word8 -> m ()
+
+instance MonadMessage m => MonadMessage (Engine m) where
+    printMessage bank msg = Engine . lift $ printMessage bank msg
+
+runEngine :: (Monad m) => IOArray Word8 Word8 -> ByteString -> Engine m a -> m (a, Any)
+runEngine vars helpMap engine = evalRWST (unEngine engine) (MkR vars helpMap) ()
 
 dumpVars :: (MonadIO m) => Engine m ()
 dumpVars = do
@@ -44,10 +50,13 @@ dumpVars = do
             mapM_ (printf "%02x ") chunk
             printf "\n"
 
-newtype Terp m a = Terp{ unTerp :: RWST (ByteString, ByteString) () Ptr (Engine m) a }
+newtype Terp m a = Terp{ unTerp :: RWST (Bank, ByteString) () Ptr (Engine m) a }
     deriving (Functor, Applicative, Monad, MonadIO)
 
-runTerp :: (MonadIO m) => ByteString -> ByteString -> Engine m ()
+instance MonadMessage m => MonadMessage (Terp m) where
+    printMessage bank msg = Terp . lift $ printMessage bank msg
+
+runTerp :: (MonadIO m, MonadMessage m) => Bank -> ByteString -> Engine m ()
 runTerp bank bc = do
     runRWST (unTerp runBC) (bank, bc) 0
     pure ()
@@ -89,11 +98,6 @@ putVar' var val = do
 putVar :: (MonadIO m) => Word8 -> Word8 -> Terp m ()
 putVar var = Terp . lift . putVar' var
 
-printlnZ1 :: (MonadIO m) => Word8 -> Engine m ()
-printlnZ1 msg = do
-    bank1 <- Engine $ asks bank1
-    printlnZ bank1 msg
-
 unpackWords :: ByteString -> [(String, Word8)]
 unpackWords bs
     | b0 == 0xff = []
@@ -130,7 +134,7 @@ findByInput input bs = do
       where
         Just (b0, bs') = BS.uncons bs
 
-runBC :: (MonadIO m) => Terp m ()
+runBC :: (MonadIO m, MonadMessage m) => Terp m ()
 runBC = do
     op <- fetch
     -- liftIO $ printf "runBC: 0x%02x\n" op
@@ -197,7 +201,7 @@ runBC = do
 
     message msg = do
         bank <- Terp $ asks fst
-        printlnZ bank msg
+        printMessage bank msg
 
     skip = peek >>= seek
 
@@ -211,48 +215,45 @@ runBC = do
         val <- getVar var
         putVar var $ max 0 (val - delta)
 
-runBuiltin :: (MonadIO m) => [Word8] -> Engine m ()
+runBuiltin :: (MonadIO m, MonadMessage m) => [Word8] -> Engine m ()
 runBuiltin = \case
     [0x0e] -> do -- Take all
         loc <- getVar' playerLoc
         items <- filterM (\i -> (loc ==) <$> getVar' i) [minItem..maxItem]
-        if null items then printlnZ1 9 else do
+        if null items then printMessage Bank1 9 else do
             forM_ items \i -> putVar' i 0x00
-            printlnZ1 4
+            printMessage Bank1 4
     [0x0e, i] -> do -- Take
         loc <- getVar' playerLoc
         when (minItem <= i && i <= maxItem) do
             val <- getVar' i
-            if val /= loc then printlnZ1 5 else do
+            if val /= loc then printMessage Bank1 5 else do
                 putVar' i 0x00
     [0x0f] -> do -- Drop all
         loc <- getVar' playerLoc
         items <- filterM (\i -> (0 ==) <$> getVar' i) [minItem..maxItem]
-        if null items then printlnZ1 8 else do
+        if null items then printMessage Bank1 8 else do
             forM_ items \i -> putVar' i loc
-            printlnZ1 4
+            printMessage Bank1 4
     [0x0f, i] -> do -- Drop
         loc <- getVar' playerLoc
         when (minItem <= i && i <= maxItem) do
             val <- getVar' i
-            if val /= 0 then printlnZ1 6 else do
+            if val /= 0 then printMessage Bank1 6 else do
                 putVar' i loc
     [0x10] -> do -- Inventory
-        bank1 <- Engine $ asks bank1
-        printZ bank1 7
+        printMessage Bank1 7
         items <- filterM (\i -> (0 ==) <$> getVar' i) [minItem..maxItem]
-        if null items then printlnZ bank1 8 else do
-            bank2 <- Engine $ asks bank2
-            mapM_ (printZ bank2) items
+        if null items then printMessage Bank1 8 else do
+            mapM_ (printMessage Bank2) items
     [0x16] -> do -- Help
         loc <- getVar' playerLoc
         helps <- Engine $ asks helpMap
-        bank2 <- Engine $ asks bank2
         case BS.index helps (fromIntegral loc - 1) of
-            0x00 -> printlnZ1 10
-            msg -> printlnZ bank2 msg
+            0x00 -> printMessage Bank1 10
+            msg -> printMessage Bank2 msg
     (w:_) -> do
-        printlnZ1 $ case w of
+        printMessage Bank1 $ case w of
             w | w <= 12 -> 3
             _ -> 2
 

@@ -1,11 +1,15 @@
 {-# LANGUAGE ApplicativeDo, RecordWildCards, TypeApplications #-}
 {-# LANGUAGE BlockArguments, LambdaCase, ViewPatterns, TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE GeneralizedNewtypeDeriving #-}
 module Main where
 
+import RatBC.Game (Bank(..))
 import RatBC.Engine
 import RatBC.Engine.ZSCII
 
+import Control.Monad.Reader
+import Control.Monad.Catch
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
 import Options.Applicative
@@ -29,6 +33,17 @@ data Options = Options
     , transcriptPath :: Maybe FilePath
     , debug :: Bool
     }
+
+newtype ZSCIIMessage m a = ZSCIIMessage{ unZSCIIMessages :: ReaderT (ByteString, ByteString) m a }
+    deriving (Functor, Applicative, Monad, MonadIO, MonadCatch, MonadThrow, MonadMask)
+
+instance (MonadIO m) => MonadMessage (ZSCIIMessage m) where
+    printMessage bank msg = ZSCIIMessage do
+        (bank1, bank2) <- ask
+        printlnZ (case bank of Bank1 -> bank1; Bank2 -> bank2) msg
+
+runZSCIIMessage :: ByteString -> ByteString -> ZSCIIMessage m a -> m a
+runZSCIIMessage bank1 bank2 act = runReaderT (unZSCIIMessages act) (bank1, bank2)
 
 main :: IO ()
 main = do
@@ -56,7 +71,7 @@ main = do
         writeArray vars i x
     writeArray vars playerLoc startRoom
 
-    let runInput :: (MonadIO m) => String -> Engine m Bool
+    let runInput :: (MonadIO m, MonadMessage m) => String -> Engine m Bool
         runInput line = do
             let words = parseLine parseWord line
             ((), Any moved) <- listen $ case words of
@@ -69,9 +84,9 @@ main = do
                           , findByInput words globalBC
                           ]
                     case mb_bc of
-                        Just bc -> runTerp bank1 bc
+                        Just bc -> runTerp Bank1 bc
                         Nothing -> runBuiltin words
-            runTerp bank2 afterBC
+            runTerp Bank2 afterBC
             pure moved
 
     initialTranscript <- case transcriptPath of
@@ -82,16 +97,16 @@ main = do
             Just fileName -> withFile fileName AppendMode \h -> body $ hPutStrLn h
 
     withAppendMaybe transcriptPath \appendLine -> do
-        void $ runEngine vars bank1 bank2 helpMap $ runInputT defaultSettings $ do
+        void $ runZSCIIMessage bank1 bank2 $ runEngine vars helpMap $ runInputT defaultSettings $ do
             let loop lines moved = do
                     when debug $ lift dumpVars
                     when moved $ lift do
                         bc <- findByRoom enterBC
-                        runTerp bank2 bc
+                        runTerp Bank2 bc
                         here <- getVar' playerLoc
                         itemsHere <- filterM (\i -> (here ==) <$> getVar' i) [minItem..maxItem]
                         liftIO $ unless (null itemsHere) $ do
-                            putStrLn "Tárgyak:"
+                            printlnZ bank1 11
                             mapM_ (printlnZ bank2) itemsHere
                     (mline, lines') <- case lines of
                         (line:lines') -> do

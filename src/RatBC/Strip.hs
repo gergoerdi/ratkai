@@ -22,6 +22,7 @@ import qualified Data.Set as S
 import Data.List (nub, sort, (\\))
 import Data.Maybe
 import Data.Foldable (toList)
+import GHC.Stack
 
 stripGame :: Game Identity -> Game Identity
 stripGame =
@@ -166,11 +167,12 @@ stripRooms game@Game{..} = mapStmt remap $ game
 
     remapReset room = fromMaybe room $ remapRoom room
 
-gcArray :: (Ix i, Enum i) => (i, i) -> [i] -> ((i, i), (i -> Maybe i))
+gcArray :: (HasCallStack, Ix i, Enum i) => (i, i) -> [i] -> ((i, i), (i -> Maybe i))
 gcArray bounds@(from, _) keep = (bounds', flip M.lookup mapping)
   where
     ranks = zip (sort keep) [from..]
-    bounds' = (from, snd . last $ ranks)
+    bounds' | null ranks = (from, pred from)
+            | otherwise = (from, snd . last $ ranks)
     mapping = M.fromList ranks
 
 compactArray :: (Ix i) => ((i, i), (i -> Maybe i)) -> Array i a -> Array i a
