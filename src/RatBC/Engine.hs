@@ -207,6 +207,10 @@ runBC = do
             val <- getVar var
             unless (val == 0) $ putVar var (val + 1)
             runBC
+        0x17 -> do -- XXX we have to assume this is the single machine code routine in Bosszú
+            items <- Terp . lift $ getItems
+            let itemsHeld = map fst . filter ((0 ==) . snd) $ items
+            forM_ itemsHeld \i -> putVar i 0x5f
         _ -> error $ printf "Unknown opcode: 0x%02x" op
   where
     assertVar target = do
