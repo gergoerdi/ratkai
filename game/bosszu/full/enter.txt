@@ -491,7 +491,6 @@
 , -- ROOM 68
   [ SetScreen 10 2 255             -- 11 0a 02 ff
   , Message 55                     -- 02 37                -- "Egy kelet-nyugati folyosón vagy. Egy ajtó vezet délre a kertbe. "
-  , AssertFF 96 200                -- 07 60 c8             -- "Ha ki akarsz menni a kertbe, gépeld be a tájékoztató harmadik példamondatát! "
   ]
 , -- ROOM 69
   [ SetScreen 6 14 44              -- 11 06 0e 2c
