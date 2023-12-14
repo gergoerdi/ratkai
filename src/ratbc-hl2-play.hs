@@ -60,7 +60,7 @@ main = do
         maxItem = 160 - 1
         startRoom = 1
 
-    let parseWord = mkParser dict . map toUpper
+    let parseWord = mkParser $ unpackDict dict
 
     vars <- newArray (minBound, maxBound) 0x00
     forM_ (zip [minItem..] (BS.unpack resetState)) \(i, x) -> do
@@ -81,16 +81,6 @@ main = do
                 (liftIO . appendLine)
                 (lift . getInputLine)
                 initialTranscript
-
-mkParser :: ByteString -> String -> Maybe Word8
-mkParser bs = \input -> snd <$> find (matchWord input . fst) dict
-  where
-    dict = unpackWords bs
-    matchWord input word = case (input, word) of
-        (_, []) -> True
-        ([], ' ':w) -> matchWord [] w
-        (i:is, c:cs) | i == c -> matchWord is cs
-        _ -> False
 
 options :: Parser Options
 options = do

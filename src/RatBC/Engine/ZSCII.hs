@@ -67,10 +67,10 @@ printZ bank = liftIO . mapM_ putStrLn . reflow . decodeZ . fst . unpackZ . findZ
 printlnZ :: (MonadIO m) => ByteString -> Word8 -> m ()
 printlnZ bank msg = printZ bank msg >> liftIO (putStrLn "")
 
-unpackWords :: ByteString -> [(String, Word8)]
-unpackWords bs
+unpackDict :: ByteString -> [(String, Word8)]
+unpackDict bs
     | b0 == 0xff = []
-    | otherwise = (w, b) : unpackWords bs''
+    | otherwise = (w, b) : unpackDict bs''
   where
     b0 = BS.head bs
 

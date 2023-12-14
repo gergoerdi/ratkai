@@ -2,7 +2,7 @@
 module RatBC.TVC.Text where
 
 import Data.Word
-import Data.Char (ord, isLower, toUpper)
+import Data.Char (ord, chr, isLower, toUpper)
 
 tvcChar :: Char -> Word8
 tvcChar = \case
@@ -28,6 +28,31 @@ tvcChar = \case
     '_' -> 0x6f
     c | isLower c -> fromIntegral (ord c) - 0x60
       | otherwise -> fromIntegral (ord c)
+
+fromTVCChar :: Word8 -> Char
+fromTVCChar = \case
+    0xf0 -> '\n'
+    0x6d -> 'Á'
+    0x6c -> 'É'
+    0x61 -> 'Í'
+    0x76 -> 'Ó'
+    0x1b -> 'Ő'
+    0x75 -> 'Ú'
+    0x40 -> 'Ü'
+    0x1d -> 'Ű'
+    0x70 -> 'á'
+    0x71 -> 'é'
+    0x62 -> 'í'
+    0x79 -> 'ó'
+    0x00 -> 'ö'
+    0x64 -> 'ő'
+    0x78 -> 'ú'
+    0x2a -> 'ü'
+    0x5f -> 'ű'
+    0x6f -> '_'
+    x | c <- chr (fromIntegral $ x + 0x60)
+      , isLower c -> c
+      | otherwise -> chr (fromIntegral x)
 
 keymap :: [(Word8, Word8)]
 keymap = map (tvcChar . toUpper <$>)

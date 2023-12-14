@@ -9,6 +9,7 @@ module RatBC.Engine
     , runBuiltin
     , runTerp
 
+    , leap
     , findByRoom
     , findByInput
     , getVar'
@@ -112,15 +113,16 @@ putVar' var val = do
 putVar :: (MonadIO m) => Word8 -> Word8 -> Terp m ()
 putVar var = Terp . lift . putVar' var
 
-leap :: ByteString -> Word8 -> ByteString
-leap bs 1 = BS.tail bs
-leap bs i = let Just (b, bs') = BS.uncons bs
-            in leap (BS.drop (fromIntegral b) bs) (i - 1)
+leap :: ByteString -> Word8 -> (Word8, ByteString)
+leap bs 1 = let Just (n, bs') = BS.uncons bs
+            in (n, bs')
+leap bs i = let Just (n, bs') = BS.uncons bs
+            in leap (BS.drop (fromIntegral n) bs) (i - 1)
 
 findByRoom :: (MonadIO m) => ByteString -> Engine m ByteString
 findByRoom bs = do
     loc <- getVar' playerLoc
-    pure $ leap bs loc
+    pure $ snd $ leap bs loc
 
 findByInput :: [Word8] -> ByteString -> Maybe ByteString
 findByInput input bs = do

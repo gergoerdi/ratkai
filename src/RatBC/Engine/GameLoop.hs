@@ -17,6 +17,8 @@ import Data.List.Split
 import Control.Monad
 import Control.Monad.Writer
 import Data.Foldable (traverse_)
+import Data.Char (toUpper)
+import Data.List (find)
 
 runGame
     :: forall m. (MonadIO m, MonadMessage m)
@@ -80,3 +82,12 @@ tokenize = split (dropBlanks $ dropDelims $ oneOf [' '])
 
 parseLine :: (String -> Maybe Word8) -> String -> Maybe [Word8]
 parseLine parseWord = fmap (filter (/= 100)) . mapM parseWord . tokenize
+
+mkParser :: [(String, Word8)] -> String -> Maybe Word8
+mkParser dict = \input -> snd <$> find (matchWord (map toUpper input) . fst) dict
+  where
+    matchWord input word = case (input, word) of
+        (_, []) -> True
+        ([], ' ':w) -> matchWord [] w
+        (i:is, c:cs) | i == c -> matchWord is cs
+        _ -> False

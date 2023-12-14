@@ -43,8 +43,13 @@ newtype Messages m a = Messages{ unMessages :: ReaderT (ByteString, ByteString) 
 instance (MonadIO m) => MonadMessage (Messages m) where
     printMessage bank msg = Messages do
         (bank1, bank2) <- ask
-        -- printlnZ (case bank of Bank1 -> bank1; Bank2 -> bank2) msg
-        pure () -- TODO
+        let bs = case bank of Bank1 -> bank1; Bank2 -> bank2
+            (n, bs') = leap bs msg
+        liftIO $ putStrLn $ fromTVCString . BS.take (fromIntegral $ n - 1) $ bs'
+        liftIO $ putStrLn ""
+
+fromTVCString :: ByteString -> String
+fromTVCString = map fromTVCChar . BS.unpack
 
 runMessages :: ByteString -> ByteString -> Messages m a -> m a
 runMessages bank1 bank2 act = runReaderT (unMessages act) (bank1, bank2)
@@ -64,7 +69,7 @@ main = do
         localBC = asset interactiveLocal
         globalBC = asset interactiveGlobal
 
-    let parseWord = mkParser (asset dict) . map toUpper
+    let parseWord = mkParser (unpackDict $ asset dict)
 
     vars <- newArray (minBound, maxBound) 0x00
     forM_ (zip [minItem assets'..] (BS.unpack $ asset resetState)) \(i, x) -> do
@@ -86,15 +91,13 @@ main = do
                 (lift . getInputLine)
                 initialTranscript
 
-mkParser :: ByteString -> String -> Maybe Word8
-mkParser bs = \input -> snd <$> find (matchWord input . fst) dict
+unpackDict :: ByteString -> [(String, Word8)]
+unpackDict bs
+  | BS.head bs == 0xff = []
+  | otherwise = (fromTVCString w, b) : unpackDict bs'
   where
-    dict = unpackWords bs
-    matchWord input word = case (input, word) of
-        (_, []) -> True
-        ([], ' ':w) -> matchWord [] w
-        (i:is, c:cs) | i == c -> matchWord is cs
-        _ -> False
+    w = BS.take 5 bs
+    Just (b, bs') = BS.uncons . BS.drop 5 $ bs
 
 options :: Parser Options
 options = do
