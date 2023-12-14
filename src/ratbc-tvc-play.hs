@@ -28,6 +28,7 @@ import Data.Array.IO
 import Data.Array
 import Data.Char
 import Data.List (find)
+import Data.List.Split
 import System.IO
 import Data.Foldable (traverse_)
 
@@ -45,8 +46,11 @@ instance (MonadIO m) => MonadMessage (Messages m) where
         (bank1, bank2) <- ask
         let bs = case bank of Bank1 -> bank1; Bank2 -> bank2
             (n, bs') = leap bs msg
-        liftIO $ putStrLn $ fromTVCString . BS.take (fromIntegral $ n - 1) $ bs'
+        liftIO $ mapM_ putStrLn . reflow $ fromTVCString . BS.take (fromIntegral $ n - 1) $ bs'
         liftIO $ putStrLn ""
+      where
+          reflow :: String -> [String]
+          reflow = concatMap (chunksOf 31) . split (dropDelims . onSublist $ "\n")
 
 fromTVCString :: ByteString -> String
 fromTVCString = map fromTVCChar . BS.unpack

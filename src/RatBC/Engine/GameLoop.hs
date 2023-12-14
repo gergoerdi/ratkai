@@ -74,6 +74,7 @@ runGame enterBC afterBC localBCs globalBC parseWord appendLine getInputLine line
         case mline of
             Nothing -> return ()
             Just line -> do
+                liftIO $ putStrLn ""
                 moved <- runInput line
                 loop lines' moved
 
