@@ -48,7 +48,7 @@ runGame enterBC afterBC localBCs globalBC parseWord appendLine getInputLine line
                 case mb_bc of
                     Just bc -> runTerp Bank1 bc
                     Nothing -> runBuiltin words
-        runTerp Bank2 afterBC
+        runTerp Bank1 afterBC
         pure moved
 
     loop :: [String] -> Bool -> Engine m ()
