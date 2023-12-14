@@ -403,7 +403,6 @@
 , -- ROOM 55
   [ Message 42                     -- 02 2a                -- "A szikla tetején állsz a kolostor bejárata előtt. "
   , SetScreen 2 10 3               -- 11 02 0a 03
-  , AssertFF 95 199                -- 07 5f c7             -- "Ha be akarsz menni, gépeld be a tájékoztató első példamondatát! "
   ]
 , -- ROOM 56
   [ Message 43                     -- 02 2b                -- "A kolostor udvarán állsz. A kijárat délre van. Egy szerzetes áll előtted. "
