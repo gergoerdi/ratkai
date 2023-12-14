@@ -19,7 +19,7 @@ stripScript = mapStmts \_ -> mapMaybe stripStmt
 stripStmt :: Stmt -> Maybe Stmt
 stripStmt = \case
     SetScreen border bg pic -> Just $ SetScreen (toBorderColor border) (toBackgroundColor bg) pic
-    SetTextColors output input -> Just $ SetTextColors (toBackgroundColor output) (toBackgroundColor input)
+    SetTextColors output input -> Just $ SetTextColors (toDenseColor output) (toDenseColor input)
     SpriteOn i addr col x y -> Just $ SpriteOn i addr (toBorderColor col) x' y' -- TODO: transform x and y
       where
         x' = fromInteger $ max 0 $ (fromIntegral x - 106) `div` 4

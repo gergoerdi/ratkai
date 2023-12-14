@@ -53,7 +53,12 @@ toBorderColor :: Word8 -> Word8
 toBorderColor = (`interleave` 0x00) . toTVCColor
 
 toBackgroundColor :: Word8 -> Word8
-toBackgroundColor c = let c' = toTVCColor c in interleave c' c'
+toBackgroundColor 0xf = toBackgroundColor 0xc -- HACK: avoid white background
+toBackgroundColor 0x0 = toBackgroundColor 0xc -- HACK: avoid black background
+toBackgroundColor c = toDenseColor c
+
+toDenseColor :: Word8 -> Word8
+toDenseColor c = let c' = toTVCColor c in interleave c' c'
 
 fromNybbles :: (Word8, Word8) -> Word8
 fromNybbles (n1, n0) = (n1 `shiftL` 4) .|. (n0 `shiftL` 0)
