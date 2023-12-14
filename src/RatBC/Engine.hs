@@ -206,6 +206,7 @@ runBC = do
             var <- fetch
             val <- getVar var
             unless (val == 0) $ putVar var (val + 1)
+            runBC
         _ -> error $ printf "Unknown opcode: 0x%02x" op
   where
     assertVar target = do
