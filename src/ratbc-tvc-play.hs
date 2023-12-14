@@ -74,6 +74,7 @@ main = do
         globalBC = asset interactiveGlobal
 
     let parseWord = mkParser (unpackDict $ asset dict)
+    when debug $ mapM_ print $ unpackDict $ asset dict
 
     vars <- newArray (minBound, maxBound) 0x00
     forM_ (zip [minItem assets'..] (BS.unpack $ asset resetState)) \(i, x) -> do

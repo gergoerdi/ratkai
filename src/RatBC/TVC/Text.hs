@@ -44,13 +44,15 @@ fromTVCChar = \case
     0x71 -> 'é'
     0x62 -> 'í'
     0x79 -> 'ó'
-    0x00 -> 'ö'
+    0x00 -> 'Ö'
     0x64 -> 'ő'
     0x78 -> 'ú'
     0x2a -> 'ü'
     0x5f -> 'ű'
     0x6f -> '_'
-    x | c <- chr (fromIntegral $ x + 0x60)
+    x | x' <- fromIntegral x + 0x60
+      , x' < 0x80
+      , c <- chr x'
       , isLower c -> c
       | otherwise -> chr (fromIntegral x)
 
