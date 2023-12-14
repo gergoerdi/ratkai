@@ -2,6 +2,7 @@
 {-# LANGUAGE BlockArguments, LambdaCase, ViewPatterns, TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE ScopedTypeVariables #-}
 module RatBC.Engine.GameLoop where
 
 import RatBC.Game (Bank(..))
@@ -18,7 +19,7 @@ import Control.Monad.Writer
 import Data.Foldable (traverse_)
 
 runGame
-    :: (MonadIO m, MonadMessage m)
+    :: forall m. (MonadIO m, MonadMessage m)
     => ByteString
     -> ByteString
     -> ByteString
@@ -30,6 +31,7 @@ runGame
     -> Engine m ()
 runGame enterBC afterBC localBCs globalBC parseWord appendLine getInputLine lines = loop lines True
   where
+    runInput :: String -> Engine m Bool
     runInput line = do
         let words = parseLine parseWord line
         ((), Any moved) <- listen $ case words of
@@ -47,13 +49,15 @@ runGame enterBC afterBC localBCs globalBC parseWord appendLine getInputLine line
         runTerp Bank2 afterBC
         pure moved
 
+    loop :: [String] -> Bool -> Engine m ()
     loop lines moved = do
         -- when debug dumpVars
         when moved do
             bc <- findByRoom enterBC
             runTerp Bank2 bc
-            here <- getVar' playerLoc
-            itemsHere <- filterM (\i -> (here ==) <$> getVar' i) [minItem..maxItem]
+            loc <- getVar' playerLoc
+            items <- getItems
+            let itemsHere = map fst . filter ((loc ==) . snd) $ items
             unless (null itemsHere) $ do
                 printMessage Bank1 11
                 mapM_ (printMessage Bank2) itemsHere

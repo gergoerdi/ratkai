@@ -1,6 +1,22 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving, FlexibleContexts #-}
 {-# LANGUAGE BlockArguments, LambdaCase #-}
-module RatBC.Engine where
+{-# LANGUAGE RecordWildCards, TupleSections #-}
+module RatBC.Engine
+    ( MonadMessage(..)
+
+    , Engine
+    , runEngine
+    , runBuiltin
+    , runTerp
+
+    , findByRoom
+    , findByInput
+    , getVar'
+    , getItems
+    , unpackWords
+
+    , playerLoc
+    ) where
 
 import RatBC.Game (Bank(..))
 import RatBC.Engine.ZSCII
@@ -14,7 +30,7 @@ import Data.Word
 import Data.Array.IO
 import Data.Array (Array, elems)
 import Data.Bits
-import Control.Arrow (first)
+import Control.Arrow (first, (&&&))
 import Text.Printf
 import Data.List.Split
 import Debug.Trace
@@ -25,6 +41,7 @@ type Ptr = Int
 data R = MkR
   { vars :: IOArray Word8 Word8
   , helpMap :: ByteString
+  , minItem, maxItem :: Word8
   }
 
 newtype Engine m a = Engine{ unEngine :: RWST R Any () m a }
@@ -36,8 +53,8 @@ class (Monad m) => MonadMessage m where
 instance MonadMessage m => MonadMessage (Engine m) where
     printMessage bank msg = Engine . lift $ printMessage bank msg
 
-runEngine :: (Monad m) => IOArray Word8 Word8 -> ByteString -> Engine m a -> m (a, Any)
-runEngine vars helpMap engine = evalRWST (unEngine engine) (MkR vars helpMap) ()
+runEngine :: (Monad m) => Word8 -> Word8 -> IOArray Word8 Word8 -> ByteString -> Engine m a -> m (a, Any)
+runEngine minItem maxItem vars helpMap engine = evalRWST (unEngine engine) MkR{..} ()
 
 dumpVars :: (MonadIO m) => Engine m ()
 dumpVars = do
@@ -214,37 +231,47 @@ runBC = do
         val <- getVar var
         putVar var $ max 0 (val - delta)
 
+getItems :: (MonadIO m) => Engine m [(Word8, Word8)]
+getItems = do
+    (minItem, maxItem) <- Engine $ asks $ minItem &&& maxItem
+    forM [minItem..maxItem] \i ->
+        (i,) <$> getVar' i
+
 runBuiltin :: (MonadIO m, MonadMessage m) => [Word8] -> Engine m ()
 runBuiltin = \case
     [0x0e] -> do -- Take all
         loc <- getVar' playerLoc
-        items <- filterM (\i -> (loc ==) <$> getVar' i) [minItem..maxItem]
-        if null items then printMessage Bank1 9 else do
-            forM_ items \i -> putVar' i 0x00
+        items <- getItems
+        let itemsHere = map fst . filter ((loc ==) . snd) $ items
+        if null itemsHere then printMessage Bank1 9 else do
+            forM_ itemsHere \i -> putVar' i 0x00
             printMessage Bank1 4
     [0x0e, i] -> do -- Take
         loc <- getVar' playerLoc
+        (minItem, maxItem) <- Engine $ asks $ minItem &&& maxItem
         when (minItem <= i && i <= maxItem) do
             val <- getVar' i
             if val /= loc then printMessage Bank1 5 else do
                 putVar' i 0x00
     [0x0f] -> do -- Drop all
         loc <- getVar' playerLoc
-        items <- filterM (\i -> (0 ==) <$> getVar' i) [minItem..maxItem]
-        if null items then printMessage Bank1 8 else do
-            forM_ items \i -> putVar' i loc
+        items <- getItems
+        let itemsHeld = map fst . filter ((0 ==) . snd) $ items
+        if null itemsHeld then printMessage Bank1 8 else do
+            forM_ itemsHeld \i -> putVar' i loc
             printMessage Bank1 4
     [0x0f, i] -> do -- Drop
         loc <- getVar' playerLoc
-        when (minItem <= i && i <= maxItem) do
-            val <- getVar' i
+        items <- getItems
+        forM_ (lookup i items) \val ->
             if val /= 0 then printMessage Bank1 6 else do
                 putVar' i loc
     [0x10] -> do -- Inventory
         printMessage Bank1 7
-        items <- filterM (\i -> (0 ==) <$> getVar' i) [minItem..maxItem]
-        if null items then printMessage Bank1 8 else do
-            mapM_ (printMessage Bank2) items
+        items <- getItems
+        let itemsHeld = map fst . filter ((0 ==) . snd) $ items
+        if null itemsHeld then printMessage Bank1 8 else do
+            mapM_ (printMessage Bank2) itemsHeld
     [0x16] -> do -- Help
         loc <- getVar' playerLoc
         helps <- Engine $ asks helpMap
@@ -255,7 +282,3 @@ runBuiltin = \case
         printMessage Bank1 $ case w of
             w | w <= 12 -> 3
             _ -> 2
-
-minItem, maxItem :: Word8
-minItem = 120
-maxItem = 160 - 1

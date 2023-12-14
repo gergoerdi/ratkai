@@ -2,16 +2,23 @@
 {-# LANGUAGE BlockArguments, LambdaCase, ViewPatterns, TupleSections #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE RankNTypes #-}
 module Main where
 
-import RatBC.Game (Bank(..))
+import RatBC.Game
+import RatBC.Game.Text
+import RatBC.TVC.Binary
+import RatBC.TVC.Text
+import RatBC.TVC.Strip
+
 import RatBC.Engine
 import RatBC.Engine.GameLoop
-import RatBC.Engine.ZSCII
 
+import Data.Bifunctor
 import Control.Monad.Reader
 import Data.ByteString (ByteString)
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Lazy as BL
 import Options.Applicative
 import System.Directory
 import System.FilePath
@@ -30,42 +37,39 @@ data Options = Options
     , debug :: Bool
     }
 
-newtype ZSCIIMessages m a = ZSCIIMessages{ unZSCIIMessages :: ReaderT (ByteString, ByteString) m a }
+newtype Messages m a = Messages{ unMessages :: ReaderT (ByteString, ByteString) m a }
     deriving (Functor, Applicative, Monad, MonadIO, MonadTrans)
 
-instance (MonadIO m) => MonadMessage (ZSCIIMessages m) where
-    printMessage bank msg = ZSCIIMessages do
+instance (MonadIO m) => MonadMessage (Messages m) where
+    printMessage bank msg = Messages do
         (bank1, bank2) <- ask
-        printlnZ (case bank of Bank1 -> bank1; Bank2 -> bank2) msg
+        -- printlnZ (case bank of Bank1 -> bank1; Bank2 -> bank2) msg
+        pure () -- TODO
 
-runZSCIIMessage :: ByteString -> ByteString -> ZSCIIMessages m a -> m a
-runZSCIIMessage bank1 bank2 act = runReaderT (unZSCIIMessages act) (bank1, bank2)
+runMessages :: ByteString -> ByteString -> Messages m a -> m a
+runMessages bank1 bank2 act = runReaderT (unMessages act) (bank1, bank2)
 
 main :: IO ()
 main = do
     Options{..} <- execParser optionsInfo
 
-    let readBin fn = BS.readFile $ inputPath </> fn <.> "bin"
+    assets <- loadTextFiles inputPath
+    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
+    let asset :: forall a x. (Game (Const ByteString) -> Const a x) -> a
+        asset sel = getConst $ sel assets'
 
-    bank1 <- readBin "text1"
-    bank2 <- readBin "text2"
-    dict <- readBin "dict"
-    resetState <- readBin "reset"
-    helpMap <- readBin "help"
-    enterBC <- readBin "enter"
-    afterBC <- readBin "after"
-    globalBC <- readBin "interactive-global"
-    localBCs <- readBin "interactive-local"
-    let minItem = 120
-        maxItem = 160 - 1
-        startRoom = 1
+    let helps = asset helpMap
+        enterBC = asset enterRoom
+        afterBC = asset afterTurn
+        localBC = asset interactiveLocal
+        globalBC = asset interactiveGlobal
 
-    let parseWord = mkParser dict . map toUpper
+    let parseWord = mkParser (asset dict) . map toUpper
 
     vars <- newArray (minBound, maxBound) 0x00
-    forM_ (zip [minItem..] (BS.unpack resetState)) \(i, x) -> do
+    forM_ (zip [minItem assets'..] (BS.unpack $ asset resetState)) \(i, x) -> do
         writeArray vars i x
-    writeArray vars playerLoc startRoom
+    writeArray vars playerLoc (startRoom assets')
 
     initialTranscript <- case transcriptPath of
         Nothing -> pure []
@@ -75,9 +79,9 @@ main = do
             Just fileName -> withFile fileName AppendMode \h -> body $ hPutStrLn h
 
     withAppendMaybe transcriptPath \appendLine -> do
-        void $ runInputT defaultSettings $ runZSCIIMessage bank1 bank2 $ runEngine minItem maxItem vars helpMap do
+        void $ runInputT defaultSettings $ runMessages (asset msgs1) (asset msgs2) $ runEngine (minItem assets') (maxItem assets') vars helps do
             runGame
-                enterBC afterBC localBCs globalBC parseWord
+                enterBC afterBC localBC globalBC parseWord
                 (liftIO . appendLine)
                 (lift . getInputLine)
                 initialTranscript
