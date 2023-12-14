@@ -13,13 +13,11 @@ module RatBC.Engine
     , findByInput
     , getVar'
     , getItems
-    , unpackWords
 
     , playerLoc
     ) where
 
 import RatBC.Game (Bank(..))
-import RatBC.Engine.ZSCII
 
 import Control.Monad.State
 import Control.Monad.Reader
@@ -113,17 +111,6 @@ putVar' var val = do
 
 putVar :: (MonadIO m) => Word8 -> Word8 -> Terp m ()
 putVar var = Terp . lift . putVar' var
-
-unpackWords :: ByteString -> [(String, Word8)]
-unpackWords bs
-    | b0 == 0xff = []
-    | otherwise = (w, b) : unpackWords bs''
-  where
-    b0 = BS.head bs
-
-    (z, bs') = unpackZ bs
-    w = decodeZ z
-    Just (b, bs'') = BS.uncons bs'
 
 leap :: ByteString -> Word8 -> ByteString
 leap bs 1 = BS.tail bs
