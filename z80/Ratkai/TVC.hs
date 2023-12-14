@@ -89,6 +89,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     -- Run the game
     let platform = Platform{ setTextColors = Just setTextColors, ..}
           where
+            moveIsFinal = False
             printString s = skippable \end -> mdo
                 ld IY lbl
                 decLoopB (fromIntegral $ length s) do

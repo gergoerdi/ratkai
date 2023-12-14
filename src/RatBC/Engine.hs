@@ -20,6 +20,7 @@ module RatBC.Engine
 
 import RatBC.Game (Bank(..))
 
+import Control.Monad.Extra
 import Control.Monad.State
 import Control.Monad.Reader
 import Control.Monad.RWS
@@ -41,6 +42,7 @@ data R = MkR
   { vars :: IOArray Word8 Word8
   , helpMap :: ByteString
   , minItem, maxItem :: Word8
+  , moveIsFinal :: Bool
   }
 
 newtype Engine m a = Engine{ unEngine :: RWST R Any () m a }
@@ -52,8 +54,8 @@ class (Monad m) => MonadMessage m where
 instance MonadMessage m => MonadMessage (Engine m) where
     printMessage bank msg = Engine . lift $ printMessage bank msg
 
-runEngine :: (Monad m) => Word8 -> Word8 -> IOArray Word8 Word8 -> ByteString -> Engine m a -> m (a, Any)
-runEngine minItem maxItem vars helpMap engine = evalRWST (unEngine engine) MkR{..} ()
+runEngine :: (Monad m) => Bool -> Word8 -> Word8 -> IOArray Word8 Word8 -> ByteString -> Engine m a -> m (a, Any)
+runEngine moveIsFinal minItem maxItem vars helpMap engine = evalRWST (unEngine engine) MkR{..} ()
 
 dumpVars :: (MonadIO m) => Engine m ()
 dumpVars = do
@@ -75,6 +77,9 @@ runTerp :: (MonadIO m, MonadMessage m) => Bank -> ByteString -> Engine m ()
 runTerp bank bc = do
     runRWST (unTerp runBC) (bank, bc) 0
     pure ()
+
+moveFinishes :: (Monad m) => Terp m Bool
+moveFinishes = Terp $ lift $ Engine $ asks moveIsFinal
 
 moved :: (Monad m) => Terp m ()
 moved = Terp . lift . tell $ Any True
@@ -169,7 +174,7 @@ runBC = do
         0x09 -> skip >> runBC
         0x0a -> skipUnless 0x00
         0x0b -> skipUnless 0xff
-        0x0c -> fetch >>= putVar playerLoc >> moved
+        0x0c -> fetch >>= putVar playerLoc >> moved >> unlessM moveFinishes runBC
         0x0d -> do
             status <- fetch
             liftIO $ printf "playerStatus = %d\n" status

@@ -75,7 +75,7 @@ main = do
             Just fileName -> withFile fileName AppendMode \h -> body $ hPutStrLn h
 
     withAppendMaybe transcriptPath \appendLine -> do
-        void $ runInputT defaultSettings $ runZSCIIMessage bank1 bank2 $ runEngine minItem maxItem vars helpMap do
+        void $ runInputT defaultSettings $ runZSCIIMessage bank1 bank2 $ runEngine True minItem maxItem vars helpMap do
             runGame
                 enterBC afterBC localBCs globalBC parseWord
                 (liftIO . appendLine)

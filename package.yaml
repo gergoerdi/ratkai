@@ -25,6 +25,7 @@ dependencies:
   - rev-state
   - exceptions
   - pqueue
+  - extra
 
 library:
   source-dirs: src

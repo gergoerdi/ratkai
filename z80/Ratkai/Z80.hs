@@ -27,9 +27,6 @@ supportSound = True
 supportGraphics :: Bool
 supportGraphics = True
 
-moveIsFinal :: Bool
-moveIsFinal = True
-
 dictWordLength :: Word8
 dictWordLength = 5
 
@@ -51,6 +48,7 @@ data Platform = Platform
     , setTextColors :: Maybe Z80ASM
     , spriteOn :: Maybe Z80ASM
     , spriteOff :: Maybe Z80ASM
+    , moveIsFinal :: Bool
     }
 
 data Vars = Vars

@@ -89,7 +89,7 @@ main = do
             Just fileName -> withFile fileName AppendMode \h -> body $ hPutStrLn h
 
     withAppendMaybe transcriptPath \appendLine -> do
-        void $ runInputT defaultSettings $ runMessages (asset msgs1) (asset msgs2) $ runEngine (minItem assets') (maxItem assets' - 1) vars helps do
+        void $ runInputT defaultSettings $ runMessages (asset msgs1) (asset msgs2) $ runEngine False (minItem assets') (maxItem assets' - 1) vars helps do
             runGame
                 enterBC afterBC localBC globalBC parseWord
                 (liftIO . appendLine)

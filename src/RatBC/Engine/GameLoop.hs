@@ -59,6 +59,7 @@ runGame enterBC afterBC localBCs globalBC parseWord appendLine getInputLine line
             runTerp Bank2 bc
             loc <- getVar' playerLoc
             items <- getItems
+            -- liftIO $ print items
             let itemsHere = map fst . filter ((loc ==) . snd) $ items
             unless (null itemsHere) $ do
                 printMessage Bank1 11
