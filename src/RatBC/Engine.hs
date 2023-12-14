@@ -176,12 +176,30 @@ runBC = do
         0x0e -> inc playerHealth >> runBC
         0x0f -> dec playerHealth >> runBC
         0x10 -> inc playerScore >> runBC
+        0x11 -> do
+            border <- fetch
+            bg <- fetch
+            pic <- fetch
+            liftIO $ printf "<SetScreen %d %d %d>\n" border bg pic
+            runBC
+        0x12 -> do
+            i <- fetch
+            addr <- fetch
+            color <- fetch
+            x <- fetch
+            y <- fetch
+            liftIO $ printf "<SpriteOn %d %d %d %d %d>\n" i addr color x y
+            runBC
+        0x13 -> do
+            i <- fetch
+            liftIO $ printf "<SpriteOff %d>\n" i
+            runBC
         0x15 -> fetch >>= \n -> liftIO (printf "<SLEEP %d>\n" n) >> runBC
         0x16 -> do
             var <- fetch
             val <- getVar var
             unless (val == 0) $ putVar var (val + 1)
-        _ -> error $ printf "0x%02x" op
+        _ -> error $ printf "Unknown opcode: 0x%02x" op
   where
     assertVar target = do
         var <- fetch
