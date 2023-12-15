@@ -864,16 +864,17 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
 
     gameOver <- labelled do
         -- `A` contains the player's status:
-        -- 1: Dead
-        -- 2: Won the game
+        -- 255: Dead
+        -- 254: Won the game
         skippable \notDead -> do
+            when supportScore $ call printScore
+            call resetGameVars
+            ldVia A [gameVars + 1] 0x00
+
             cp 254
             jp Z notDead
             message1 12
-            when supportScore $ call printScore
-
-        call resetGameVars
-        ldVia A [gameVars + 1] 0xff
+            ldVia A [gameVars + 1] 0xff
 
         waitEnter
         jp newGame
