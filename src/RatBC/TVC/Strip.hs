@@ -26,7 +26,7 @@ stripStmt = \case
         x' = fromInteger $ max 0 $ (fromIntegral x - 106) `div` 4
         y' = fromInteger $ max 0 $ fromIntegral y - 58
     Chime{} -> Nothing
-    Sleep n -> Just $ Sleep $ min 10 n
+    Sleep n -> Just $ Sleep $ min 30 n
     CopyProtection{} -> Nothing
     MachineCode addr ops
       | [0xa9, 0x5b, 0xa0, 0x99, 0x99, 0x00, 0x20, 0x60] <- ops -> Just $ Assign 0x99 0x5b
