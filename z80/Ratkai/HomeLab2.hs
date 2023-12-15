@@ -268,6 +268,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     let platform = Platform{ clearScreen = call clearScreen, .. }
           where
             moveIsFinal = True
+            runMachineCode = False
             printMessage = printlnZ
             space = 0x20
             newline = cr

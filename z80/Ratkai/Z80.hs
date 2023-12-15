@@ -49,6 +49,7 @@ data Platform = Platform
     , spriteOn :: Maybe Z80ASM
     , spriteOff :: Maybe Z80ASM
     , moveIsFinal :: Bool
+    , runMachineCode :: Bool
     }
 
 data Vars = Vars
@@ -60,7 +61,7 @@ data Vars = Vars
 
 data Routines = Routines
     { varIY :: Location
-    , printItemsAtD, anyItemsAtD :: Location
+    , printItemsAtD, anyItemsAtD, moveItemsDE :: Location
     , findByRoom, findByWords :: Location
     , runRatScript :: Location
     , runInteractive :: Location
@@ -244,6 +245,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
                 fetch C -- Picture number
                 setScreen
                 jp runRatScript
+
         opSpriteOn <- case spriteOn of
             Nothing -> unsupported
             Just spriteOn -> labelled $ do
@@ -254,13 +256,16 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
                 fetch E -- Y coordinate
                 spriteOn
                 jp runRatScript
+
         opSpriteOff <- case spriteOff of
             Nothing -> unsupported
             Just spriteOff -> labelled $ do
                 fetch A -- Sprite #
                 spriteOff
                 jp runRatScript
+
         opChime <- if supportSound then unimplemented 1 else unsupported
+
         opSetTextColors <- case setTextColors of
             Nothing -> unsupported
             Just setTextColors -> labelled do
@@ -268,6 +273,12 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
                 fetch B -- Input text color
                 setTextColors
                 jp runRatScript
+
+        opMachineCode <- if not runMachineCode then unsupported else labelled do
+            ldVia A D 0x00
+            ldVia A E 95
+            call moveItemsDE
+            jp runRatScript
 
         opTable <- labelled $ dw
             [ opRet             -- 00
@@ -293,7 +304,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             , opChime           -- 14
             , opSleep           -- 15
             , opIncIfNot0       -- 16
-            , 0x0000            -- 17
+            , opMachineCode     -- 17
             , 0x0000            -- 18
             , opSetTextColors   -- 19
             ]
@@ -558,20 +569,6 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
     finish <- labelled do
         call printMessage
         setZ
-        ret
-
-    -- Move all items at location `D` to location `E`. `C` is number of items moved.
-    -- Clobbers `IY`, `A`, `B`
-    moveItemsDE <- labelled do
-        ld IY $ gameVars + fromIntegral maxItem
-        ld C 0
-        decLoopB (maxItem - minItem) $ skippable \next -> do
-            dec IY
-            ld A [IY]
-            cp D
-            jp NZ next
-            inc C
-            ld [IY] E
         ret
 
     printStatus <- labelled $ when supportScore mdo
@@ -881,6 +878,21 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
         waitEnter
         jp newGame
 
+    -- Move all items at location `D` to location `E`. `
+    -- Post: C` is number of items moved.
+    -- Clobbers `IY`, `A`, `B`
+    moveItemsDE <- labelled do
+        ld IY $ gameVars + fromIntegral maxItem
+        ld C 0
+        decLoopB (maxItem - minItem) $ skippable \next -> do
+            dec IY
+            ld A [IY]
+            cp D
+            jp NZ next
+            inc C
+            ld [IY] E
+        ret
+
     runEnter <- labelled $ runEnter_ assetLocs platform vars routines
     runAfter <- labelled $ runAfter_ assetLocs routines
     runInteractiveBuiltin <- labelled $ runInteractiveBuiltin_ assetLocs platform vars routines
@@ -907,3 +919,8 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
         ld IX $ getConst . msgs1 $ assetLocs
         ld B msg
         call printMessage
+
+    Game
+      { minItem = minItem
+      , maxItem = maxItem
+      } = assetLocs
