@@ -112,6 +112,21 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
 
                 call setColors
 
+                -- Hide all sprites
+                push DE
+                push HL
+                ld HL spriteState
+                ld DE spriteStateSize
+
+                push BC
+                decLoopB numSprites do
+                    ld [HL] 0
+                    add HL DE
+                pop BC
+
+                pop HL
+                pop DE
+
                 -- Picture #255 means blank screen
                 inc C
                 jp Z clearBlitStore
@@ -172,7 +187,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
 
                 call blitPicture
                 ld IX spriteState
-                decLoopB numSprites do -- Max sprite number
+                decLoopB numSprites do
                     ld A [IX]
                     cp 0
                     push BC
