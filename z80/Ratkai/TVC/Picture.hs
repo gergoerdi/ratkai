@@ -20,6 +20,7 @@ import Data.Bits
 
 data Locations = Locations
     { pageVideo, pageRAM :: Location
+    , borderStore :: Location
     , blitStore :: Location
     , blitPicture :: Location
     }
@@ -32,6 +33,7 @@ setColors_ :: Locations -> Z80ASM
 setColors_ Locations{..} = mdo
     -- Set border
     out [0x00] A
+    ld [borderStore] A
 
     call pageVideo
 

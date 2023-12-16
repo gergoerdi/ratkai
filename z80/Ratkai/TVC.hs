@@ -15,6 +15,7 @@ import Ratkai.TVC.Picture as Picture
 import Z80.TVC
 import Z80.TVC.Keyboard
 import Z80.TVC.Video as Video
+import Z80.TVC.File
 import Z80.ZX0 as ZX0
 
 import Debug.Trace
@@ -57,7 +58,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     let printCharC = call printCharC4
 
     di
-    let blitStore = 0x0eac
+    let borderStore = 0x0eac
+        blitStore = borderStore + 1
         spriteState = blitStore + picWidth `div` 2 * picHeight
     ld SP $ blitStore + 2047
 
@@ -296,6 +298,46 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 call pageRAM
             space = tvcChar ' '
             newline = call newLine
+
+            loadSaveGameVars = Just (loadGameVars, saveGameVars)
+              where
+                loadGameVars = do
+                    call pageSys
+
+                    ld DE fileName
+                    openFile_
+                    ld DE $ gameVars vars
+                    ld BC 256
+                    readBlock_
+                    closeFile_
+
+                    -- Restore system state
+                    call pageRAM
+                    ld A [borderStore]
+                    out [0x00] A
+                    setInterruptHandler intHandler
+                    ei
+
+                    setZ -- TODO: check for errors
+
+                saveGameVars = do
+                    call pageSys
+
+                    ld DE fileName
+                    createFile_
+                    ld DE $ gameVars vars
+                    ld BC 256
+                    writeBlock_
+                    closeFile_
+
+                    -- Restore system state
+                    call pageRAM
+                    ld A [borderStore]
+                    out [0x00] A
+                    setInterruptHandler intHandler
+                    ei
+
+                    setZ -- TODO: check for errors
 
     call setMainColor
     routines <- gameLoop assetLocs platform vars
@@ -577,6 +619,11 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     spriteData <- labelled $ db . BL.toStrict . mconcat $
         -- Pad sprite data to 64 bytes for easy addressing
         [ sprite <> BL.singleton 0x00 | (_, sprite) <- assocs $ sprites assets ]
+
+    fileName <- labelled $ do
+        let withLen :: String -> [Word8]
+            withLen s = map fromIntegral $ length s : map ord s
+        db $ withLen "bosszu.sav"
 
     kbdBuf <- labelled $ db $ replicate (fromIntegral kbdBufLen) 0xff
     vars <- do

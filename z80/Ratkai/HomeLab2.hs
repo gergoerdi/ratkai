@@ -276,6 +276,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             setTextColors = Nothing
             spriteOn = Nothing
             spriteOff = Nothing
+            loadSaveGameVars = Nothing
 
     assetLocs <- do
         let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 40 . preprocessGame $ assets

@@ -50,6 +50,7 @@ data Platform = Platform
     , spriteOff :: Maybe Z80ASM
     , moveIsFinal :: Bool
     , runMachineCode :: Bool
+    , loadSaveGameVars :: Maybe (Z80ASM, Z80ASM)
     }
 
 data Vars = Vars
@@ -439,6 +440,21 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             ldir
             ldVia A [moved] 1
             finishWith msgs1 4
+
+    forM_ loadSaveGameVars \(loadGameVars, saveGameVars) -> do
+        builtin 0x13 do -- Save
+            saveGameVars
+            unlessFlag NZ $ finishWith msgs1 4
+            setZ
+            ret
+
+        builtin 0x12 do -- Load
+            loadGameVars
+            unlessFlag NZ $ do
+                ldVia A [moved] 1
+                finishWith msgs1 4
+            setZ
+            ret
 
     forM_ undoVars \undoVars -> do
         builtin 0x1a do -- Undo
