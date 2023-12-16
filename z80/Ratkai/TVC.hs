@@ -77,7 +77,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     -- Clear screen
     syscall 0x05
 
-    call pageVideoOut
+    call pageRAM
     call decompressData
 
     setInterruptHandler intHandler
@@ -279,7 +279,7 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 pop BC
 
             clearScreen = do
-                call pageVideoIn
+                call pageVideo
                 push BC
                 push HL
                 ld HL $ videoStart + fromIntegral firstLine * rowStride * fromIntegral charHeight
@@ -293,15 +293,16 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                     ld B C
                 pop HL
                 pop BC
-                call pageVideoOut
+                call pageRAM
             space = tvcChar ' '
             newline = call newLine
 
     call setMainColor
     routines <- gameLoop assetLocs platform vars
 
-    pageVideoIn <- labelled pageVideoIn_
-    pageVideoOut <- labelled pageVideoOut_
+    pageVideo <- labelled pageVideo_
+    pageRAM <- labelled pageRAM_
+    pageSys <- labelled pageSys_
     displayPicture <- labelled $ displayPicture_ pictureLocs
     blitPicture <- labelled $ blitPicture_ pictureLocs
     blitSprite <- labelled $ blitSprite_ pictureLocs
@@ -635,16 +636,23 @@ compressedData items = do
 toByteMap :: [(Word8, Word8)] -> BS.ByteString
 toByteMap vals = BS.pack [ fromMaybe 0xff val | addr <- [0..255], let val = lookup addr vals ]
 
-pageVideoIn_ :: Z80ASM
-pageVideoIn_ = do
+pageVideo_ :: Z80ASM
+pageVideo_ = do
     ld A 0x90
     ld [0x03] A
     out [0x02] A
     ret
 
-pageVideoOut_ :: Z80ASM
-pageVideoOut_ = do
+pageRAM_ :: Z80ASM
+pageRAM_ = do
     ld A 0xb0
+    ld [0x03] A
+    out [0x02] A
+    ret
+
+pageSys_ :: Z80ASM
+pageSys_ = do
+    ld A 0x70
     ld [0x03] A
     out [0x02] A
     ret

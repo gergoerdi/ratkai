@@ -30,7 +30,7 @@ rowStride = 64
 data Locations = Locations
     { lineNum, colNum :: Location
     , charset :: Location
-    , pageVideoIn, pageVideoOut :: Location
+    , pageVideo, pageRAM :: Location
     , drawColorIsInput :: Location
     , newLine :: Location
     }
@@ -86,7 +86,7 @@ printCharC4_ Locations{..} = mdo
     ld IX charset
     add IX DE
 
-    call pageVideoIn
+    call pageVideo
 
     ld A [drawColorIsInput]
     cp 0x00
@@ -134,7 +134,7 @@ printCharC4_ Locations{..} = mdo
 
 
     drawDone <- label
-    jp pageVideoOut
+    jp pageRAM
     -- syscall 0x01
     ret
 
@@ -151,12 +151,12 @@ newLine_ Locations{..} = do
     push BC
     push DE
     push HL
-    call pageVideoIn
+    call pageVideo
     ld HL $ videoStart + (fromIntegral firstLine + 1) * rowStride * fromIntegral charHeight
     ld DE $ videoStart + fromIntegral firstLine * rowStride * fromIntegral charHeight
     ld BC $ (fromIntegral $ lastLine - firstLine) * rowStride * fromIntegral charHeight
     ldir
-    call pageVideoOut
+    call pageRAM
     pop HL
     pop DE
     pop BC

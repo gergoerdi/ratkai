@@ -19,7 +19,7 @@ import Data.Array (Array, (!), listArray)
 import Data.Bits
 
 data Locations = Locations
-    { pageVideoIn, pageVideoOut :: Location
+    { pageVideo, pageRAM :: Location
     , blitStore :: Location
     , blitPicture :: Location
     }
@@ -33,7 +33,7 @@ setColors_ Locations{..} = mdo
     -- Set border
     out [0x00] A
 
-    call pageVideoIn
+    call pageVideo
 
     -- Set palette 0 (background) for text
     ld A B
@@ -49,7 +49,7 @@ setColors_ Locations{..} = mdo
         pop BC
 
     push AF
-    call pageVideoOut
+    call pageRAM
     pop AF
     ret
 
@@ -138,7 +138,7 @@ renderPicture = skippable \end -> mdo
 
 blitPicture_ :: Locations -> Z80ASM
 blitPicture_ Locations{..}= mdo
-    call pageVideoIn
+    call pageVideo
 
     ld HL blitStore
     ld DE pictureStart
@@ -161,7 +161,7 @@ blitPicture_ Locations{..}= mdo
 
         pop BC
 
-    jp pageVideoOut
+    jp pageRAM
 
 -- | Pre: `HL` is the start of the picture data (bitmap <> colormap)
 displayPicture_ :: Locations -> Z80ASM
@@ -220,7 +220,7 @@ blitSprite_ Locations{..} = do
     ld E [IX + 5]
     computeSpriteTarget
 
-    call pageVideoIn
+    call pageVideo
 
     -- Draw sprite
     -- C: sprite color
@@ -272,4 +272,4 @@ blitSprite_ Locations{..} = do
 
         pop BC
 
-    jp pageVideoOut
+    jp pageRAM
