@@ -860,7 +860,10 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
             jp NZ healthy
             ldVia A [playerStatus] 1
 
-        call runAfter
+        ld A [playerStatus]
+        cp 0
+        call NZ runAfter
+
         jp loop
 
     gameOver <- labelled do
