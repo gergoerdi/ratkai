@@ -53,6 +53,7 @@ toBorderColor :: Word8 -> Word8
 toBorderColor = (`interleave` 0x00) . toTVCColor
 
 toBackgroundColor :: Word8 -> Word8
+toBackgroundColor 0x7 = toBackgroundColor 0x8 -- HACK: avoid white-on-yellow text
 toBackgroundColor 0xf = toBackgroundColor 0xc -- HACK: avoid white background
 toBackgroundColor 0x0 = toBackgroundColor 0xc -- HACK: avoid black background
 toBackgroundColor c = toDenseColor c
