@@ -451,6 +451,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
           else mdo
             ld D 0
             ldVia A E [playerLoc]
+            dec E
             ld HL help
             add HL DE
             ld A [HL]
