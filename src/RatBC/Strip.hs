@@ -24,11 +24,11 @@ import Data.Maybe
 import Data.Foldable (toList)
 import GHC.Stack
 
-stripGame :: Game Identity -> Game Identity
-stripGame =
+stripGame :: Bool -> Game Identity -> Game Identity
+stripGame supportSave =
     stripRooms >>>
     stripMessages >>>
-    stripWords >>>
+    stripWords supportSave >>>
     stripInteractive >>>
     stripSprites
 
@@ -75,16 +75,24 @@ usedMessages Game{..} = both (nub . sort) $ mconcat
         WhenFF _ body -> stmtsMessages body
         _ -> []
 
-usedWords :: Game Identity -> [Val]
-usedWords Game{..} = nub . sort $ mconcat
+usedWords :: Bool -> Game Identity -> [Val]
+usedWords supportSave Game{..} = nub . sort $ mconcat
     [ foldMap wordsOf . runIdentity $ interactiveGlobal
     , foldMap (foldMap wordsOf) . runIdentity $ interactiveLocal
-    , [0x00..0x16] \\ [0x12, 0x13] , [0x1a..0x1c] -- Builtin commands
+    , usedBuiltins
     , [0x64] -- ignored grammar connectives
     ]
   where
     wordsOf :: InputDispatch a -> [Val]
     wordsOf (InputDispatch words _) = words
+
+    builtins = [0x00..0x16] ++ [0x1a..0x1c]
+
+    unusedBuiltins = mconcat . mconcat $
+      [ [ [0x12, 0x13] | not supportSave ]
+      ]
+
+    usedBuiltins = builtins \\ unusedBuiltins
 
 accessibleRooms :: Game Identity -> [Val]
 accessibleRooms Game{..} = S.toList $ flip execState mempty $ do
@@ -140,12 +148,12 @@ reflowMessages game@Game{..} = game
     , msgs2 = fmap (fmap $ wrapWords 40) msgs2
     }
 
-stripWords :: Game Identity -> Game Identity
-stripWords game@Game{..} = game
+stripWords :: Bool -> Game Identity -> Game Identity
+stripWords supportSave game@Game{..} = game
     { dict = fmap (M.filterWithKey (\k _ -> k `elem` words)) dict
     }
   where
-    words = usedWords game
+    words = usedWords supportSave game
 
 stripRooms :: Game Identity -> Game Identity
 stripRooms game@Game{..} = mapStmt remap $ game

@@ -31,7 +31,7 @@ main = do
 
     game <- loadTextFiles inputPath
     game <- pure $ if block then mapStmts (\_ -> restoreBlocks) game else game
-    game <- pure $ stripGame game
+    game <- pure $ stripGame True game
 
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game

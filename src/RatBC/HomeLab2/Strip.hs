@@ -10,7 +10,7 @@ import Control.Monad.Identity
 import Data.Maybe
 
 preprocessGame :: Game Identity -> Game Identity
-preprocessGame = fixupSkips . stripGame . stripScript
+preprocessGame = fixupSkips . stripGame False . stripScript
 
 stripScript :: Game Identity -> Game Identity
 stripScript = transformStmts (mapMaybe toHomeLab)

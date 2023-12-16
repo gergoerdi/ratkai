@@ -12,7 +12,7 @@ import Data.Maybe
 import Text.Printf
 
 preprocessGame :: Game Identity -> Game Identity
-preprocessGame = fixupSkips . stripGame . stripScript
+preprocessGame = fixupSkips . stripGame True . stripScript
 
 stripScript :: Game Identity -> Game Identity
 stripScript = mapStmts \_ -> mapMaybe stripStmt
