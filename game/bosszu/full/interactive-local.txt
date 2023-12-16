@@ -918,6 +918,9 @@
   , InputDispatch [0x37, 0x66, 0xb9] -- "beszé |66| ninja"
       [ Message 73                     -- 02 49                -- "- Add át urad üzenetét nekem! "
       ]
+  , InputDispatch [0x3e, 0x7e] -- "mutat levél"
+      [ Skip 6                         -- 09 08
+      ]
   , InputDispatch [0x38, 0x7e] -- "ad levél"
       [ Skip 8                         -- 09 08
       ]
