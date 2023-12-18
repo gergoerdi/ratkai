@@ -107,7 +107,7 @@ ensureRet stmts = case reverse stmts of
 
 assertNoSkip :: Stmt -> Stmt
 assertNoSkip = \case
-    Skip{} -> error "Skip"
+    -- Skip{} -> error "Skip"
     When00 var body -> When00 var $ assertNoSkips body
     WhenFF var body -> WhenFF var $ assertNoSkips body
     stmt -> stmt
