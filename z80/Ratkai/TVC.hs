@@ -302,6 +302,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
             loadSaveGameVars = Just (loadGameVars, saveGameVars)
               where
                 loadGameVars = do
+                    call getFileName
+
                     call pageSys
 
                     ld DE fileName
@@ -321,6 +323,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                     setZ -- TODO: check for errors
 
                 saveGameVars = do
+                    call getFileName
+
                     call pageSys
 
                     ld DE fileName
@@ -354,8 +358,17 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
     parseLine <- labelled $ parseLine_ assetLocs platform vars routines
 
     readLine <- labelled do
+        -- Set color for user input
+        call setInputColor
+
+        -- Draw prompt
+        ld C $ tvcChar '>'
+        printCharC
+
         ld HL $ inputBuf vars
+        ld D maxInput
         call inputLine
+        call setMainColor
         call newLine
         -- forM_ [0..4] \i -> do
         --     ld A [inputBuf vars + i]
@@ -363,19 +376,13 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
         call newLine
         jp parseLine
 
-    -- Input one line of text, store result in `[HL]`
-    -- Mangles `HL`, `A`, and `B`
-    inputLine <- labelled do
-        -- Set color for user input
-        call setInputColor
+    -- Input one line of text, store result in `[HL]`. `D` is the maximum length.
+    -- Returns in `A` the number of characters entered.
+    -- Mangles `HL`, `A`, `B` and `C`.
+    inputLine <- labelled mdo
+        ld B D
+        ldVia A [maxLen] D
 
-        -- Draw prompt
-        push HL
-        ld C $ tvcChar '>'
-        printCharC
-        pop HL
-
-        ld B maxInput
         withLabel \loop -> mdo
             ld [HL] 0xff
 
@@ -433,8 +440,10 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 -- Try to increase B
                 inc B
                 skippable \inRange -> do
+                    ldVia A D [maxLen]
                     ld A B
-                    cp (maxInput + 1)
+                    dec A
+                    cp D
                     jr NZ inRange
                     dec B
                     jr loop
@@ -461,12 +470,19 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 ld [HL] 0xff
 
                 -- Remove cursor
+                push BC
                 ld C $ tvcChar ' '
                 printCharC
+                pop BC
 
-                -- Restore color
-                jp setMainColor
+                -- Calculate number of characters entered
+                ld A [maxLen]
+                sub B
+                ret
             pure ()
+
+        maxLen <- labelled $ db [0]
+        pure ()
 
     readChar <- labelled $ mdo
         readChar_ keyData kbdBuf
@@ -620,11 +636,6 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
         -- Pad sprite data to 64 bytes for easy addressing
         [ sprite <> BL.singleton 0x00 | (_, sprite) <- assocs $ sprites assets ]
 
-    fileName <- labelled $ do
-        let withLen :: String -> [Word8]
-            withLen s = map fromIntegral $ length s : map ord s
-        db $ withLen "bosszu.sav"
-
     kbdBuf <- labelled $ db $ replicate (fromIntegral kbdBufLen) 0xff
     vars <- do
         moved <- pure 0x0100
@@ -638,6 +649,25 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
         savedVars <- Just <$> pure 0x0400
         undoVars <- Just <$> pure 0x0500
         return Vars{..}
+
+    fileName <- pure 0x0600
+
+    getFileName <- labelled do
+        call setInputColor
+        forM_ "Filenév? " \c -> do
+            ld C $ tvcChar c
+            printCharC
+
+        ld D 16
+        ld HL (fileName + 1)
+        call inputLine
+
+        -- Compute number of characters entered
+        ld [fileName] A
+
+        call setMainColor
+        call newLine
+        jp newLine
 
     decompress <- labelled do
         ZX0.standardBack
