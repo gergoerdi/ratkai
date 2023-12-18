@@ -113,8 +113,13 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
             setScreen = Just mdo
                 push DE
                 push HL
-                call setColors
+                push AF
+                push BC
                 call setPicture
+                pop BC
+                pop AF
+                call setColors
+                call blitPicture
                 pop HL
                 pop DE
 
@@ -598,12 +603,14 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
             ld DE pics'
             add HL DE
             call displayPicture
-
             pop IY
             pop IX
             ret
 
         clearBlitStore <- labelled do
+            -- B is the background color
+            ld A B
+
             ld HL blitStore
             decLoopB picHeight do
                 ld C B
@@ -611,7 +618,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                     ld [HL] A
                     inc HL
                 ld B C
-        jp blitPicture
+            ret
+        pure ()
 
     assetLocs <- do
         let asset sel = labelled $ db $ getConst . sel $ assets

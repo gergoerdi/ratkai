@@ -48,21 +48,56 @@ setColors_ Locations{..} = mdo
     out [0x60] A
 
     -- Fill background of picture area
-    ld DE videoStart
-    decLoopB 90 do
+    push HL
+
+    -- Top
+    ld HL videoStart
+    decLoopB pictureMarginTop do
         push BC
         decLoopB rowStride do
-            ld [DE] A
-            inc DE
+            ld [HL] A
+            inc HL
+        pop BC
+
+    -- Sides
+    ld DE $ picWidth `div` 2
+    decLoopB (picHeight * 2) do
+        push BC
+        decLoopB pictureMarginLeft do
+            ld [HL] A
+            inc HL
+        add HL DE
+        decLoopB pictureMarginLeft do
+            ld [HL] A
+            inc HL
+        pop BC
+
+    -- Bottom
+    ld HL $ videoStart + (fromIntegral pictureMarginTop + (picHeight * 2)) * rowStride
+    decLoopB pictureMarginBottom do
+        push BC
+        decLoopB rowStride do
+            ld [HL] A
+            inc HL
         pop BC
 
     push AF
     call pageRAM
     pop AF
+    pop HL
     ret
 
+pictureMarginTop :: Word8
+pictureMarginTop = 8
+
+pictureMarginBottom :: Word8
+pictureMarginBottom = 2
+
+pictureMarginLeft :: Word8
+pictureMarginLeft = (rowStride - (picWidth `div` 2)) `div` 2
+
 pictureStart :: Word16
-pictureStart = videoStart + (8 * rowStride) + ((rowStride - 40) `div` 2)
+pictureStart = videoStart + (fromIntegral pictureMarginTop * rowStride) + fromIntegral pictureMarginLeft
 
 -- | Render the picture as a 80x40 mode-4 rectangle
 -- | Pre: `IX`: pointer to colormap
@@ -182,8 +217,7 @@ displayPicture_ Locations{..} = mdo
 
     ld IY blitStore
     renderPicture
-
-    jp blitPicture
+    ret
 
 spriteHeight = 21
 spriteStride = 3
