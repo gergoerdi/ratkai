@@ -734,22 +734,19 @@ toByteMap vals = BS.pack [ fromMaybe 0xff val | addr <- [0..255], let val = look
 pageVideo_ :: Z80ASM
 pageVideo_ = do
     ld A 0x90
-    ld [0x03] A
-    out [0x02] A
+    setMemoryBank
     ret
 
 pageRAM_ :: Z80ASM
 pageRAM_ = do
     ld A 0xb0
-    ld [0x03] A
-    out [0x02] A
+    setMemoryBank
     ret
 
 pageSys_ :: Z80ASM
 pageSys_ = do
     ld A 0x70
-    ld [0x03] A
-    out [0x02] A
+    setMemoryBank
     ret
 
 intHandler_ :: Location -> Z80ASM

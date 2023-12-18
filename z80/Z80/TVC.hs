@@ -40,3 +40,8 @@ setInterruptHandler addr = do
     ld [HL] hi
   where
     (lo, hi) = wordBytes addr
+
+setMemoryBank :: Z80ASM
+setMemoryBank = do
+    ld [0x03] A
+    out [0x02] A
