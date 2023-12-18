@@ -411,6 +411,9 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             cp val
             jp NZ skip
             body
+        setMeta = forM_ undoVars \undoVars -> do
+            ldVia A [undoVars + 256] 0xff
+        setMoved = ldVia A [moved] 1
 
     let finishWith :: (Load Reg8 msg) => Word16 -> msg -> Z80ASM
         finishWith bank msg = do
@@ -419,7 +422,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             jp finish
 
     builtin 0x0d do -- Look
-        ldVia A [moved] 1
+        setMoved
         ret
 
     builtin 0x15 do -- Examine
@@ -427,11 +430,13 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
 
     when supportScore do
         builtin 0x14 do -- Score
+            setMeta
             jp printStatus
 
     forM_ savedVars \savedVars -> do
         builtin 0x1b do         -- QSave
             call qsave
+            setMeta
             finishWith msgs1 4
 
         builtin 0x1c do         -- QLoad
@@ -439,30 +444,46 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             ld HL savedVars
             ld BC 256
             ldir
-            ldVia A [moved] 1
+            setMeta
+            setMoved
+            finishWith msgs1 4
+
+    forM_ undoVars \undoVars -> do
+        builtin 0x1a do -- Undo
+            ld DE gameVars
+            ld HL undoVars
+            ld BC 256
+            ldir
+
+            -- Save candidate game state for next undo
+            ld DE $ undoVars + 257
+            ld HL gameVars
+            ld BC 256
+            ldir
+
+            setMeta
+            setMoved
             finishWith msgs1 4
 
     forM_ loadSaveGameVars \(loadGameVars, saveGameVars) -> do
         builtin 0x13 do -- Save
             saveGameVars
             unlessFlag NZ $ finishWith msgs1 4
+            setMeta
             setZ
             ret
 
         builtin 0x12 do -- Load
             loadGameVars
             unlessFlag NZ $ do
-                ldVia A [moved] 1
+                setMoved
                 finishWith msgs1 4
+            setMeta
             setZ
             ret
 
-    forM_ undoVars \undoVars -> do
-        builtin 0x1a do -- Undo
-            -- TODO
-            finishWith msgs1 2
-
     builtin 0x16 do -- Help
+        setMeta
         if not supportHelp then do
             finishWith msgs1 10
           else mdo
@@ -486,6 +507,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             finishWith msgs1 8
         message1 7
         call printItemsAtD
+        setMeta
         setZ
         ret
 
@@ -830,6 +852,11 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
 
     call resetGameVars
     call qsave
+    forM_ undoVars \undoVars -> do
+        ld DE undoVars
+        ld HL gameVars
+        ld BC 256
+        ldir
 
     newGame <- label
 
@@ -852,12 +879,30 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
         cp 0
         jp NZ gameOver
 
+        forM_ undoVars \undoVars -> do
+            -- Unless last command was a meta-command, copy over the game state
+            ld A [undoVars + 256]
+            cp 0
+            ldVia A [undoVars + 256] 0
+            unlessFlag NZ do
+                ld DE undoVars
+                ld HL $ undoVars + 257
+                ld BC 256
+                ldir
+
+                -- Save candidate game state for next undo
+                ld DE $ undoVars + 257
+                ld HL gameVars
+                ld BC 256
+                ldir
+
+        inputLoop <- label
         call readLine
         -- call dbgPrintParseBuf
 
         ld A [parseBuf]
         cp 0x00
-        jp Z loop
+        jp Z inputLoop
 
         skippable \processed -> do
             call runInteractiveLocal
@@ -868,7 +913,7 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
             jp Z processed
 
             message1 2
-            jp loop
+            jp inputLoop
 
         -- check health
         skippable \healthy -> do
