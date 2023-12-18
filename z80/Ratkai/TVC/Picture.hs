@@ -20,7 +20,7 @@ import Data.Bits
 
 data Locations = Locations
     { pageVideo, pageRAM :: Location
-    , borderStore :: Location
+    , borderStore, backgroundStore :: Location
     , blitStore :: Location
     , blitPicture :: Location
     }
@@ -35,10 +35,16 @@ setColors_ Locations{..} = mdo
     out [0x00] A
     ld [borderStore] A
 
+    -- Has the background color changed?
+    ld A [backgroundStore]
+    cp B
+    ret Z
+
     call pageVideo
 
     -- Set palette 0 (background) for text
     ld A B
+    ld [backgroundStore] A
     out [0x60] A
 
     -- Fill background of picture area

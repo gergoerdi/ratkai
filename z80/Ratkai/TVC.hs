@@ -59,9 +59,11 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
 
     di
     let borderStore = 0x0eac
-        blitStore = borderStore + 1
+        backgroundStore = borderStore + 1
+        blitStore = backgroundStore + 1
         spriteState = blitStore + picWidth `div` 2 * picHeight
     ld SP $ blitStore + 2047
+    ldVia A [backgroundStore] 0
 
     let setTextColors = do
             -- Set palette 1 (foreground) for text
@@ -111,60 +113,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
             setScreen = Just mdo
                 push DE
                 push HL
-
                 call setColors
-
-                -- Hide all sprites
-                push DE
-                push HL
-                ld HL spriteState
-                ld DE spriteStateSize
-
-                push BC
-                decLoopB numSprites do
-                    ld [HL] 0
-                    add HL DE
-                pop BC
-
-                pop HL
-                pop DE
-
-                -- Picture #255 means blank screen
-                inc C
-                jp Z clearBlitStore
-                dec C
-
-                drawBackground <- labelled do
-                    push IX
-                    push IY
-
-                    -- Compute picData offset as 450 * (C - 1)
-                    ld DE 450
-                    ld HL 0
-                    dec C
-                    replicateM_ 8 do
-                        srl C
-                        unlessFlag NC $ add HL DE
-                        sla E
-                        rl D
-                    ld DE pics'
-                    add HL DE
-                    call displayPicture
-
-                    pop IY
-                    pop IX
-                    jp finish
-
-                clearBlitStore <- labelled do
-                    ld HL blitStore
-                    decLoopB picHeight do
-                        ld C B
-                        decLoopB (picWidth `div` 2) do
-                            ld [HL] A
-                            inc HL
-                        ld B C
-
-                finish <- label
+                call setPicture
                 pop HL
                 pop DE
 
@@ -610,6 +560,58 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
         pop BC
         call newLine
         jp newLine
+
+    setPicture <- labelled mdo
+        -- Hide all sprites
+        push DE
+        push HL
+        ld HL spriteState
+        ld DE spriteStateSize
+
+        push BC
+        decLoopB numSprites do
+            ld [HL] 0
+            add HL DE
+        pop BC
+
+        pop HL
+        pop DE
+
+        -- Picture #255 means blank screen
+        inc C
+        jp Z clearBlitStore
+        dec C
+
+        draw <- labelled do
+            push IX
+            push IY
+
+            -- Compute picData offset as 450 * (C - 1)
+            ld DE 450
+            ld HL 0
+            dec C
+            replicateM_ 8 do
+                srl C
+                unlessFlag NC $ add HL DE
+                sla E
+                rl D
+            ld DE pics'
+            add HL DE
+            call displayPicture
+
+            pop IY
+            pop IX
+            ret
+
+        clearBlitStore <- labelled do
+            ld HL blitStore
+            decLoopB picHeight do
+                ld C B
+                decLoopB (picWidth `div` 2) do
+                    ld [HL] A
+                    inc HL
+                ld B C
+        jp blitPicture
 
     assetLocs <- do
         let asset sel = labelled $ db $ getConst . sel $ assets
