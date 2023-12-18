@@ -51,6 +51,7 @@ data Platform = Platform
     , moveIsFinal :: Bool
     , runMachineCode :: Bool
     , loadSaveGameVars :: Maybe (Z80ASM, Z80ASM)
+    , deathCallback :: Z80ASM
     }
 
 data Vars = Vars
@@ -895,6 +896,7 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
             jp Z notDead
             message1 12
             ldVia A [gameVars + 1] 0xff
+            deathCallback
 
         waitEnter
         jp newGame

@@ -54,7 +54,7 @@ spriteStateSize = 6
 type CompressedBS = (BS.ByteString, BS.ByteString, Word16)
 
 game :: Game (Const BS.ByteString) -> CompressedBS -> CompressedBS -> CompressedBS -> Z80ASM
-game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
+game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics = mdo
     let printCharC = call printCharC4
 
     di
@@ -109,6 +109,12 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
                 jr end
                 lbl <- labelled $ db $ map tvcChar s
                 pure ()
+
+            deathCallback = do
+                ld C deathPicture
+                ldVia A B [backgroundStore]
+                call setPicture
+                call blitPicture
 
             setScreen = Just mdo
                 push DE
@@ -566,6 +572,8 @@ game assets@Game{ minItem, maxItem, startRoom } text1 text2 pics = mdo
         call newLine
         jp newLine
 
+    -- | Pre: `B`: background color
+    -- | Pre: `C`: picture number
     setPicture <- labelled mdo
         -- Hide all sprites
         push DE

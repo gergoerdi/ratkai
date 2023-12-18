@@ -97,6 +97,7 @@ loadTextFiles inputPath = do
       <*> pure 120 -- TODO: minItem
       <*> pure 160 -- TODO: maxItem
       <*> pure 1 -- TODO: startRoom
+      <*> pure 54 -- TODO: deathPicture
       <*> bin "charset"
       <*> sprites
     return $ parseGame game0

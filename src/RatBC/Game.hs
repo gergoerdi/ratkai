@@ -28,6 +28,7 @@ data Game f = Game
     , helpMap :: f (ByRoom Word8)
     , minItem, maxItem :: Word8
     , startRoom :: Word8
+    , deathPicture :: Word8
     , charSet :: BL.ByteString
     , sprites :: Array Word8 BL.ByteString
     }
