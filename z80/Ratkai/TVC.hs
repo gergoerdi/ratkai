@@ -536,6 +536,17 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
         jp newLine
 
     printMessageListItem <- labelled do
+        push BC
+        push DE
+        push IX
+        ld C $ tvcChar ' '
+        decLoopB 5 do
+            push BC
+            printCharC
+            pop BC
+        pop IX
+        pop DE
+        pop BC
         jp printMessage
 
     printMessage <- labelled mdo
