@@ -924,7 +924,7 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
 
         ld A [playerStatus]
         cp 0
-        call NZ runAfter
+        call Z runAfter
 
         jp loop
 
