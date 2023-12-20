@@ -288,7 +288,7 @@ blitSprite_ Locations{..} = do
                         Z80.and 0b0101_0101
                         Z80.or C
                         pure ()
-                    rlc C
+                    rrc C
 
                     -- Should we change second pixel?
                     sla D
@@ -296,7 +296,7 @@ blitSprite_ Locations{..} = do
                         Z80.and 0b1010_1010
                         Z80.or C
                         pure ()
-                    rrc C
+                    rlc C
 
                     ld [IY] A
                     inc IY
