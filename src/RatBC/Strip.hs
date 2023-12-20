@@ -81,6 +81,7 @@ usedWords supportSave Game{..} = nub . sort $ mconcat
     , foldMap (foldMap wordsOf) . runIdentity $ interactiveLocal
     , usedBuiltins
     , [0x64] -- ignored grammar connectives
+    , [minItem..maxItem-1]
     ]
   where
     wordsOf :: InputDispatch a -> [Val]
