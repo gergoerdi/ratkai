@@ -36,7 +36,7 @@ data Locations = Locations
     }
 
 -- Pre: `C` is the character to print
--- Clobbers `AF`, `BC`, `HL`, `IX`
+-- Clobbers `AF`, `BC`, `DE`, `HL`, `IX`
 printCharC4_ :: Locations -> Z80ASM
 printCharC4_ Locations{..} = mdo
     skippable \sameLine -> do

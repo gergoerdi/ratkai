@@ -531,6 +531,13 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
         call newLine
         ret
 
+    printMessageLn <- labelled do
+        call printMessage
+        jp newLine
+
+    printMessageListItem <- labelled do
+        jp printMessage
+
     printMessage <- labelled mdo
         push BC
         push DE
@@ -569,7 +576,6 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
         pop IY
         pop DE
         pop BC
-        call newLine
         jp newLine
 
     -- | Pre: `B`: background color

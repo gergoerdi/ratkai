@@ -269,7 +269,9 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
           where
             moveIsFinal = True
             runMachineCode = False
-            printMessage = printlnZ
+            printMessageLn = printlnZ
+            printMessage = printZ
+            printMessageListItem = printZ
             space = 0x20
             newline = cr
             setScreen = Nothing

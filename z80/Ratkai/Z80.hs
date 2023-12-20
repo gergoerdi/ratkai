@@ -34,7 +34,7 @@ maxOpCode :: Word8
 maxOpCode = 0x30
 
 data Platform = Platform
-    { printMessage :: Location
+    { printMessage, printMessageLn, printMessageListItem :: Location
     , matchWord :: Location
     , beforeParseError :: Z80ASM
     , printString :: String -> Z80ASM
@@ -83,7 +83,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
         ld B A
         push IX
         push HL
-        call printMessage
+        call printMessageLn
         pop HL
         pop IX
         jp runRatScript
@@ -139,7 +139,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
                 skippable \assertHolds -> do
                     cp val
                     jp Z assertHolds
-                    jp printMessage
+                    jp printMessageLn
                 jp runRatScript
         opAssert00 <- labelled $ opAssert 0x00
         opAssertFF <- labelled $ opAssert 0xff
@@ -220,7 +220,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             ld A [playerLoc]
             cp C
             jp Z runRatScript
-            jp printMessage
+            jp printMessageLn
 
         opSleep <- labelled do
             fetch B
@@ -505,7 +505,9 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
         skippable \haveItems -> do
             jr Z haveItems
             finishWith msgs1 8
-        message1 7
+        ld IX msgs1
+        ld B 7
+        call printMessage
         call printItemsAtD
         setMeta
         setZ
@@ -551,7 +553,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             finishWith msgs1 16
 
         finish <- label
-        call printMessage
+        call printMessageLn
         setZ
         ret
 
@@ -595,7 +597,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             finishWith msgs1 8
 
         finish <- label
-        call printMessage
+        call printMessageLn
         setZ
         ret
 
@@ -607,7 +609,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
         -- Fall through to `finish`
 
     finish <- labelled do
-        call printMessage
+        call printMessageLn
         setZ
         ret
 
@@ -630,7 +632,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
     message1 msg = do
         ld IX msgs1
         ld B msg
-        call printMessage
+        call printMessageLn
 
 printScore_ :: Platform -> Vars -> Routines -> Z80ASM
 printScore_ Platform{..} Vars{..} Routines{..} = when supportScore mdo
@@ -786,7 +788,7 @@ parseLine_ assets Platform{..} Vars{..} Routines{..} = mdo
 
         ld IX $ getConst . msgs1 $ assets
         ld B 1
-        call printMessage
+        call printMessageLn
         jp readLine
 
     pure ()
@@ -808,8 +810,9 @@ printItemsAtD_ Game{..} Platform{..} Vars{..} Routines{..} = do
         ld A B
         add A $ minItem - 1
         ld B A
-        call printMessage
+        call printMessageListItem
         pop BC
+    newline
     ret
 
 
@@ -986,7 +989,7 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
     message1 msg = do
         ld IX $ getConst . msgs1 $ assetLocs
         ld B msg
-        call printMessage
+        call printMessageLn
 
     Game
       { minItem = minItem
