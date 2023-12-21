@@ -200,7 +200,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             jp opAddToCounter
         opHurt <- labelled do
             ld IY playerHealth
-            call opSubFromCounter
+            jp opSubFromCounter
 
         opIncIfNot0 <- labelled do
             fetch E -- Variable
@@ -330,8 +330,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             fetch B -- Value to add
             sub B
             daa
-            skippable \noOverflow -> do
-                jp NC noOverflow
+            unlessFlag NC do
                 ld A 0
             ld [IY] A
             jp runRatScript
