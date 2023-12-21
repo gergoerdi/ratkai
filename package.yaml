@@ -80,3 +80,12 @@ executables:
     main: src/ratbc-tvc-asm.hs
     dependencies:
       - ratkai
+
+  ratbc-tvc-colors:
+    main: src/ratbc-tvc-colors.hs
+    dependencies:
+      - monomer
+      - lens
+      - optparse-applicative
+      - ratkai
+      - text-show
