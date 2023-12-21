@@ -55,10 +55,11 @@ data Platform = Platform
     }
 
 data Vars = Vars
-    { moved
+    { moved, meta
     , inputBuf, parseBuf
     , gameVars, playerScore, playerHealth, playerStatus, playerLoc :: Location
-    , savedVars, undoVars :: Maybe Location
+    , savedVars :: Maybe Location
+    , undoVars :: Maybe (Location, Location)
     }
 
 data Routines = Routines
@@ -411,8 +412,7 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             cp val
             jp NZ skip
             body
-        setMeta = forM_ undoVars \undoVars -> do
-            ldVia A [undoVars + 256] 0xff
+        setMeta = ldVia A [meta] 1
         setMoved = ldVia A [moved] 1
 
     let finishWith :: (Load Reg8 msg) => Word16 -> msg -> Z80ASM
@@ -448,16 +448,16 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
             setMoved
             finishWith msgs1 4
 
-    forM_ undoVars \undoVars -> do
+    forM_ undoVars \(undoVars, undoCandidates) -> do
         builtin 0x1a do -- Undo
-            ld DE gameVars
             ld HL undoVars
+            ld DE gameVars
             ld BC 256
             ldir
 
             -- Save candidate game state for next undo
-            ld DE $ undoVars + 257
             ld HL gameVars
+            ld DE undoCandidates
             ld BC 256
             ldir
 
@@ -853,7 +853,7 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
 
     call resetGameVars
     call qsave
-    forM_ undoVars \undoVars -> do
+    forM_ undoVars \(undoVars, _) -> do
         ld DE undoVars
         ld HL gameVars
         ld BC 256
@@ -865,6 +865,11 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
     ldVia A [moved] 1
 
     withLabel \loop -> do
+        -- check player status
+        ld A [playerStatus]
+        cp 0
+        jp NZ gameOver
+
         skippable \notMoved -> do
             ld A [moved]
             dec A
@@ -880,19 +885,19 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
         cp 0
         jp NZ gameOver
 
-        forM_ undoVars \undoVars -> do
+        forM_ undoVars \(undoVars, undoCandidates) -> do
             -- Unless last command was a meta-command, copy over the game state
-            ld A [undoVars + 256]
+            ld A [meta]
             cp 0
-            ldVia A [undoVars + 256] 0
+            ldVia A [meta] 0
             unlessFlag NZ do
                 ld DE undoVars
-                ld HL $ undoVars + 257
+                ld HL undoCandidates
                 ld BC 256
                 ldir
 
                 -- Save candidate game state for next undo
-                ld DE $ undoVars + 257
+                ld DE undoCandidates
                 ld HL gameVars
                 ld BC 256
                 ldir
@@ -925,8 +930,11 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
 
         ld A [playerStatus]
         cp 0
-        call Z runAfter
+        jp NZ gameOver
 
+        ld A [meta]
+        cp 0
+        call Z runAfter
         jp loop
 
     gameOver <- labelled do

@@ -310,6 +310,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
     vars <- do
         moved <- labelled $ db [0]
+        meta <- labelled $ db [0]
         inputBuf <- labelled $ resb 40
         parseBuf <- labelled $ resb 5
         gameVars <- labelled $ resb 256
@@ -318,7 +319,11 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             playerStatus = gameVars + 0xfe
             playerLoc = gameVars + 0xff
         savedVars <- if supportQSave then fmap Just . labelled $ resb 256 else pure Nothing
-        undoVars <- if supportUndo then fmap Just . labelled $ resb 256 else pure Nothing
+        undoVars <- if supportUndo then do
+            undoVars <- labelled $ resb 256
+            undoCandidates <- labelled $ resb 256
+            pure $ Just (undoVars, undoCandidates)
+          else pure Nothing
         return Vars{..}
 
     unless release nop -- To see real memory usage instead of just image size

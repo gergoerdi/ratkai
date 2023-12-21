@@ -714,7 +714,8 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
             playerStatus = gameVars + 0xfe
             playerLoc = gameVars + 0xff
         savedVars <- Just <$> pure 0x0400
-        undoVars <- Just <$> pure 0x0500
+        undoVars <- Just <$> pure (0x0500, 0x0600)
+        meta <- pure 0x0700
         return Vars{..}
 
     fileName <- pure 0x0600
