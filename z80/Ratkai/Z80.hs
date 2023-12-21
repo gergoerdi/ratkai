@@ -943,15 +943,19 @@ gameLoop assetLocs platform@Platform{..} vars@Vars{..} = mdo
         -- 254: Won the game
         skippable \notDead -> do
             when supportScore $ call printScore
+
+            ld A [playerStatus]
+            cp 255
+            jp NZ notDead
             call resetGameVars
-            ldVia A [gameVars + 1] 0x00
-
-            cp 254
-            jp Z notDead
-            message1 12
             ldVia A [gameVars + 1] 0xff
+            message1 12
             deathCallback
+            waitEnter
+            jp newGame
 
+        call resetGameVars
+        ldVia A [gameVars + 1] 0x00
         waitEnter
         jp newGame
 
