@@ -35,5 +35,5 @@ stripStmt = \case
       | otherwise -> error $ printf "MachineCode: %d %s" (length ops) (show ops)
     When00 var body -> When00 var <$> let body' = mapMaybe stripStmt body in body' <$ guard (not . null $ body')
     WhenFF var body -> WhenFF var <$> let body' = mapMaybe stripStmt body in body' <$ guard (not . null $ body')
-    Message msg -> Just $ CompactMessage msg
+    Message msg -> Just $ Message msg -- Don't use CompactMessage to avoid Skip frame errors
     s -> pure s
