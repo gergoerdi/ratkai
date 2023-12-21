@@ -498,7 +498,7 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
         push DE
         push IX
         ld C $ tvcChar ' '
-        decLoopB 5 do
+        decLoopB 2 do
             push BC
             printCharC
             pop BC
