@@ -254,7 +254,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unpackIsLast <- labelled $ db [0]
     shiftState <- labelled $ db [0]
 
-    printlnBCDPercent <- labelled $ when supportScore do -- XXX
+    printBCDPercentLn <- labelled $ when supportScore do -- XXX
         call 0x01a5
         ld A $ fromIntegral . ord $ '%'
         rst 0x28

@@ -450,7 +450,7 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
         keyData <- labelled $ db $ toByteMap keymap
         pure ()
 
-    printByte <- labelled $ printByte_ printCharC
+    printByteNo0 <- labelled $ printByteNo0_ printCharC
 
     -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
     -- After: `A` contains the word code (or 0 on non-match), and
@@ -524,8 +524,8 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
     setMainColor <- labelled $ setMainColor_ videoLocs
     setInputColor <- labelled $ setInputColor_ videoLocs
 
-    printlnBCDPercent <- labelled do
-        call printByte
+    printBCDPercentLn <- labelled do
+        call printByteNo0
         ld C $ tvcChar '%'
         printCharC
         call newLine
@@ -838,24 +838,14 @@ intHandler_ kbdBuf = mdo
          crtcOut 0x0e hi
          crtcOut 0x0f lo
 
-toHex_ :: Z80ASM
-toHex_ = mdo
-    cp 10
-    jp NC hex
-    add A $ tvcChar '0'
-    ret
-    hex <- label
-    add A $ tvcChar 'a' - 10
-    ret
-
-printByte_ :: Z80ASM -> Z80ASM
-printByte_ printCharC = mdo
+printByteNo0_ :: Z80ASM -> Z80ASM
+printByteNo0_ printCharC = mdo
     push BC
 
     push AF
     Z80.and 0xf0
     replicateM_ 4 $ srl A
-    call toHex
+    call toHexNo0
 
     ld C A
     printCharC
@@ -870,5 +860,17 @@ printByte_ printCharC = mdo
     pop BC
     ret
 
-    toHex <- labelled toHex_
+    toHexNo0 <- labelled do
+        cp 0
+        jp NZ toHex
+        ld A $ tvcChar ' '
+        ret
+    toHex <- labelled mdo
+        cp 10
+        jp NC hex
+        add A $ tvcChar '0'
+        ret
+        hex <- label
+        add A $ tvcChar 'a' - 10
+        ret
     pure ()
