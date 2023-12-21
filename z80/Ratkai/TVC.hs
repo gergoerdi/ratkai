@@ -261,48 +261,6 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
             newline = call newLine
 
             loadSaveGameVars = Just (loadGameVars, saveGameVars)
-              where
-                loadGameVars = do
-                    call getFileName
-
-                    call pageSys
-
-                    ld DE fileName
-                    openFile_
-                    ld DE $ gameVars vars
-                    ld BC 256
-                    readBlock_
-                    closeFile_
-
-                    -- Restore system state
-                    call pageRAM
-                    ld A [borderStore]
-                    out [0x00] A
-                    setInterruptHandler intHandler
-                    ei
-
-                    setZ -- TODO: check for errors
-
-                saveGameVars = do
-                    call getFileName
-
-                    call pageSys
-
-                    ld DE fileName
-                    createFile_
-                    ld DE $ gameVars vars
-                    ld BC 256
-                    writeBlock_
-                    closeFile_
-
-                    -- Restore system state
-                    call pageRAM
-                    ld A [borderStore]
-                    out [0x00] A
-                    setInterruptHandler intHandler
-                    ei
-
-                    setZ -- TODO: check for errors
 
     call setMainColor
     routines <- gameLoop assetLocs platform vars
@@ -645,6 +603,80 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
                 ld B C
             ret
         pure ()
+
+    let loadBuffer = 0x0740
+        numVars = 256
+
+    failed <- labelled $ db [0]
+
+    loadGameVars <- labelled do
+        call getFileName
+
+        call pageSys
+
+        ldVia A [failed] 0x00
+
+        ld DE fileName
+        openFile_
+        ld DE loadBuffer
+        ld BC numVars
+        readBlock_
+        ld A 0
+        cp B
+        unlessFlag Z $ ldVia A [failed] 0xff
+        cp C
+        unlessFlag Z $ ldVia A [failed] 0xff
+        closeFile_
+
+        ld A [failed]
+        cp 0
+        unlessFlag NZ do
+            -- If it all went well, apply new game state
+            ld HL loadBuffer
+            ld DE $ gameVars vars
+            ld BC numVars
+            ldir
+
+        -- Restore system state
+        call pageRAM
+        ld A [borderStore]
+        out [0x00] A
+        setInterruptHandler intHandler
+        ei
+
+        ld A [failed]
+        cp 0
+        ret
+
+    saveGameVars <- labelled do
+        call getFileName
+
+        call pageSys
+
+        ldVia A [failed] 0x00
+
+        ld DE fileName
+        createFile_
+        ld DE $ gameVars vars
+        ld BC numVars
+        writeBlock_
+        ld A 0
+        cp B
+        unlessFlag Z $ ldVia A [failed] 0xff
+        cp C
+        unlessFlag Z $ ldVia A [failed] 0xff
+        closeFile_
+
+        -- Restore system state
+        call pageRAM
+        ld A [borderStore]
+        out [0x00] A
+        setInterruptHandler intHandler
+        ei
+
+        ld A [failed]
+        cp 0
+        ret
 
     assetLocs <- do
         let asset sel = labelled $ db $ getConst . sel $ assets

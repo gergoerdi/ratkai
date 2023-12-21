@@ -50,7 +50,7 @@ data Platform = Platform
     , spriteOff :: Maybe Z80ASM
     , moveIsFinal :: Bool
     , runMachineCode :: Bool
-    , loadSaveGameVars :: Maybe (Z80ASM, Z80ASM)
+    , loadSaveGameVars :: Maybe (Location, Location)
     , deathCallback :: Z80ASM
     }
 
@@ -467,20 +467,18 @@ runInteractiveBuiltin_ assets Platform{..} Vars{..} Routines{..} = mdo
 
     forM_ loadSaveGameVars \(loadGameVars, saveGameVars) -> do
         builtin 0x13 do -- Save
-            saveGameVars
+            call saveGameVars
             unlessFlag NZ $ finishWith msgs1 4
             setMeta
-            setZ
-            ret
+            finishWith msgs1 2
 
         builtin 0x12 do -- Load
-            loadGameVars
+            call loadGameVars
             unlessFlag NZ $ do
                 setMoved
                 finishWith msgs1 4
             setMeta
-            setZ
-            ret
+            finishWith msgs1 2
 
     builtin 0x16 do -- Help
         setMeta
