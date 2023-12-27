@@ -31,8 +31,8 @@ library:
   source-dirs: src
   
 executables:
-  ratkai-homelab:
-    main: homelab.hs
+  ratkai-hl2:
+    main: hl2.hs
     source-dirs: z80
     dependencies:
       - z80
