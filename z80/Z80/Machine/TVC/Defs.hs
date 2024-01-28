@@ -1,5 +1,5 @@
 {-# LANGUAGE BlockArguments #-}
-module Z80.TVC where
+module Z80.Machine.TVC.Defs where
 
 import Z80
 import Z80.Utils

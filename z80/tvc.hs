@@ -2,8 +2,8 @@
 {-# LANGUAGE RecursiveDo #-}
 module Main where
 
-import qualified Ratkai.TVC as Ratkai
-import Z80.TVC.Format (cas)
+import qualified Target.TVC as Ratkai
+import Z80.Machine.TVC.Cas (cas)
 
 import RatBC.Game.Text
 import RatBC.Game

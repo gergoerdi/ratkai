@@ -1,5 +1,5 @@
 {-# LANGUAGE RecursiveDo, BlockArguments #-}
-module Z80.HomeLab2 where
+module Z80.Machine.HomeLab.HL2 where
 
 import Z80
 import Z80.Utils

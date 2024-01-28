@@ -1,6 +1,6 @@
 {-# LANGUAGE NumericUnderscores, BlockArguments, BinaryLiterals #-}
 {-# LANGUAGE RecursiveDo, ViewPatterns #-}
-module Z80.TVC.Format where
+module Z80.Machine.TVC.Cas where
 
 import Z80
 import Data.Word

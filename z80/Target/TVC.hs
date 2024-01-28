@@ -2,7 +2,7 @@
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
-module Ratkai.TVC (game) where
+module Target.TVC (game) where
 
 import RatBC.Game
 import RatBC.Picture (picWidth, picHeight)
@@ -11,11 +11,11 @@ import RatBC.TVC.Text
 import RatBC.TVC.Strip
 
 import Ratkai.Z80
-import Ratkai.TVC.Picture as Picture
-import Z80.TVC
-import Z80.TVC.Keyboard
-import Z80.TVC.Video as Video
-import Z80.TVC.File
+import Target.TVC.Picture as Picture
+import Z80.Machine.TVC.Defs
+import Z80.Machine.TVC.Keyboard
+import Target.TVC.Video as Video
+import Z80.Machine.TVC.File
 import Z80.ZX0 as ZX0
 
 import Debug.Trace

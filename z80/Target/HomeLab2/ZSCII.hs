@@ -2,7 +2,7 @@
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
-module Ratkai.HomeLab2.ZSCII where
+module Target.HomeLab2.ZSCII where
 
 import Z80
 import Z80.Utils

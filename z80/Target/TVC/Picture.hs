@@ -1,13 +1,13 @@
 {-# LANGUAGE NumericUnderscores, BlockArguments, BinaryLiterals #-}
 {-# LANGUAGE RecursiveDo #-}
 {-# LANGUAGE RecordWildCards #-}
-module Ratkai.TVC.Picture where
+module Target.TVC.Picture where
 
 import Z80
 import Z80.Utils
 
-import Z80.TVC
-import Z80.TVC.Video (rowStride)
+import Z80.Machine.TVC.Defs
+import Target.TVC.Video (rowStride)
 import RatBC.Picture
 import RatBC.TVC.Picture
 

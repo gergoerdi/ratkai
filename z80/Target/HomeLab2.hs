@@ -2,18 +2,18 @@
 {-# LANGUAGE BinaryLiterals, NumericUnderscores #-}
 {-# LANGUAGE FlexibleContexts #-}
 {-# OPTIONS_GHC -Wno-unused-do-bind #-}
-module Ratkai.HomeLab2 (game) where
+module Target.HomeLab2 (game) where
 
 import RatBC.Game
 import RatBC.HomeLab2.Strip
 import RatBC.HomeLab2.Binary
 
 import Ratkai.Z80
-import Ratkai.HomeLab2.ZSCII
+import Target.HomeLab2.ZSCII
 
 import Z80
 import Z80.Utils
-import Z80.HomeLab2
+import Z80.Machine.HomeLab.HL2
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Bifunctor

@@ -2,7 +2,7 @@
 {-# LANGUAGE RecursiveDo #-}
 module Main where
 
-import qualified Ratkai.HomeLab2 as Ratkai
+import qualified Target.HomeLab2 as Ratkai
 import RatBC.Game.Text
 
 import Z80
