@@ -7,6 +7,7 @@ import RatBC.Game.Text
 
 import Z80
 import Z80.Utils
+import Z80.Machine.HomeLab.HTP
 import qualified Data.ByteString as BS
 import Data.String (fromString)
 import System.FilePath
@@ -26,35 +27,10 @@ emit name block = do
     let bin = asmData block
     BS.writeFile (name <.> "obj") bin
     printf "Raw binary size: %d bytes\n" $ BS.length bin
-    BS.writeFile (name <.> "htp") $ htp (fromString $ takeBaseName name) block
+    BS.writeFile (name <.> "htp") $ htpWithAutoStart (fromString $ takeBaseName name) block
 
-htp :: BS.ByteString -> ASMBlock -> BS.ByteString
-htp label mainBlock = mconcat
-    [ leader
-    , record label $ org 0x4002 do
-            dw [asmOrg mainBlock]
-    , BS.singleton 0x01
-    , leader
-    , record mempty mainBlock
-    , BS.singleton 0x00
+htpWithAutoStart :: BS.ByteString -> ASMBlock -> BS.ByteString
+htpWithAutoStart label mainBlock = htp 100 label
+    [ mainBlock
+    , org 0x4002 $ dw [asmOrg mainBlock]
     ]
-  where
-    leader = BS.replicate 100 0x00
-
-    record label block = mconcat
-        [ BS.singleton 0xa5
-        , label
-        , BS.singleton 0x00
-        , word $ asmOrg block
-        , word . fromIntegral $ BS.length bs
-        , bs
-        , crc bs
-        ]
-      where
-        bs = asmData block
-
-    crc = BS.singleton . BS.foldr' (+) 0
-
-    word w = BS.pack [lo, hi]
-      where
-        (lo, hi) = wordBytes w
