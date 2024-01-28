@@ -2,6 +2,7 @@ resolver: lts-21.0
 
 packages:
   - ./import/z80-assembler-haskell
+  - ./import/z80-utils-haskell
   - .
 
 extra-deps:

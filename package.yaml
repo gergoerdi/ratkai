@@ -5,8 +5,6 @@ license: GPL-3
 
 extra-source-files:
   - README.md
-  - import/ZX0/src/*.h
-  - import/ZX0/src/*.c
   
 dependencies:
   - base
@@ -36,6 +34,7 @@ executables:
     source-dirs: z80
     dependencies:
       - z80
+      - z80-utils
       - ratkai
 
   ratkai-tvc:
@@ -43,11 +42,8 @@ executables:
     source-dirs: z80
     dependencies:
       - z80
+      - z80-utils
       - ratkai
-    c-sources:
-      - import/ZX0/src/compress.c
-      - import/ZX0/src/optimize.c
-      - import/ZX0/src/memory.c
 
   ratbc-disasm:
     main: src/ratbc-disasm.hs
