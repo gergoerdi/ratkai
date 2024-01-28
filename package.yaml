@@ -25,12 +25,29 @@ dependencies:
   - pqueue
   - extra
 
+default-extensions:
+  - BinaryLiterals
+  - NumericUnderscores
+  - BlockArguments
+  - RecursiveDo
+  - NamedFieldPuns
+  - RecordWildCards
+  - LambdaCase
+
 library:
   source-dirs: src
   
 executables:
   ratkai-homelab2:
     main: homelab2.hs
+    source-dirs: z80
+    dependencies:
+      - z80
+      - z80-utils
+      - ratkai
+      
+  ratkai-homelab34:
+    main: homelab34.hs
     source-dirs: z80
     dependencies:
       - z80
