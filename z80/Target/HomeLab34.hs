@@ -73,8 +73,10 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         printA
         flushOut
 
+        push HL
         call 0x0546
         cr
+        pop HL
 
         skippable \end -> decLoopB 38 do
             rst 0x10
@@ -82,6 +84,8 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             jp Z end
             ld [HL] A
             inc HL
+        ld [HL] $ encodeChar ' '
+        inc HL
         ld [HL] 0xff
 
         pop IY
@@ -91,9 +95,8 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         ld HL $ inputBuf vars
         call inputLine
         call paragraph
-        jp parseLine
 
-    parseLine <- labelled $ parseLine_ assetLocs platform vars routines
+        parseLine_ assetLocs platform vars routines
 
     -- Match one word from `[HL]` vs. a dictionary entry at `[IX]`
     -- After: `A` contains the word code (or 0 on non-match), and
@@ -144,7 +147,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             pop HL
             pop IX
             inc IX
-            ld A 0
+            Z80.xor A
             ret
         pure ()
 
