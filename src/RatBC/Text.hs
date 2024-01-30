@@ -64,10 +64,8 @@ toChar b | b >= 128 = toChar (b - 128) ++ " "
          | otherwise = ""
 
 wrapWords :: Int -> String -> String
-wrapWords cols s = foldMap wrapLine paras
+wrapWords cols = foldMap wrapLine . split (onSublist "\n")
   where
-    paras = split (onSublist "\n") $ s
-
     wrapLine para = startLine tokens
       where
         tokens = split (dropBlanks $ dropDelims $ onSublist " ") $ para
