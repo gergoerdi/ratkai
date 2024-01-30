@@ -280,7 +280,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             beforeParseError = pure ()
 
     assetLocs <- do
-        let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 64 . preprocessGame $ assets
+        let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages True 62 . preprocessGame $ assets
         let asset sel = labelled $ db $ getConst . sel $ assets'
         text1 <- asset msgs1
         text2 <- asset msgs2

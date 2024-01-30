@@ -36,7 +36,7 @@ main = do
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
 
-    game <- pure $ reflowMessages 31 game
+    game <- pure $ reflowMessages False 31 game
     TVC.writeFiles outputPath game
 
     pics <- BS.readFile (inputPath </> "pics-c64.bin")

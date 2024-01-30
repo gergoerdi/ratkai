@@ -63,8 +63,8 @@ toChar b | b >= 128 = toChar (b - 128) ++ " "
          -- | otherwise = printf "|0x%02x|" b
          | otherwise = ""
 
-wrapWords :: Int -> String -> String
-wrapWords cols = foldMap wrapLine . split (onSublist "\n")
+wrapWords :: Bool -> Int -> String -> String
+wrapWords forceNewline cols = foldMap wrapLine . split (onSublist "\n")
   where
     wrapLine para = startLine tokens
       where
@@ -75,8 +75,8 @@ wrapWords cols = foldMap wrapLine . split (onSublist "\n")
     reflow :: Bool -> Int -> [String] -> String
     reflow first n [] = []
     reflow first n (s:ss)
-        | k == n = space <> s <> startLine ss              -- Automatic line-wrapping on last column
-        | k == n - 1 = space <> s <> " " <> startLine ss   -- Automatic line-wrapping on last column
+        | k == n, not forceNewline = space <> s <> startLine ss              -- Automatic line-wrapping on last column
+        | k == n - 1, not forceNewline = space <> s <> " " <> startLine ss   -- Automatic line-wrapping on last column
         | k < n = space <> s <> more ss                   -- Keep going
         | k > cols = "\n" <> s <> "\n" <> startLine ss    -- This word needs its own line
         | otherwise = "\n" <> startLine (s:ss)            -- Start a new line

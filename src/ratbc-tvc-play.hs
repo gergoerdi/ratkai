@@ -46,11 +46,8 @@ instance (MonadIO m) => MonadMessage (Messages m) where
         (bank1, bank2) <- ask
         let bs = case bank of Bank1 -> bank1; Bank2 -> bank2
             (n, bs') = leap bs msg
-        liftIO $ mapM_ putStrLn . reflow $ fromTVCString . BS.take (fromIntegral $ n - 1) $ bs'
+        liftIO $ putStrLn $ fromTVCString . BS.take (fromIntegral $ n - 1) $ bs'
         liftIO $ putStrLn ""
-      where
-          reflow :: String -> [String]
-          reflow = concatMap (chunksOf 31) . split (dropDelims . onSublist $ "\n")
 
 fromTVCString :: ByteString -> String
 fromTVCString = map fromTVCChar . BS.unpack
@@ -63,7 +60,7 @@ main = do
     Options{..} <- execParser optionsInfo
 
     assets <- loadTextFiles inputPath
-    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
+    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages True 31 . preprocessGame $ assets
     let asset :: forall a x. (Game (Const ByteString) -> Const a x) -> a
         asset sel = getConst $ sel assets'
 

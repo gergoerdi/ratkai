@@ -37,7 +37,7 @@ main = do
     createDirectoryIfMissing True outputPath
     writeTextFiles outputPath game
 
-    game <- pure $ reflowMessages 40 game
+    game <- pure $ reflowMessages False 40 game
     HL2.writeFiles outputPath game
     writeDotFile (outputPath </> "map.dot") $ roomDot game
 

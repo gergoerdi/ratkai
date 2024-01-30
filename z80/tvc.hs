@@ -28,7 +28,7 @@ main = do
     let inputPath = "game/bosszu/full"
 
     assets <- loadTextFiles inputPath
-    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 31 . preprocessGame $ assets
+    let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages False 31 . preprocessGame $ assets
 
     let zx0 bs = do
             (bs', delta) <- compressBackwards bs

@@ -145,8 +145,8 @@ stripMessages game@Game{..} = mapStmt remap $ game
 
 reflowMessages :: Game Identity -> Game Identity
 reflowMessages game@Game{..} = game
-    { msgs1 = fmap (fmap $ wrapWords 40) msgs1
-    , msgs2 = fmap (fmap $ wrapWords 40) msgs2
+    { msgs1 = fmap (fmap $ wrapWords True 40) msgs1
+    , msgs2 = fmap (fmap $ wrapWords True 40) msgs2
     }
 
 stripWords :: Bool -> Game Identity -> Game Identity
