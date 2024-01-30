@@ -3,9 +3,12 @@ module RatBC.HomeLab34.Text where
 import Data.Word
 import Data.Char (ord)
 
+encodeOutChar :: Char -> [Word8]
+encodeOutChar '\n' = map (fromIntegral . ord) ['\n', '\r']
+encodeOutChar c = [encodeChar c]
+
 encodeChar :: Char -> Word8
 encodeChar = \case
-    '\n' -> encodeChar ' '
     'Á' -> 0x40
     'É' -> 0x5b
     'Í' -> encodeChar 'I'

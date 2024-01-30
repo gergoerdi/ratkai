@@ -76,7 +76,7 @@ assemble game@Game{..} = game
             putWord8 0x00
             putStmts action
 
-    text = runPut . mapM_ (putWord8 . encodeChar)
+    text = runPut . mapM_ (mapM_ putWord8 . encodeOutChar)
     msgs = map (runPut . withLength8 . putLazyByteString . text)
 
     putDictEntry (k, ws) = mconcat
