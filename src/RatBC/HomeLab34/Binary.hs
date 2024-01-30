@@ -98,7 +98,6 @@ assemble game@Game{..} = game
 ensureRet :: [Stmt] -> [Stmt]
 ensureRet stmts = case reverse stmts of
     Ret:_ -> stmts
-    MoveTo{}:_ -> stmts
     Skip{}:_ -> stmts
     stmts' -> reverse (Ret : stmts')
 

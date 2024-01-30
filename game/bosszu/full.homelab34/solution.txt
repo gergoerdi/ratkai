@@ -1,0 +1,303 @@
+v ember
+beszél ember
+ki
+úszik
+f kés
+v vödör
+tölt vödör
+lista
+tör bambusz
+úszik
+ék
+vár
+lista
+é
+önt víz ház
+be
+v ember
+ráz ember
+le
+elkap egér
+fel
+ki
+é
+ék
+é
+s
+v vándor
+beszél vándor
+pont
+ék
+
+ék
+k
+beszél őr
+ny
+ny
+f
+k
+é
+kopog
+kopog hármat
+be
+beszél tomod
+elolt lámpa
+ki
+dk
+s
+v fa
+mászik fa
+vár
+be
+f levél
+v faliszekrény
+f gyűrű
+olvas levél
+ny
+f
+kérdez lány
+k
+é
+é
+ugrik
+v fa
+ék
+v fa
+kihúz shuri
+d
+dk
+s
+ás
+nyit láda
+f láda
+lista
+ény
+v oshinoko
+üt oshinoko bambusz
+ény
+ék
+mutat gyűrű
+ék
+be
+f
+lista
+beszél ninja
+mutat levél
+ad levél
+ki
+d
+dny
+ény
+v vitorla
+vág vitorla
+s
+ny
+beszél kormányos
+ad pénz
+ki
+v kerít
+ény
+v kerítés
+mászik kerítés
+szed virág
+megfog macska
+mászik kerítés
+ny
+d
+beszél koldus
+é
+é
+ék
+é
+é
+takar skorpi vászon
+f kő
+é
+s
+dob kő kígyó
+eszik kígyó
+é
+fel
+ny
+köt kötél bambusz
+mászik kötél
+be
+kérdez szerzetes
+ny
+k
+d
+d
+d
+ny
+ny
+s
+dob shuriken
+kiált
+ad virág lány
+kérdez ember
+tanul
+dk
+k
+k
+d
+ny
+ny
+verekszik
+f
+d
+d
+é
+é
+é
+lop lepény
+d
+borít asztal
+d
+borít asztal
+d
+d
+ad lepény koldus
+k
+használ füstbomba
+mászik kerítés
+k
+kiékel ajtó
+le
+f
+fel
+ki
+készít szigony
+ék
+
+felhúz horgony
+bont vitorla
+felhúz horgony
+kapaszkodik árbóc
+
+öl cápa szigony
+k
+k
+k
+k
+ék
+dk
+d
+d
+d
+be
+beszél tomodachi
+k
+d
+megad
+lista
+leng
+f gyertya
+gyújt  kötél
+f
+ki
+nyit ajtó
+rúg ajtó
+ki
+f
+üt őr
+v őr
+f
+lista
+gyújt fáklya
+elolt gyertya
+kötöz őr
+töm őr száj
+k
+nyit lánc
+ny
+ny
+ény
+dob skorpi oshino
+d
+ény
+é
+k
+rak pirula üveg
+rak üveg asztal
+ny
+é
+fel
+fel
+v tó
+le 
+le
+d
+ny
+k
+fel
+ny
+ny
+fel
+v ablak
+ny
+nyit ajtó
+húz ajtó
+é
+f
+d
+k
+dob fiola ablak
+le
+k
+d
+támad nusum
+d
+d
+úszik
+f
+úszik
+ki
+d
+öl szigony őr
+é
+k
+é
+k
+d
+
+feszí ajtó
+be
+k
+v hordó
+f
+ny
+é
+ny
+d
+d
+d
+ény
+lerak macska
+é
+s
+kiönt puskapor
+k
+támad őr
+é
+é
+ny
+fel
+k
+v ablak
+dob fáklya kapu
+k
+v folyosó tükör
+támad őr
+d
+d
+d
+v őr
+f
+é
+j
+k
+é
+v szekrény
+nyit szekrény hasáb
+k
+támad hakai

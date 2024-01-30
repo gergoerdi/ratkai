@@ -1,0 +1,79 @@
+-- -*- haskell -*-
+[ WhenFF 14
+    [ IncIfNot0 15                   -- 16 0f
+    , AssertFF 15 50                 -- 07 0f 32             -- "Üvöltözést és dörömbölést hallasz az ajtó felől. "
+    , Message 44                     -- 02 2c                -- "A katonák betörik az ajtót és beözönlenek a szobába. "
+    , Sleep 5                        -- 15 05
+    , Message 45                     -- 02 2d                -- "Pillanatok alatt végeznek veled... "
+    , SetPlayerStatus 255            -- 0d ff
+    , Ret                            -- 00
+    ]
+, WhenFF 8
+    [ IncIfNot0 15                   -- 16 0f
+    , AssertFF 15 51                 -- 07 0f 33             -- "A katonák keresnek téged... "
+    , Message 52                     -- 02 34                -- "A katonák megtaláltak... "
+    , Sleep 5                        -- 15 05
+    , Message 45                     -- 02 2d                -- "Pillanatok alatt végeznek veled... "
+    , SetPlayerStatus 255            -- 0d ff
+    , Ret                            -- 00
+    ]
+, When00 17
+    [ When00 128
+        [ AssignFF 17                    -- 04 11
+        , SpriteOff 3                    -- 13 03
+        ]
+    ]
+, When00 18
+    [ When00 127
+        [ AssignFF 18                    -- 04 12
+        , SpriteOff 4                    -- 13 04
+        ]
+    ]
+, WhenFF 28
+    [ When00 36
+        [ AssignFF 36                    -- 04 24
+        , Skip 5                         -- 09 05
+        ]
+    , Message 61                     -- 02 3d                -- "Egy shuriken fúródik be a fejedbe... "
+    , SetPlayerStatus 255            -- 0d ff
+    ]
+, WhenFF 49
+    [ IncIfNot0 50                   -- 16 32
+    , WhenFF 50
+        [ Assign00 49                    -- 03 31
+        ]
+    ]
+, WhenFF 25
+    [ IncIfNot0 57                   -- 16 39
+    , WhenFF 57
+        [ AssignFF 41                    -- 04 29
+        ]
+    ]
+, IncIfNot0 66                   -- 16 42
+, WhenFF 66
+    [ Message 191                    -- 02 bf                -- "Valaki leszúr hátulról. "
+    , SetPlayerStatus 255            -- 0d ff
+    ]
+, WhenFF 71
+    [ Message 127                    -- 02 7f                -- "A kutyák a közeledben vannak... "
+    , IncIfNot0 70                   -- 16 46
+    , WhenFF 70
+        [ Message 128                    -- 02 80                -- "Rádugranak és átharapják a torkod... "
+        , SetPlayerStatus 255            -- 0d ff
+        ]
+    ]
+, WhenFF 74
+    [ SetPlayerStatus 255            -- 0d ff
+    , Message 61                     -- 02 3d                -- "Egy shuriken fúródik be a fejedbe... "
+    , IncIfNot0 83                   -- 16 53
+    ]
+, WhenFF 83
+    [ SetPlayerStatus 255            -- 0d ff
+    , Message 186                    -- 02 ba                -- "Puszta kézzel? "
+    ]
+, IncIfNot0 93                   -- 16 5d
+, WhenFF 93
+    [ SetPlayerStatus 255            -- 0d ff
+    , Message 160                    -- 02 a0                -- "A cápa rádtámad és leharapja a fejed... "
+    ]
+]

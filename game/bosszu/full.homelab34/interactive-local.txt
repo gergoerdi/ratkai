@@ -1,0 +1,2647 @@
+-- -*- haskell -*-
+[ -- ROOM 1
+  [ InputDispatch [0x15, 0xa3] -- "v compu"
+      [ Message 195                    -- 02 c3                -- "Régi és ütött-kopott. "
+      ]
+  , InputDispatch [0x15, 0xa1] -- "v ember"
+      [ Message 196                    -- 02 c4                -- "Elegáns, jóképű, intelligens, stb, stb... és ő ennek a programnak az írója... "
+      ]
+  , InputDispatch [0x43, 0xa0] -- "nyit ajtó"
+      [ Message 174                    -- 02 ae                -- "Nyitva van. "
+      ]
+  , InputDispatch [0x37, 0x66, 0xa1] -- "beszé |66| ember"
+      [ Message 158                    -- 02 9e                -- "- Ez a játék Japánban játszódik a középkorban. A japánok nagyon vérszomjasak voltak azokban az időkben! Legyél nagyon óvatos és használd gyakran a QSAVE és a BOM funkciót! Sok szerencsét! "
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x65, 0xa0] -- "megy ajtó"
+      [ Assign00 120                   -- 03 78
+      , SetScreen 2 10 2               -- 11 02 0a 02
+      , Chime 3                        -- 14 03
+      , Message 159                    -- 02 9f                -- "  Kitalálta, kidolgozta, megtervezte megrajzolta, összehozta, programozta       Rátkai István         Zene:    Mohos Zoltán & Rátkai Tamás "
+      , Sleep 45                       -- 15 2d
+      , MoveTo 2                       -- 0c 02
+      ]
+  ]
+, -- ROOM 2
+  [ InputDispatch [0x15, 0xa4] -- "v folyó"
+      [ Message 197                    -- 02 c5                -- "Ez tényleg egy folyó. "
+      ]
+  , InputDispatch [0x33] -- "úszik"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x33, 0xa4] -- "úszik folyó"
+      [ MoveTo 3                       -- 0c 03
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 4                       -- 0c 04
+      ]
+  , InputDispatch [0x3a, 0x78] -- "tölt vödör"
+      [ Skip 7                         -- 09 07
+      ]
+  ]
+, -- ROOM 3
+  [ InputDispatch [0x3a, 0x78] -- "tölt vödör"
+      [ AssertHere 120 2               -- 08 78 02             -- "Nem teheted meg. "
+      , Assert00 10 41                 -- 06 0a 29             -- "Tele van vízzel. "
+      , AssignFF 10                    -- 04 0a
+      , Message 4                      -- 02 04                -- "OK. "
+      , Chime 11                       -- 14 0b
+      ]
+  , InputDispatch [0x40, 0x7a] -- "vág bambu"
+      [ Message 198                    -- 02 c6                -- "Próbáld puszta kézzel! "
+      ]
+  , InputDispatch [0x33] -- "úszik"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x33, 0xa4] -- "úszik folyó"
+      [ MoveTo 2                       -- 0c 02
+      ]
+  , InputDispatch [0x34, 0x7a] -- "tör bambu"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x30, 0x7a] -- "húz bambu"
+      [ Assert00 2 19                  -- 06 02 13             -- "Már törtél egyet! "
+      , AssignFF 2                     -- 04 02
+      , Message 4                      -- 02 04                -- "OK. "
+      , Assign00 122                   -- 03 7a
+      , AddScore 1                     -- 10 01
+      , Chime 10                       -- 14 0a
+      ]
+  ]
+, -- ROOM 4
+  [ InputDispatch [0x15, 0xa6] -- "v fa"
+      [ Message 214                    -- 02 d6                -- "Ez tényleg egy fa! "
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ MoveTo 5                       -- 0c 05
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 2                       -- 0c 02
+      ]
+  , InputDispatch [0x28] -- "vár"
+      [ Message 22                     -- 02 16                -- "Telik az idő... "
+      , Sleep 5                        -- 15 05
+      , When00 3
+          [ AssignFF 3                     -- 04 03
+          , Message 23                     -- 02 17                -- "A fosztogatók elvonultak. "
+          , Chime 5                        -- 14 05
+          , AddScore 1                     -- 10 01
+          ]
+      ]
+  , InputDispatch [0x2d, 0x69, 0xa6] -- "mászi |69| fa"
+      [ Message 24                     -- 02 18                -- "Megpróbálod, de leesel. "
+      , Hurt 3                         -- 0f 03
+      ]
+  ]
+, -- ROOM 5
+  [ InputDispatch [0x15, 0xa7] -- "v ház"
+      [ Message 216                    -- 02 d8                -- "Ez egy leégett ház. "
+      ]
+  , InputDispatch [0x1e, 0x78] -- "haszn vödör"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x1e, 0xa9] -- "haszn víz"
+      [ Message 194                    -- 02 c2                -- "Hogy? "
+      ]
+  , InputDispatch [0x15, 0xa8] -- "v falu"
+      [ Message 199                    -- 02 c7                -- "Milyen szörnyű látvány! "
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ MoveTo 8                       -- 0c 08
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x0b, 0xa7] -- "be ház"
+      [ MoveTo 6                       -- 0c 06
+      ]
+  , InputDispatch [0x36, 0xa9, 0x49] -- "önt víz gyújt"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x36, 0xa9, 0x68, 0xa7] -- "önt víz |68| ház"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x36, 0x78, 0x68, 0xa7] -- "önt vödör |68| ház"
+      [ Assert00 120 2                 -- 06 78 02             -- "Nem teheted meg. "
+      , AssertFF 10 25                 -- 07 0a 19             -- "A vödör üres. "
+      , Assign00 10                    -- 03 0a
+      , Assert00 4 4                   -- 06 04 04             -- "OK. "
+      , AssignFF 4                     -- 04 04
+      , Message 26                     -- 02 1a                -- "Eloltottad az izzó gerendát. "
+      , AddScore 2                     -- 10 02
+      , Chime 13                       -- 14 0d
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 4                       -- 0c 04
+      ]
+  ]
+, -- ROOM 6
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 5                       -- 0c 05
+      ]
+  , InputDispatch [0x65, 0x67, 0xd8] -- "megy |67| luk"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x56] -- "miért"
+      [ Message 4                      -- 02 04                -- "OK. "
+      ]
+  , InputDispatch [0x15, 0xd8] -- "v luk"
+      [ Message 200                    -- 02 c8                -- "Próbálj átjutni rajta! "
+      ]
+  , InputDispatch [0x0a] -- "le"
+      [ MoveTo 7                       -- 0c 07
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ MoveTo 5                       -- 0c 05
+      ]
+  , InputDispatch [0x15, 0xa1] -- "v ember"
+      [ Assert00 11 27                 -- 06 0b 1b             -- "Halott. "
+      , Message 28                     -- 02 1c                -- "Eszméletlen. "
+      ]
+  , InputDispatch [0x31, 0xa1] -- "ráz ember"
+      [ Assert00 11 27                 -- 06 0b 1b             -- "Halott. "
+      , AssignFF 11                    -- 04 0b
+      , Message 29                     -- 02 1d                -- "Visszanyeri az eszméletét és halkan beszélni kezd: Szörnyű mészárlás volt... Megöltek mindenkit a faluban... A vezetőjüket Hakainak szólították... Állj bosszút, fiam... - Félrebillen a feje... Halott... "
+      , AddScore 2                     -- 10 02
+      , Chime 9                        -- 14 09
+      ]
+  ]
+, -- ROOM 7
+  [ InputDispatch [0x09] -- "fel"
+      [ MoveTo 6                       -- 0c 06
+      ]
+  , InputDispatch [0x35, 0x7b] -- "elkap egér"
+      [ Assert00 5 2                   -- 06 05 02             -- "Nem teheted meg. "
+      , AssignFF 5                     -- 04 05
+      , Message 4                      -- 02 04                -- "OK. "
+      , Assign00 123                   -- 03 7b
+      , SpriteOff 1                    -- 13 01
+      , AddScore 2                     -- 10 02
+      , Chime 12                       -- 14 0c
+      ]
+  , InputDispatch [0x15, 0xaa] -- "v cella"
+      [ Message 30                     -- 02 1e                -- "Sötét és nyirkos. "
+      ]
+  ]
+, -- ROOM 8
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 9                       -- 0c 09
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 10                      -- 0c 0a
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 5                       -- 0c 05
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  ]
+, -- ROOM 9
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 10                      -- 0c 0a
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 10                      -- 0c 0a
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 8                       -- 0c 08
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 10                      -- 0c 0a
+      ]
+  ]
+, -- ROOM 10
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 14                      -- 0c 0e
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 10                      -- 0c 0a
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 9                       -- 0c 09
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 13                      -- 0c 0d
+      ]
+  ]
+, -- ROOM 11
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 13                      -- 0c 0d
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 10                      -- 0c 0a
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  ]
+, -- ROOM 12
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 9                       -- 0c 09
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 14                      -- 0c 0e
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 13                      -- 0c 0d
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 8                       -- 0c 08
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  ]
+, -- ROOM 13
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 12                      -- 0c 0c
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 10                      -- 0c 0a
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 8                       -- 0c 08
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 9                       -- 0c 09
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 11                      -- 0c 0b
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 8                       -- 0c 08
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 8                       -- 0c 08
+      ]
+  , InputDispatch [0x37, 0x66, 0xa1] -- "beszé |66| ember"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x37, 0x66, 0xab] -- "beszé |66| vándo"
+      [ Assert00 12 31                 -- 06 0c 1f             -- "Nem látom itt őt. "
+      , AssignFF 12                    -- 04 0c
+      , Message 32                     -- 02 20                -- "- Keresd meg Tomodachit! Lehet, hogy ő tud neked segíteni. Kopogj háromszor az ajtaján! - Mondja a vándor és továbbsétál... "
+      , SpriteOff 1                    -- 13 01
+      ]
+  , InputDispatch [0x2c, 0xab] -- "öl vándo"
+      [ Assert00 12 2                  -- 06 0c 02             -- "Nem teheted meg. "
+      , AssignFF 12                    -- 04 0c
+      , Message 33                     -- 02 21                -- "Elszaladt. "
+      , SpriteOff 1                    -- 13 01
+      ]
+  , InputDispatch [0x15, 0xb4] -- "v tomod"
+      [ Message 194                    -- 02 c2                -- "Hogy? "
+      ]
+  , InputDispatch [0x15, 0xab] -- "v vándo"
+      [ Assert00 12 2                  -- 06 0c 02             -- "Nem teheted meg. "
+      , Message 34                     -- 02 22                -- "Nem vagy te orvos! "
+      , AddScore 2                     -- 10 02
+      , Chime 10                       -- 14 0a
+      ]
+  ]
+, -- ROOM 14
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 17                      -- 0c 11
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 15                      -- 0c 0f
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 9                       -- 0c 09
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 16                      -- 0c 10
+      ]
+  ]
+, -- ROOM 15
+  [ InputDispatch [0x07] -- "ny"
+      [ MoveTo 14                      -- 0c 0e
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Message 35                     -- 02 23                -- "Ő sokkal gyakorlottabb a fegyveres harcban... "
+      , Hurt 12                        -- 0f 0c
+      , Sleep 3                        -- 15 03
+      , Message 37                     -- 02 25                -- "Megsebzett téged. "
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ Message 38                     -- 02 26                -- "Az őr megállít. "
+      ]
+  , InputDispatch [0x37, 0x66, 0xa1] -- "beszé |66| ember"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x37, 0x66, 0xae] -- "beszé |66| őr"
+      [ Message 39                     -- 02 27                -- "- Ez Hakai háza! "
+      ]
+  , InputDispatch [0x2d, 0x69, 0xb0] -- "mászi |69| |b0|"
+      [ Message 38                     -- 02 26                -- "Az őr megállít. "
+      ]
+  , InputDispatch [0x0b, 0xaf] -- "be kapu"
+      [ Message 38                     -- 02 26                -- "Az őr megállít. "
+      ]
+  ]
+, -- ROOM 16
+  [ InputDispatch [0x03] -- "k"
+      [ Assert00 7 2                   -- 06 07 02             -- "Nem teheted meg. "
+      , MoveTo 14                      -- 0c 0e
+      ]
+  , InputDispatch [0x4c] -- "küzd"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x2c, 0xae, 0x6a, 0x79] -- "öl őr |6a| kés"
+      [ AssertFF 7 2                   -- 07 07 02             -- "Nem teheted meg. "
+      , Message 35                     -- 02 23                -- "Ő sokkal gyakorlottabb a fegyveres harcban... "
+      , Sleep 3                        -- 15 03
+      , Message 36                     -- 02 24                -- "Megölt téged. "
+      , SetPlayerStatus 255            -- 0d ff
+      , Chime 2                        -- 14 02
+      ]
+  , InputDispatch [0x39] -- "késse"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x39, 0xb1] -- "késse magam"
+      [ AssertFF 7 2                   -- 07 07 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , Message 40                     -- 02 28                -- "A katonák elfognak. "
+      , Chime 2                        -- 14 02
+      , Sleep 5                        -- 15 05
+      , MoveTo 60                      -- 0c 3c
+      , AddScore 2                     -- 10 02
+      , Assign00 63                    -- 03 3f
+      , Chime 9                        -- 14 09
+      , MachineCode 20 [160,120,185,0,32,208,5,169,95,153,0,32,200,192,160,208,241,96] -- 17 a0 78 b9 00 20 d0 05 a9 5f 99 00 20 c8 c0 a0 d0 f1 60
+      ]
+  ]
+, -- ROOM 17
+  [ InputDispatch [0x05] -- "d"
+      [ MoveTo 14                      -- 0c 0e
+      ]
+  , InputDispatch [0x3b] -- "kopog"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x3b, 0x69, 0xa0] -- "kopog |69| ajtó"
+      [ Message 18                     -- 02 12                -- "Semmi sem történt. "
+      ]
+  , InputDispatch [0x3b, 0xb2] -- "kopog három"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x3b, 0xb2, 0xb3] -- "kopog három alkal"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x3b, 0x69, 0xa0, 0xb2] -- "kopog |69| ajtó három"
+      [ Skip 9                         -- 09 09
+      ]
+  , InputDispatch [0x3b, 0x69, 0xa0, 0xb2, 0xb3] -- "kopog |69| ajtó három alkal"
+      [ Message 4                      -- 02 04                -- "OK. "
+      , Message 42                     -- 02 2a                -- "Tomodachi kinyitja az ajtót és behív téged. "
+      , AssignFF 13                    -- 04 0d
+      , Chime 12                       -- 14 0c
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x0b, 0xa0] -- "be ajtó"
+      [ AssertFF 13 43                 -- 07 0d 2b             -- "Csukva az ajtó. "
+      , MoveTo 18                      -- 0c 12
+      ]
+  ]
+, -- ROOM 18
+  [ InputDispatch [0x65, 0xdc, 0xa0] -- "megy hátra ajtó"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x65, 0x6e] -- "megy |6e|"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ When00 14
+          [ If00 8 17                      -- 0a 08 11
+          , MoveTo 17                      -- 0c 11
+          , Assign00 13                    -- 03 0d
+          , Ret                            -- 00
+          ]
+      , Message 44                     -- 02 2c                -- "A katonák betörik az ajtót és beözönlenek a szobába. "
+      , Sleep 5                        -- 15 05
+      , Message 45                     -- 02 2d                -- "Pillanatok alatt végeznek veled... "
+      , SetPlayerStatus 255            -- 0d ff
+      , Assign00 14                    -- 03 0e
+      , Ret                            -- 00
+      , Message 46                     -- 02 2e                -- "Sikerül kiosonnod. "
+      , Assign00 8                     -- 03 08
+      , AddScore 1                     -- 10 01
+      , Chime 4                        -- 14 04
+      , MoveTo 19                      -- 0c 13
+      ]
+  , InputDispatch [0x0e, 0x7c] -- "f lámpa"
+      [ Assert00 14 2                  -- 06 0e 02             -- "Nem teheted meg. "
+      , Message 47                     -- 02 2f                -- "- Hé! Az az enyém! - Szól Tomodachi. "
+      ]
+  , InputDispatch [0x2c, 0xb4] -- "öl tomod"
+      [ Message 48                     -- 02 30                -- "De hisz ő a barátod! "
+      ]
+  , InputDispatch [0x37, 0x66, 0xa1] -- "beszé |66| ember"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x37, 0x66, 0xb4] -- "beszé |66| tomod"
+      [ Assert00 8 31                  -- 06 08 1f             -- "Nem látom itt őt. "
+      , Assert00 14 31                 -- 06 0e 1f             -- "Nem látom itt őt. "
+      , Message 49                     -- 02 31                -- "- Nehéz feladat Hakait megölni... Rengeteg fegyveres őr és katona őrzi a házát. És ő maga is kíváló harcos... Oh! Valaki elárult bennünket... Menekülj a hátsó ajtón keresztül! "
+      , AssignFF 14                    -- 04 0e
+      , Assign 15 252                  -- 01 0f fc
+      , SpriteOff 1                    -- 13 01
+      , SpriteOff 2                    -- 13 02
+      , Sleep 10                       -- 15 0a
+      , Chime 1                        -- 14 01
+      , AddScore 1                     -- 10 01
+      ]
+  , InputDispatch [0x4a, 0x7c] -- "elolt lámpa"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x2e, 0x0c, 0x7c] -- "feldö ki lámpa"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x2e, 0x6b, 0x7c] -- "feldö |6b| lámpa"
+      [ Assert00 8 2                   -- 06 08 02             -- "Nem teheted meg. "
+      , AssertFF 14 2                  -- 07 0e 02             -- "Nem teheted meg. "
+      , AssignFF 8                     -- 04 08
+      , Assign00 14                    -- 03 0e
+      , SetScreen 11 12 255            -- 11 0b 0c ff
+      , SpriteOff 3                    -- 13 03
+      , SpriteOff 4                    -- 13 04
+      , Message 44                     -- 02 2c                -- "A katonák betörik az ajtót és beözönlenek a szobába. "
+      , Assign 15 252                  -- 01 0f fc
+      , AddScore 2                     -- 10 02
+      , Chime 13                       -- 14 0d
+      ]
+  ]
+, -- ROOM 19
+  [ InputDispatch [0x04] -- "dk"
+      [ MoveTo 20                      -- 0c 14
+      ]
+  ]
+, -- ROOM 20
+  [ InputDispatch [0x15, 0xb5] -- "v kúszó"
+      [ Message 202                    -- 02 ca                -- "Lehet, hogy fel tudsz mászni... de lehet, hogy nem... "
+      ]
+  , InputDispatch [0x15, 0xbe] -- "v kerít"
+      [ Message 203                    -- 02 cb                -- "Magas és erős. "
+      ]
+  , InputDispatch [0x2a, 0xa6] -- "ugrik fa"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x2a, 0xbe] -- "ugrik kerít"
+      [ Message 201                    -- 02 c9                -- "Túl magas! "
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 19                      -- 0c 13
+      ]
+  , InputDispatch [0x2d, 0xa6] -- "mászi fa"
+      [ CopyProtection 20 117 192 11   -- 18 14 75 c0 0b
+      , MoveTo 21                      -- 0c 15
+      , Assign00 9                     -- 03 09
+      , Chime 7                        -- 14 07
+      ]
+  , InputDispatch [0x2d, 0xb5] -- "mászi kúszó"
+      [ Message 53                     -- 02 35                -- "Leszakad a súlyod alatt. "
+      , Hurt 3                         -- 0f 03
+      ]
+  , InputDispatch [0x15, 0xa6] -- "v fa"
+      [ Message 54                     -- 02 36                -- "Elég erősnek néz ki. "
+      ]
+  ]
+, -- ROOM 21
+  [ InputDispatch [0x28] -- "vár"
+      [ Message 22                     -- 02 16                -- "Telik az idő... "
+      , Sleep 5                        -- 15 05
+      , When00 67
+          [ When00 9
+              [ AssignFF 9                     -- 04 09
+              , Message 55                     -- 02 37                -- "Az őr továbbmegy. "
+              , SpriteOff 1                    -- 13 01
+              ]
+          ]
+      , Chime 5                        -- 14 05
+      ]
+  , InputDispatch [0x0a] -- "le"
+      [ MoveTo 20                      -- 0c 14
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x65, 0x67, 0xb6] -- "megy |67| ablak"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x0b, 0xb6] -- "be ablak"
+      [ When00 67
+          [ IfFF 9 6                       -- 0b 09 06
+          ]
+      , Message 4                      -- 02 04                -- "OK. "
+      , MoveTo 89                      -- 0c 59
+      , Ret                            -- 00
+      , Message 56                     -- 02 38                -- "Az őr észrevesz és belevágja a lándzsáját a fejedbe. "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  ]
+, -- ROOM 22
+  [ InputDispatch [0x03] -- "k"
+      [ CopyProtection 52 117 192 8    -- 18 34 75 c0 08
+      , MoveTo 23                      -- 0c 17
+      ]
+  , InputDispatch [0x3c, 0xb7] -- "fasz lány"
+      [ Message 57                     -- 02 39                -- "Ő hirtelen előránt egy tőrt és leszúr. "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x37, 0x66, 0xb7] -- "beszé |66| lány"
+      [ Message 58                     -- 02 3a                -- "- Hakai felfogadott két bérgyilkost.Oshinoko, a néma yakuza és Nusumu, aki nesztelen lopódzik a hátad mögé minden követ megforgatnak, hogy megtaláljanak és megöljenek! "
+      ]
+  , InputDispatch [0x37, 0x66, 0xb4] -- "beszé |66| tomod"
+      [ AssertFF 19 2                  -- 07 13 02             -- "Nem teheted meg. "
+      , Message 59                     -- 02 3b                -- "- A felkelők készen állnak a harcra. Adj egy jelet nekünk ma éjszaka és támadunk! "
+      , AssignFF 20                    -- 04 14
+      ]
+  ]
+, -- ROOM 23
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 24                      -- 0c 18
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 16                      -- 0c 10
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x0b, 0xa7] -- "be ház"
+      [ MoveTo 22                      -- 0c 16
+      ]
+  ]
+, -- ROOM 24
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 25                      -- 0c 19
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 23                      -- 0c 17
+      ]
+  ]
+, -- ROOM 25
+  [ InputDispatch [0x01] -- "é"
+      [ If00 28 7                      -- 0a 1c 07
+      , MoveTo 31                      -- 0c 1f
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ When00 28
+          [ MoveTo 24                      -- 0c 18
+          , Ret                            -- 00
+          ]
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x2a] -- "ugrik"
+      [ CopyProtection 64 117 192 20   -- 18 40 75 c0 14
+      , Assert00 21 2                  -- 06 15 02             -- "Nem teheted meg. "
+      , Assign00 28                    -- 03 1c
+      , Message 60                     -- 02 3c                -- "Valami elszáguld a füled mellett. "
+      , MoveTo 26                      -- 0c 1a
+      , AssignFF 21                    -- 04 15
+      , AddScore 2                     -- 10 02
+      , Chime 13                       -- 14 0d
+      ]
+  ]
+, -- ROOM 26
+  [ InputDispatch [0x15, 0xa6] -- "v fa"
+      [ CopyProtection 4 128 192 1     -- 18 04 80 c0 01
+      , Message 69                     -- 02 45                -- "Látsz valamit! "
+      , SpriteOn 1 31 0 166 80         -- 12 01 1f 00 a6 50
+      , Chime 7                        -- 14 07
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 28                      -- 0c 1c
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 26                      -- 0c 1a
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 26                      -- 0c 1a
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 26                      -- 0c 1a
+      ]
+  ]
+, -- ROOM 27
+  [ InputDispatch [0x15, 0xa6] -- "v fa"
+      [ Assert00 30 21                 -- 06 1e 15             -- "Nem látsz semmi érdekeset. "
+      , Message 70                     -- 02 46                -- "Egy shuriken áll ki a fából. "
+      , SpriteOn 1 30 3 166 80         -- 12 01 1e 03 a6 50
+      , Chime 7                        -- 14 07
+      ]
+  , InputDispatch [0x30, 0x81] -- "húz shuri"
+      [ Assert00 30 2                  -- 06 1e 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , Assign00 129                   -- 03 81
+      , AssignFF 30                    -- 04 1e
+      , SpriteOff 1                    -- 13 01
+      , AddScore 2                     -- 10 02
+      , Chime 10                       -- 14 0a
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 28                      -- 0c 1c
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 26                      -- 0c 1a
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  ]
+, -- ROOM 28
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 26                      -- 0c 1a
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 29                      -- 0c 1d
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 28                      -- 0c 1c
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 28                      -- 0c 1c
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  ]
+, -- ROOM 29
+  [ InputDispatch [0x3d] -- "ás"
+      [ AssertHere 128 67              -- 08 80 43             -- "Nincs szerszámod! "
+      , Assert00 29 18                 -- 06 1d 12             -- "Semmi sem történt. "
+      , AssignFF 29                    -- 04 1d
+      , AssignLoc 130                  -- 05 82
+      , Message 68                     -- 02 44                -- "Néhány perces munka után egy ládát fordított ki az ásó a földből. "
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 28                      -- 0c 1c
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 26                      -- 0c 1a
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 29                      -- 0c 1d
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 29                      -- 0c 1d
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 26                      -- 0c 1a
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 30                      -- 0c 1e
+      ]
+  ]
+, -- ROOM 30
+  [ InputDispatch [0x37, 0x66, 0xb8] -- "beszé |66| oshin"
+      [ Assert00 22 2                  -- 06 16 02             -- "Nem teheted meg. "
+      , Message 63                     -- 02 3f                -- "Nem válaszol, néma! "
+      ]
+  , InputDispatch [0x2c, 0xb8] -- "öl oshin"
+      [ Assert00 22 2                  -- 06 16 02             -- "Nem teheted meg. "
+      , Message 64                     -- 02 40                -- "Puszta kézzel Oshinoko ellen? Ez reménytelen. "
+      ]
+  , InputDispatch [0x32, 0x81, 0x66, 0xb8] -- "dob shuri |66| oshin"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x2c, 0xb8, 0x6a, 0x81] -- "öl oshin |6a| shuri"
+      [ AssertHere 129 6               -- 08 81 06             -- "Nincs nálad az a tárgy. "
+      , Skip 11                        -- 09 0b
+      ]
+  , InputDispatch [0x2c, 0xb8, 0x6a, 0x79] -- "öl oshin |6a| kés"
+      [ AssertHere 121 6               -- 08 79 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 22 2                  -- 06 16 02             -- "Nem teheted meg. "
+      , Message 65                     -- 02 41                -- "Számított a támadásodra, így könnyedén hárította azt és megölt... "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x2c, 0xb8, 0x6a, 0x7a] -- "öl oshin |6a| bambu"
+      [ AssertHere 122 6               -- 08 7a 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 22 2                  -- 06 16 02             -- "Nem teheted meg. "
+      , AssignFF 22                    -- 04 16
+      , Message 66                     -- 02 42                -- "Leütötted a bambusz-rúddal. "
+      , SetScreen 9 8 7                -- 11 09 08 07
+      , AddScore 2                     -- 10 02
+      , Chime 5                        -- 14 05
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 27                      -- 0c 1b
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ AssertFF 22 62                 -- 07 16 3e             -- "Oshinoko megállít. "
+      , CopyProtection 192 152 192 0   -- 18 c0 98 c0 00
+      , MoveTo 31                      -- 0c 1f
+      ]
+  ]
+, -- ROOM 31
+  [ InputDispatch [0x02] -- "ék"
+      [ MoveTo 32                      -- 0c 20
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 25                      -- 0c 19
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 35                      -- 0c 23
+      ]
+  ]
+, -- ROOM 32
+  [ InputDispatch [0x2d, 0x66, 0xb9] -- "mászi |66| ninja"
+      [ Assert00 23 2                  -- 06 17 02             -- "Nem teheted meg. "
+      , Message 207                    -- 02 cf                -- "Nincs válasz. "
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 31                      -- 0c 1f
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ AssertFF 23 71                 -- 07 17 47             -- "A ninják megállítanak. "
+      , MoveTo 33                      -- 0c 21
+      ]
+  , InputDispatch [0x3e, 0x7d] -- "mutat gyűrű"
+      [ CopyProtection 35 153 192 113  -- 18 23 99 c0 71
+      , When00 31
+          [ Assert00 125 6                 -- 06 7d 06             -- "Nincs nálad az a tárgy. "
+          ]
+      , AssignFF 23                    -- 04 17
+      , Message 72                     -- 02 48                -- "A ninják eltüntek... "
+      , SpriteOff 1                    -- 13 01
+      , SpriteOff 2                    -- 13 02
+      , Chime 11                       -- 14 0b
+      ]
+  , InputDispatch [0x2c, 0xb9, 0x6a, 0x79] -- "öl ninja |6a| kés"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x2c, 0xb9] -- "öl ninja"
+      [ Assert00 23 2                  -- 06 17 02             -- "Nem teheted meg. "
+      , Message 35                     -- 02 23                -- "Ő sokkal gyakorlottabb a fegyveres harcban... "
+      , Sleep 15                       -- 15 0f
+      , Message 36                     -- 02 24                -- "Megölt téged. "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  ]
+, -- ROOM 33
+  [ InputDispatch [0x05] -- "d"
+      [ MoveTo 32                      -- 0c 20
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x0b, 0xba] -- "be barla"
+      [ MoveTo 34                      -- 0c 22
+      ]
+  ]
+, -- ROOM 34
+  [ InputDispatch [0x07] -- "ny"
+      [ MoveTo 33                      -- 0c 21
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ MoveTo 33                      -- 0c 21
+      ]
+  , InputDispatch [0x2c, 0xb9] -- "öl ninja"
+      [ Message 35                     -- 02 23                -- "Ő sokkal gyakorlottabb a fegyveres harcban... "
+      , Sleep 15                       -- 15 0f
+      , Message 36                     -- 02 24                -- "Megölt téged. "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x37, 0x66, 0xb9] -- "beszé |66| ninja"
+      [ Message 73                     -- 02 49                -- "- Add át urad üzenetét nekem! "
+      ]
+  , InputDispatch [0x3e, 0x7e] -- "mutat levél"
+      [ Skip 6                         -- 09 08
+      ]
+  , InputDispatch [0x38, 0x7e] -- "ad levél"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x38, 0x7e, 0x66, 0xb9] -- "ad levél |66| ninja"
+      [ Assert00 126 6                 -- 06 7e 06             -- "Nincs nálad az a tárgy. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , Message 74                     -- 02 4a                -- "A ninja elolvassa a levelet, majd egy altató-pirulát ad át neked. "
+      , AssignFF 126                   -- 04 7e
+      , Assign00 132                   -- 03 84
+      , AddScore 2                     -- 10 02
+      , Chime 12                       -- 14 0c
+      ]
+  ]
+, -- ROOM 35
+  [ InputDispatch [0x33] -- "úszik"
+      [ Message 204                    -- 02 cc                -- "Azt hiszem egy hajó sokkal kényelmeseb lenne! "
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 31                      -- 0c 1f
+      ]
+  , InputDispatch [0x65, 0x68, 0xda] -- "megy |68| bárka"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ CopyProtection 194 157 192 12  -- 18 c2 9d c0 0c
+      , Assert00 19 2                  -- 06 13 02             -- "Nem teheted meg. "
+      , MoveTo 36                      -- 0c 24
+      ]
+  , InputDispatch [0x40, 0xbb, 0x6a, 0x79] -- "vág vitor |6a| kés"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x40, 0x86, 0x6a, 0x79] -- "vág vászn |6a| kés"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x40, 0x86] -- "vág vászn"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x40, 0xbb] -- "vág vitor"
+      [ When00 32
+          [ Assert00 121 2                 -- 06 79 02             -- "Nem teheted meg. "
+          , Message 4                      -- 02 04                -- "OK. "
+          , Assign00 134                   -- 03 86
+          , AssignFF 32                    -- 04 20
+          , Chime 6                        -- 14 06
+          , Chime 10                       -- 14 0a
+          , AddScore 1                     -- 10 01
+          , Ret                            -- 00
+          ]
+      , Message 75                     -- 02 4b                -- "A kormányos észreveszi miben mesterkedsz és hozzádvág egy követ. "
+      , Hurt 8                         -- 0f 08
+      ]
+  ]
+, -- ROOM 36
+  [ InputDispatch [0x0a] -- "le"
+      [ MoveTo 37                      -- 0c 25
+      ]
+  , InputDispatch [0x37, 0x66, 0xbc] -- "beszé |66| kormá"
+      [ Assert00 19 2                  -- 06 13 02             -- "Nem teheted meg. "
+      , Message 77                     -- 02 4d                -- "Átviszlek a tengeren... ha meg tudod fizetni... "
+      ]
+  , InputDispatch [0x38, 0x83] -- "ad pénz"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x38, 0x83, 0x66, 0xbc] -- "ad pénz |66| kormá"
+      [ Assert00 131 6                 -- 06 83 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 131                   -- 04 83
+      , AssignFF 19                    -- 04 13
+      , AddScore 2                     -- 10 02
+      , Chime 3                        -- 14 03
+      , Message 78                     -- 02 4e                -- "A vitorlás kifut a tengerre. "
+      , Sleep 40                       -- 15 28
+      , Message 79                     -- 02 4f                -- "A hajó kiköt egy kikötőben... Kínában. "
+      ]
+  , InputDispatch [0x2c, 0xbc] -- "öl kormá"
+      [ Assert00 19 2                  -- 06 13 02             -- "Nem teheted meg. "
+      , Message 80                     -- 02 50                -- "Inkább ne! Lehet, hogy segíthed neked. "
+      ]
+  , InputDispatch [0x2f, 0x89, 0xa0] -- "tol kiéke ajtó"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x89, 0xa0] -- "kiéke ajtó"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x1e, 0x89] -- "haszn kiéke"
+      [ AssertHere 137 2               -- 08 89 02             -- "Nem teheted meg. "
+      , AssignFF 137                   -- 04 89
+      , AssignFF 24                    -- 04 18
+      , Message 4                      -- 02 04                -- "OK. "
+      , AddScore 2                     -- 10 02
+      , Chime 12                       -- 14 0c
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ When00 26
+          [ When00 19
+              [ MoveTo 35                      -- 0c 23
+              , Ret                            -- 00
+              ]
+          ]
+      , MoveTo 38                      -- 0c 26
+      ]
+  ]
+, -- ROOM 37
+  [ InputDispatch [0x09] -- "fel"
+      [ AssertFF 24 81                 -- 07 18 51             -- "A csapóajtó csukva van. "
+      , MoveTo 36                      -- 0c 24
+      ]
+  ]
+, -- ROOM 38
+  [ InputDispatch [0x0b] -- "be"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 36                      -- 0c 24
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 39                      -- 0c 27
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 40                      -- 0c 28
+      ]
+  ]
+, -- ROOM 39
+  [ InputDispatch [0x15, 0xda] -- "v bárka"
+      [ Message 218                    -- 02 da                -- "Ez egy vitorlás bárka... "
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ MoveTo 38                      -- 0c 26
+      ]
+  , InputDispatch [0x42, 0xbb] -- "behúz vitor"
+      [ Assert00 33 82                 -- 06 21 52             -- "Már megtetted. "
+      , AssignFF 33                    -- 04 21
+      , Message 4                      -- 02 04                -- "OK. "
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  , InputDispatch [0x41, 0xbd] -- "felhú vasma"
+      [ AssertFF 33 76                 -- 07 21 4c             -- "A vitorla az első! "
+      , Message 83                     -- 02 53                -- "A bárkád kifut a tengerre. "
+      , SetScreen 6 14 22              -- 11 06 0e 16
+      , Chime 3                        -- 14 03
+      , Sleep 40                       -- 15 28
+      , Chime 2                        -- 14 02
+      , SetScreen 6 14 255             -- 11 06 0e ff
+      , Message 84                     -- 02 54                -- "Szörnyű viharba kerültél. "
+      , Sleep 10                       -- 15 0a
+      , Message 85                     -- 02 55                -- "A vihar darabokra töri a bárkád. "
+      , MoveTo 97                      -- 0c 61
+      , Assign 83 250                  -- 01 53 fa
+      , AddScore 2                     -- 10 02
+      ]
+  ]
+, -- ROOM 40
+  [ InputDispatch [0x07] -- "ny"
+      [ MoveTo 42                      -- 0c 2a
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 38                      -- 0c 26
+      ]
+  , InputDispatch [0x15, 0xbe] -- "v kerít"
+      [ Message 86                     -- 02 56                -- "Át tudsz mászni rajta. "
+      ]
+  , InputDispatch [0x2d, 0x6c, 0xbe] -- "mászi |6c| kerít"
+      [ CopyProtection 18 158 192 18   -- 18 12 9e c0 12
+      , Message 4                      -- 02 04                -- "OK. "
+      , MoveTo 41                      -- 0c 29
+      , Chime 11                       -- 14 0b
+      ]
+  ]
+, -- ROOM 41
+  [ InputDispatch [0x3d] -- "ás"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x3d, 0xdd] -- "ás kert"
+      [ AssertHere 128 2               -- 08 80 02             -- "Nem teheted meg. "
+      , Message 211                    -- 02 d3                -- "Fárasztó munka... "
+      , Hurt 2                         -- 0f 02
+      ]
+  , InputDispatch [0x2d, 0x6c, 0xbe] -- "mászi |6c| kerít"
+      [ Message 4                      -- 02 04                -- "OK. "
+      , MoveTo 40                      -- 0c 28
+      , Chime 11                       -- 14 0b
+      ]
+  , InputDispatch [0x1e, 0x7b] -- "haszn egér"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x35, 0x88] -- "elkap macsk"
+      [ AssertHere 123 2               -- 08 7b 02             -- "Nem teheted meg. "
+      , AssignFF 123                   -- 04 7b
+      , AssignFF 27                    -- 04 1b
+      , Assign00 136                   -- 03 88
+      , Message 115                    -- 02 73                -- "Kicsalogatod a macskát a bokor alól az egérrel, majd elkapod. "
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  , InputDispatch [0x30, 0x90] -- "húz virág"
+      [ CopyProtection 162 120 192 113 -- 18 a2 78 c0 71
+      , Assert00 92 82                 -- 06 5c 52             -- "Már megtetted. "
+      , AssignFF 92                    -- 04 5c
+      , Assign00 144                   -- 03 90
+      , Message 4                      -- 02 04                -- "OK. "
+      , AddScore 2                     -- 10 02
+      , Chime 7                        -- 14 07
+      ]
+  ]
+, -- ROOM 42
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 40                      -- 0c 28
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 43                      -- 0c 2b
+      ]
+  ]
+, -- ROOM 43
+  [ InputDispatch [0x30, 0x90] -- "húz virág"
+      [ Assert00 58 82                 -- 06 3a 52             -- "Már megtetted. "
+      , Assign00 144                   -- 03 90
+      , Message 44                     -- 02 2c                -- "A katonák betörik az ajtót és beözönlenek a szobába. "
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ MoveTo 42                      -- 0c 2a
+      , Assign00 37                    -- 03 25
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 44                      -- 0c 2c
+      ]
+  , InputDispatch [0x2c, 0xbf] -- "öl koldu"
+      [ Assert00 38 2                  -- 06 26 02             -- "Nem teheted meg. "
+      , AssignFF 38                    -- 04 26
+      , SpriteOff 1                    -- 13 01
+      , Message 88                     -- 02 58                -- "Megölted egy szimpla ütéssel. "
+      ]
+  , InputDispatch [0x37, 0x66, 0xbf] -- "beszé |66| koldu"
+      [ Message 89                     -- 02 59                -- "- Szolgálhatok néhány érdekes információval Hakairól... de most nagyon éhes vagyok... "
+      ]
+  , InputDispatch [0x38, 0x8b, 0x66, 0xbf] -- "ad lepén |66| koldu"
+      [ AssertHere 139 8               -- 08 8b 08             -- "Nincs nálad semmi. "
+      , Message 90                     -- 02 5a                -- "- Köszönöm, uram! Nos... Valamikor én készítettem el a titkos átjárókat Hakai házában... Ez a 'kulcs' minden titkos ajtót nyit. - mondja a koldus és átnyújt neked egy hatszögletű hasábot. "
+      , Assign00 146                   -- 03 92
+      , AssignFF 139                   -- 04 8b
+      , AddScore 2                     -- 10 02
+      , Chime 12                       -- 14 0c
+      ]
+  ]
+, -- ROOM 44
+  [ InputDispatch [0x07] -- "ny"
+      [ Assert00 25 2                  -- 06 19 02             -- "Nem teheted meg. "
+      , MoveTo 43                      -- 0c 2b
+      ]
+  , InputDispatch [0x2d, 0xbe] -- "mászi kerít"
+      [ CopyProtection 133 120 192 7   -- 18 85 78 c0 07
+      , WhenFF 25
+          [ When00 49
+              [ Message 91                     -- 02 5b                -- "Valaki egy kést dob a hátadba. "
+              , Sleep 5                        -- 15 05
+              , SetPlayerStatus 255            -- 0d ff
+              , Ret                            -- 00
+              ]
+          ]
+      , Message 4                      -- 02 04                -- "OK. "
+      , MoveTo 38                      -- 0c 26
+      , Chime 13                       -- 14 0d
+      ]
+  ]
+, -- ROOM 45
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 48                      -- 0c 30
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 42                      -- 0c 2a
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x2e, 0x6c, 0xc0] -- "feldö |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x2f, 0x6c, 0xc0] -- "tol |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x3b, 0x6c, 0xc0] -- "kopog |6c| aszta"
+      [ AssertFF 25 2                  -- 07 19 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 37                    -- 04 25
+      , Message 92                     -- 02 5c                -- "Ez majd feltartja az üldözőket... "
+      ]
+  , InputDispatch [0x15, 0xc0] -- "v aszta"
+      [ Message 93                     -- 02 5d                -- "Eléggé inog... "
+      ]
+  ]
+, -- ROOM 46
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 48                      -- 0c 30
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 47                      -- 0c 2f
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x2e, 0x6c, 0xc0] -- "feldö |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x2f, 0x6c, 0xc0] -- "tol |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x3b, 0x6c, 0xc0] -- "kopog |6c| aszta"
+      [ AssertFF 25 2                  -- 07 19 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 37                    -- 04 25
+      , Message 92                     -- 02 5c                -- "Ez majd feltartja az üldözőket... "
+      ]
+  , InputDispatch [0x15, 0xc0] -- "v aszta"
+      [ Message 93                     -- 02 5d                -- "Eléggé inog... "
+      ]
+  ]
+, -- ROOM 47
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x2e, 0x6c, 0xc0] -- "feldö |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x2f, 0x6c, 0xc0] -- "tol |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x3b, 0x6c, 0xc0] -- "kopog |6c| aszta"
+      [ AssertFF 25 2                  -- 07 19 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 37                    -- 04 25
+      , Message 92                     -- 02 5c                -- "Ez majd feltartja az üldözőket... "
+      ]
+  , InputDispatch [0x2c] -- "öl"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x4c] -- "küzd"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x2c, 0xa1] -- "öl ember"
+      [ Assert00 40 2                  -- 06 28 02             -- "Nem teheted meg. "
+      , When00 55
+          [ Message 124                    -- 02 7c                -- "Megsebesülsz... "
+          , Hurt 5                         -- 0f 05
+          , Chime 2                        -- 14 02
+          , Ret                            -- 00
+          ]
+      , AssignFF 40                    -- 04 28
+      , Message 125                    -- 02 7d                -- "Szétzavartad a verekedőket. "
+      , AssignLoc 137                  -- 05 89
+      , AssignLoc 138                  -- 05 8a
+      , Sleep 5                        -- 15 05
+      , MoveTo 47                      -- 0c 2f
+      , AddScore 1                     -- 10 01
+      , Chime 13                       -- 14 0d
+      ]
+  , InputDispatch [0x15, 0xc0] -- "v aszta"
+      [ Message 93                     -- 02 5d                -- "Eléggé inog... "
+      ]
+  ]
+, -- ROOM 48
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 50                      -- 0c 32
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 47                      -- 0c 2f
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 49                      -- 0c 31
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x2e, 0x6c, 0xc0] -- "feldö |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x2f, 0x6c, 0xc0] -- "tol |6c| aszta"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x3b, 0x6c, 0xc0] -- "kopog |6c| aszta"
+      [ AssertFF 25 2                  -- 07 19 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 37                    -- 04 25
+      , Message 92                     -- 02 5c                -- "Ez majd feltartja az üldözőket... "
+      ]
+  , InputDispatch [0x15, 0xc0] -- "v aszta"
+      [ Message 93                     -- 02 5d                -- "Eléggé inog... "
+      ]
+  ]
+, -- ROOM 49
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 45                      -- 0c 2d
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 47                      -- 0c 2f
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 48                      -- 0c 30
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 46                      -- 0c 2e
+      ]
+  , InputDispatch [0x15, 0xc0] -- "v aszta"
+      [ Message 94                     -- 02 5e                -- "Tele van meleg, illatozó lepényekkel. "
+      ]
+  , InputDispatch [0x46, 0x8b] -- "vesz lepén"
+      [ Message 96                     -- 02 60                -- "Nincs pénzed! "
+      ]
+  , InputDispatch [0x45, 0x8b] -- "lop lepén"
+      [ Assert00 25 82                 -- 06 19 52             -- "Már megtetted. "
+      , AssignFF 25                    -- 04 19
+      , SpriteOff 4                    -- 13 04
+      , Message 4                      -- 02 04                -- "OK. "
+      , Message 97                     -- 02 61                -- "Tolvaj! Fogják meg! - kiabál a lepényárus. "
+      , Assign 57 248                  -- 01 39 f8
+      , Assign00 139                   -- 03 8b
+      , AddScore 2                     -- 10 02
+      , Chime 7                        -- 14 07
+      ]
+  ]
+, -- ROOM 50
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 51                      -- 0c 33
+      , AssertFF 42 98                 -- 07 2a 62             -- "Kezdesz éhes lenni. "
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 48                      -- 0c 30
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 57                      -- 0c 39
+      ]
+  ]
+, -- ROOM 51
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 52                      -- 0c 34
+      , AssertFF 42 99                 -- 07 2a 63             -- "Nagyon éhes vagy! "
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 50                      -- 0c 32
+      ]
+  , InputDispatch [0x2c, 0x8f] -- "öl skorp"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x35, 0x8f] -- "elkap skorp"
+      [ Assert00 43 2                  -- 06 2b 02             -- "Nem teheted meg. "
+      , Message 100                    -- 02 64                -- "A skorpió megcsípett... "
+      , Sleep 5                        -- 15 05
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x32, 0x86, 0x66, 0x8f] -- "dob vászn |66| skorp"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x3f, 0x8f, 0x6a, 0x86] -- "takar skorp |6a| vászn"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x35, 0x8f, 0x6a, 0x86] -- "elkap skorp |6a| vászn"
+      [ Assert00 43 2                  -- 06 2b 02             -- "Nem teheted meg. "
+      , Assert00 134 6                 -- 06 86 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 43                    -- 04 2b
+      , AssignFF 134                   -- 04 86
+      , Assign00 143                   -- 03 8f
+      , Message 4                      -- 02 04                -- "OK. "
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  , InputDispatch [0x0e, 0x8d] -- "f kő"
+      [ When00 43
+          [ Message 100                    -- 02 64                -- "A skorpió megcsípett... "
+          , SetPlayerStatus 255            -- 0d ff
+          , Sleep 5                        -- 15 05
+          , Ret                            -- 00
+          ]
+      , When00 44
+          [ Assign00 141                   -- 03 8d
+          , AssignFF 44                    -- 04 2c
+          , Message 4                      -- 02 04                -- "OK. "
+          , AddScore 1                     -- 10 01
+          , Chime 5                        -- 14 05
+          , Ret                            -- 00
+          ]
+      , AssertHere 141 5               -- 08 8d 05             -- "Nem látom itt azt a tárgyat. "
+      , When00 141
+          [ Message 5                      -- 02 05                -- "Nem látom itt azt a tárgyat. "
+          , Ret                            -- 00
+          ]
+      , Assign00 141                   -- 03 8d
+      , Message 4                      -- 02 04                -- "OK. "
+      ]
+  ]
+, -- ROOM 52
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 53                      -- 0c 35
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 51                      -- 0c 33
+      ]
+  , InputDispatch [0x2c, 0x8e, 0x6a, 0x7a] -- "öl kígyó |6a| bambu"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x2c, 0x8e, 0x6a, 0x79] -- "öl kígyó |6a| kés"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x2c, 0x8e] -- "öl kígyó"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x35, 0x8e] -- "elkap kígyó"
+      [ Assert00 45 2                  -- 06 2d 02             -- "Nem teheted meg. "
+      , Message 101                    -- 02 65                -- "A kígyó megmart... "
+      , Sleep 5                        -- 15 05
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x32, 0x8d, 0x66, 0x8e] -- "dob kő |66| kígyó"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x2c, 0x8e, 0x6a, 0x8d] -- "öl kígyó |6a| kő"
+      [ Assert00 45 2                  -- 06 2d 02             -- "Nem teheted meg. "
+      , AssertHere 141 6               -- 08 8d 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 141                   -- 04 8d
+      , AssignLoc 142                  -- 05 8e
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 45                    -- 04 2d
+      , SetScreen 15 12 24             -- 11 0f 0c 18
+      , AddScore 2                     -- 10 02
+      , Chime 7                        -- 14 07
+      ]
+  ]
+, -- ROOM 53
+  [ InputDispatch [0x01] -- "é"
+      [ Message 103                    -- 02 67                -- "Beleestél egy szakadékba... "
+      , Sleep 5                        -- 15 05
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 52                      -- 0c 34
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ CopyProtection 100 8 192 40    -- 18 64 08 c0 28
+      , MoveTo 54                      -- 0c 36
+      ]
+  ]
+, -- ROOM 54
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 53                      -- 0c 35
+      ]
+  , InputDispatch [0x2d, 0xc1] -- "mászi szikl"
+      [ Message 104                    -- 02 68                -- "Ez lehetetlen! "
+      ]
+  , InputDispatch [0x1e, 0x7f] -- "haszn kötél"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x32, 0x7f] -- "dob kötél"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x32, 0x7f, 0x68, 0xc1] -- "dob kötél |68| szikl"
+      [ AssertHere 127 6               -- 08 7f 06             -- "Nincs nálad az a tárgy. "
+      , Message 105                    -- 02 69                -- "Feldobod a kötelet, de visszaesik. "
+      , Chime 2                        -- 14 02
+      ]
+  , InputDispatch [0x1e, 0x7a] -- "haszn bambu"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x4e, 0x7f, 0x68, 0x7a] -- "köt kötél |68| bambu"
+      [ AssertHere 127 6               -- 08 7f 06             -- "Nincs nálad az a tárgy. "
+      , AssertHere 122 105             -- 08 7a 69             -- "Feldobod a kötelet, de visszaesik. "
+      , AssignFF 122                   -- 04 7a
+      , AssignFF 127                   -- 04 7f
+      , Message 106                    -- 02 6a                -- "Rákötözöd a kötelet a bambuszrúdra, majd feldobod. A bambusz szerencsésen beékelődok két szikla közé. "
+      , AssignFF 46                    -- 04 2e
+      , AddScore 1                     -- 10 01
+      , Chime 4                        -- 14 04
+      ]
+  , InputDispatch [0x2d, 0x7f] -- "mászi kötél"
+      [ AssertFF 46 2                  -- 07 2e 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , MoveTo 55                      -- 0c 37
+      ]
+  ]
+, -- ROOM 55
+  [ InputDispatch [0x0a] -- "le"
+      [ MoveTo 54                      -- 0c 36
+      ]
+  , InputDispatch [0x2d, 0x7f] -- "mászi kötél"
+      [ Message 4                      -- 02 04                -- "OK. "
+      , MoveTo 54                      -- 0c 36
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ MoveTo 56                      -- 0c 38
+      ]
+  ]
+, -- ROOM 56
+  [ InputDispatch [0x2c, 0xc2] -- "öl szerz"
+      [ Message 107                    -- 02 6b                -- "Könnyedén hárítja az ütéseid. "
+      ]
+  , InputDispatch [0x37, 0x66, 0xc2] -- "beszé |66| szerz"
+      [ CopyProtection 24 8 192 83     -- 18 18 08 c0 53
+      , Message 108                    -- 02 6c                -- "- Gyere, fiam! Itt megismerheted a test és a lélek törvényeit és lehetőségeit... Követed a szerzetest és többhónapos tanulással megtanulsz uralkodni a tested és szellemed felett. "
+      , Chime 3                        -- 14 03
+      , Sleep 35                       -- 15 23
+      , Assign00 46                    -- 03 2e
+      , AssignFF 51                    -- 04 33
+      , MoveTo 54                      -- 0c 36
+      , AddScore 1                     -- 10 01
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 55                      -- 0c 37
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ MoveTo 55                      -- 0c 37
+      ]
+  ]
+, -- ROOM 57
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 50                      -- 0c 32
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 58                      -- 0c 3a
+      ]
+  ]
+, -- ROOM 58
+  [ InputDispatch [0x01] -- "é"
+      [ When00 47
+          [ Message 116                    -- 02 74                -- "A rablók megöltek. "
+          , SetPlayerStatus 255            -- 0d ff
+          , Sleep 5                        -- 15 05
+          , Ret                            -- 00
+          ]
+      , MoveTo 59                      -- 0c 3b
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 57                      -- 0c 39
+      ]
+  , InputDispatch [0x32, 0x81, 0x66, 0xc3] -- "dob shuri |66| rabló"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x32, 0x81, 0x67, 0xc3] -- "dob shuri |67| rabló"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x32, 0x81] -- "dob shuri"
+      [ AssertHere 129 6               -- 08 81 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 129                   -- 04 81
+      , AssignFF 52                    -- 04 34
+      , Message 4                      -- 02 04                -- "OK. "
+      , Message 109                    -- 02 6d                -- "A shuriken megsebzi az egyiket. "
+      , AddScore 2                     -- 10 02
+      , Chime 11                       -- 14 0b
+      ]
+  , InputDispatch [0x2b] -- "üvölt"
+      [ AssertFF 52 110                -- 07 34 6e             -- "Mi van? Szögbe léptél? "
+      , Assign00 52                    -- 03 34
+      , AssignFF 47                    -- 04 2f
+      , Message 111                    -- 02 6f                -- "A rablók fejvesztve menekülnek... Elvágod a lány köteleit, majd elkíséred őt az apja házáig. "
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      , Sleep 10                       -- 15 0a
+      , MoveTo 59                      -- 0c 3b
+      ]
+  ]
+, -- ROOM 59
+  [ InputDispatch [0x37, 0x66, 0xc4] -- "beszé |66| hao"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x37, 0x66, 0xb7] -- "beszé |66| lány"
+      [ Message 217                    -- 02 d9                -- "- Te egy igazi hős vagy! "
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 58                      -- 0c 3a
+      ]
+  , InputDispatch [0x3c, 0xc4] -- "fasz hao"
+      [ Message 117                    -- 02 75                -- "Hao Sin nem ellenkezne, de hát itt van az apja is... "
+      ]
+  , InputDispatch [0x3c, 0xb7] -- "fasz lány"
+      [ Message 117                    -- 02 75                -- "Hao Sin nem ellenkezne, de hát itt van az apja is... "
+      ]
+  , InputDispatch [0x2c, 0xa1] -- "öl ember"
+      [ Message 118                    -- 02 76                -- "De ő egy kung-fu mester! "
+      ]
+  , InputDispatch [0x37, 0x66, 0xa1] -- "beszé |66| ember"
+      [ Assert00 55 119                -- 06 37 77             -- "- Sok szerencsét! "
+      , Message 120                    -- 02 78                -- "- Megtanítalak a kung-fu sárkány stílusára... ha meg akarod tanulni... "
+      ]
+  , InputDispatch [0x4b] -- "tanul"
+      [ CopyProtection 16 8 192 57     -- 18 10 08 c0 39
+      , Assert00 55 82                 -- 06 37 52             -- "Már megtetted. "
+      , Chime 3                        -- 14 03
+      , AddScore 1                     -- 10 01
+      , Message 121                    -- 02 79                -- "Egy év alatt kemény edzésekkel mesterszintet értél el a kung-fu-ban. "
+      , Sleep 40                       -- 15 28
+      , AssignFF 55                    -- 04 37
+      ]
+  , InputDispatch [0x38, 0x90] -- "ad virág"
+      [ Message 122                    -- 02 7a                -- "Kinek adod a virágot? "
+      ]
+  , InputDispatch [0x38, 0x90, 0x66, 0xb7] -- "ad virág |66| lány"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x38, 0x90, 0x66, 0xc4] -- "ad virág |66| hao"
+      [ AssertHere 144 6               -- 08 90 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 144                   -- 04 90
+      , AssignFF 56                    -- 04 38
+      , Message 123                    -- 02 7b                -- "- Köszönöm. "
+      , AddScore 2                     -- 10 02
+      , Chime 5                        -- 14 05
+      ]
+  ]
+, -- ROOM 60
+  [ InputDispatch [0x10] -- "l"
+      [ Assert00 48 112                -- 06 30 70             -- "Egy gyertyát tartasz a szádban. "
+      , Message 113                    -- 02 71                -- "Minden holmidat elvették és a cella sarkába dobták. "
+      ]
+  , InputDispatch [0x48] -- "leng"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x48, 0x7f] -- "leng kötél"
+      [ Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 53                    -- 04 35
+      , Chime 5                        -- 14 05
+      ]
+  , InputDispatch [0x0e, 0x93] -- "f gyert"
+      [ AssertFF 53 2                  -- 07 35 02             -- "Nem teheted meg. "
+      , Assert00 48 2                  -- 06 30 02             -- "Nem teheted meg. "
+      , AssignFF 48                    -- 04 30
+      , Message 4                      -- 02 04                -- "OK. "
+      , SetScreen 14 15 255            -- 11 0e 0f ff
+      , Chime 5                        -- 14 05
+      , AddScore 1                     -- 10 01
+      ]
+  , InputDispatch [0x49, 0x7f] -- "gyújt kötél"
+      [ CopyProtection 110 8 192 153   -- 18 6e 08 c0 99
+      , AssertFF 48 2                  -- 07 30 02             -- "Nem teheted meg. "
+      , Assert00 54 2                  -- 06 36 02             -- "Nem teheted meg. "
+      , Message 114                    -- 02 72                -- "Szétégetted a köteleket... "
+      , MoveTo 95                      -- 0c 5f
+      , AssignLoc 127                  -- 05 7f
+      , AssignLoc 147                  -- 05 93
+      , AddScore 2                     -- 10 02
+      , Chime 13                       -- 14 0d
+      ]
+  ]
+, -- ROOM 61
+  [ InputDispatch [0x15, 0xae] -- "v őr"
+      [ Assert00 97 9                  -- 06 61 09             -- "Nem látsz semmi érdekeset. "
+      , AssignFF 97                    -- 04 61
+      , Message 150                    -- 02 96                -- "Találtál valamit! "
+      , Assign 149 61                  -- 01 95 3d
+      , AddScore 1                     -- 10 01
+      , Chime 11                       -- 14 0b
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 92                      -- 0c 5c
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 95                      -- 0c 5f
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ AssertFF 59 38                 -- 07 3b 26             -- "Az őr megállít. "
+      , MoveTo 62                      -- 0c 3e
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Assert00 59 82                 -- 06 3b 52             -- "Már megtetted. "
+      , AssignFF 59                    -- 04 3b
+      , Message 129                    -- 02 81                -- "Leütötted. "
+      , Chime 10                       -- 14 0a
+      , AddScore 1                     -- 10 01
+      ]
+  , InputDispatch [0x4e, 0xae] -- "köt őr"
+      [ AssertFF 59 2                  -- 07 3b 02             -- "Nem teheted meg. "
+      , Assert00 60 82                 -- 06 3c 52             -- "Már megtetted. "
+      , AssertHere 127 2               -- 08 7f 02             -- "Nem teheted meg. "
+      , AssignFF 60                    -- 04 3c
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 127                   -- 04 7f
+      , Chime 11                       -- 14 0b
+      , AddScore 1                     -- 10 01
+      ]
+  , InputDispatch [0x4f, 0xc5, 0x6a, 0x93] -- "töm száj |6a| gyert"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x4f, 0xc5] -- "töm száj"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x4f, 0xae, 0xc5] -- "töm őr száj"
+      [ Skip 9                         -- 09 09
+      ]
+  , InputDispatch [0x4f, 0xae, 0xc5, 0x6a, 0x93] -- "töm őr száj |6a| gyert"
+      [ AssertFF 59 2                  -- 07 3b 02             -- "Nem teheted meg. "
+      , Assert00 61 82                 -- 06 3d 52             -- "Már megtetted. "
+      , AssertHere 147 2               -- 08 93 02             -- "Nem teheted meg. "
+      , AssignFF 61                    -- 04 3d
+      , AssignFF 147                   -- 04 93
+      , Message 130                    -- 02 82                -- "Betömted a száját a gyeryával. "
+      , Chime 10                       -- 14 0a
+      , AddScore 1                     -- 10 01
+      ]
+  ]
+, -- ROOM 62
+  [ InputDispatch [0x04] -- "dk"
+      [ MoveTo 61                      -- 0c 3d
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ WhenFF 60
+          [ WhenFF 61
+              [ WhenFF 54
+                  [ MoveTo 63                      -- 0c 3f
+                  , Ret                            -- 00
+                  ]
+              ]
+          ]
+      , Message 188                    -- 02 bc                -- "Egy szörnyű üvöltést hallasz a pincéből. "
+      , SetScreen 10 2 43              -- 11 0a 02 2b
+      , Sleep 5                        -- 15 05
+      , Message 182                    -- 02 b6                -- "Őrök jelennek meg és megölnek... "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  ]
+, -- ROOM 63
+  [ InputDispatch [0x37, 0x66, 0xb8] -- "beszé |66| oshin"
+      [ Assert00 22 2                  -- 06 16 02             -- "Nem teheted meg. "
+      , Message 63                     -- 02 3f                -- "Nem válaszol, néma! "
+      ]
+  , InputDispatch [0x2c, 0xb8] -- "öl oshin"
+      [ Assert00 63 2                  -- 06 3f 02             -- "Nem teheted meg. "
+      , Message 64                     -- 02 40                -- "Puszta kézzel Oshinoko ellen? Ez reménytelen. "
+      ]
+  , InputDispatch [0x2c, 0xb8, 0x6a, 0x91] -- "öl oshin |6a| szigo"
+      [ AssertHere 145 6               -- 08 91 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 63 2                  -- 06 3f 02             -- "Nem teheted meg. "
+      , Message 65                     -- 02 41                -- "Számított a támadásodra, így könnyedén hárította azt és megölt... "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x2c, 0xb8, 0x6a, 0x79] -- "öl oshin |6a| kés"
+      [ AssertHere 121 6               -- 08 79 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 63 2                  -- 06 3f 02             -- "Nem teheted meg. "
+      , Message 65                     -- 02 41                -- "Számított a támadásodra, így könnyedén hárította azt és megölt... "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x32, 0x8f] -- "dob skorp"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x32, 0x8f, 0x68, 0xb8] -- "dob skorp |68| oshin"
+      [ AssertHere 143 6               -- 08 8f 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 63 2                  -- 06 3f 02             -- "Nem teheted meg. "
+      , AssignFF 63                    -- 04 3f
+      , AssignFF 143                   -- 04 8f
+      , Message 166                    -- 02 a6                -- "A skorpió megcsípte a yakuzát, aki hang nélkül összecsuklott. "
+      , MoveTo 63                      -- 0c 3f
+      , AddScore 2                     -- 10 02
+      , Chime 5                        -- 14 05
+      ]
+  , InputDispatch [0x34, 0xa0, 0x6a, 0x99] -- "tör ajtó |6a| feszí"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x50, 0xa0, 0x6a, 0x99] -- "feszí ajtó |6a| feszí"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x50, 0xa0] -- "feszí ajtó"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x34, 0x43, 0xa0] -- "tör nyit ajtó"
+      [ CopyProtection 184 8 192 255   -- 18 b8 08 c0 ff
+      , Assert00 84 82                 -- 06 54 52             -- "Már megtetted. "
+      , AssertHere 153 2               -- 08 99 02             -- "Nem teheted meg. "
+      , Message 167                    -- 02 a7                -- "Kifeszítetted az ajtót a feszítővassal. "
+      , AssignFF 84                    -- 04 54
+      , Chime 5                        -- 14 05
+      ]
+  , InputDispatch [0x34, 0xa0] -- "tör ajtó"
+      [ Assert00 84 82                 -- 06 54 52             -- "Már megtetted. "
+      , Message 164                    -- 02 a4                -- "Túl erős. "
+      ]
+  , InputDispatch [0x15, 0xa0] -- "v ajtó"
+      [ Assert00 84 174                -- 06 54 ae             -- "Nyitva van. "
+      , Message 173                    -- 02 ad                -- "Zárva az ajtó. "
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ AssertFF 63 62                 -- 07 3f 3e             -- "Oshinoko megállít. "
+      , MoveTo 65                      -- 0c 41
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 62                      -- 0c 3e
+      ]
+  , InputDispatch [0x34, 0xa0] -- "tör ajtó"
+      [ Message 164                    -- 02 a4                -- "Túl erős. "
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x65, 0xa0] -- "megy ajtó"
+      [ AssertFF 84 173                -- 07 54 ad             -- "Zárva az ajtó. "
+      , MoveTo 64                      -- 0c 40
+      ]
+  ]
+, -- ROOM 64
+  [ InputDispatch [0x07] -- "ny"
+      [ CopyProtection 87 3 192 78     -- 18 57 03 c0 4e
+      , MoveTo 63                      -- 0c 3f
+      ]
+  ]
+, -- ROOM 65
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 67                      -- 0c 43
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 66                      -- 0c 42
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 63                      -- 0c 3f
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 68                      -- 0c 44
+      ]
+  ]
+, -- ROOM 66
+  [ InputDispatch [0x07] -- "ny"
+      [ MoveTo 65                      -- 0c 41
+      ]
+  , InputDispatch [0x0f, 0x87, 0x68, 0xc0] -- "rak üveg |68| aszta"
+      [ CopyProtection 89 3 192 83     -- 18 59 03 c0 53
+      , AssertHere 135 6               -- 08 87 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 135                   -- 04 87
+      , Message 4                      -- 02 04                -- "OK. "
+      , Chime 5                        -- 14 05
+      , WhenFF 85
+          [ AssignFF 76                    -- 04 4c
+          , AddScore 2                     -- 10 02
+          ]
+      ]
+  ]
+, -- ROOM 67
+  [ InputDispatch [0x05] -- "d"
+      [ MoveTo 65                      -- 0c 41
+      ]
+  , InputDispatch [0x09] -- "fel"
+      [ MoveTo 82                      -- 0c 52
+      ]
+  ]
+, -- ROOM 68
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 65                      -- 0c 41
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 70                      -- 0c 46
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 69                      -- 0c 45
+      ]
+  ]
+, -- ROOM 69
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 68                      -- 0c 44
+      ]
+  , InputDispatch [0x09] -- "fel"
+      [ MoveTo 80                      -- 0c 50
+      ]
+  ]
+, -- ROOM 70
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 68                      -- 0c 44
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 72                      -- 0c 48
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 71                      -- 0c 47
+      ]
+  , InputDispatch [0x2c, 0xc6] -- "öl nusum"
+      [ Assert00 65 2                  -- 06 41 02             -- "Nem teheted meg. "
+      , AssignFF 65                    -- 04 41
+      , Message 134                    -- 02 86                -- "Hirtelen hátrafordulsz és torkon rúgod... Összecsuklik és nem mozdul többet. "
+      , Assign00 66                    -- 03 42
+      , AddScore 2                     -- 10 02
+      , Chime 11                       -- 14 0b
+      ]
+  ]
+, -- ROOM 71
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 70                      -- 0c 46
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 72                      -- 0c 48
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 74                      -- 0c 4a
+      ]
+  ]
+, -- ROOM 72
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 70                      -- 0c 46
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 73                      -- 0c 49
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 75                      -- 0c 4b
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 74                      -- 0c 4a
+      ]
+  ]
+, -- ROOM 73
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 70                      -- 0c 46
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 75                      -- 0c 4b
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 72                      -- 0c 48
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 74                      -- 0c 4a
+      ]
+  , InputDispatch [0x2c, 0x91, 0x67, 0xae] -- "öl szigo |67| őr"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x32, 0x91, 0x67, 0xae] -- "dob szigo |67| őr"
+      [ CopyProtection 52 3 192 35     -- 18 34 03 c0 23
+      , AssertHere 145 6               -- 08 91 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 67 2                  -- 06 43 02             -- "Nem teheted meg. "
+      , AssignFF 67                    -- 04 43
+      , AssignFF 145                   -- 04 91
+      , Message 135                    -- 02 87                -- "Belevágod a szigonyt a hátába. "
+      , AddScore 2                     -- 10 02
+      , Chime 5                        -- 14 05
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Message 175                    -- 02 af                -- "Hogy? "
+      ]
+  ]
+, -- ROOM 74
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 70                      -- 0c 46
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 75                      -- 0c 4b
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 72                      -- 0c 48
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 75                      -- 0c 4b
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Assert00 68 2                  -- 06 44 02             -- "Nem teheted meg. "
+      , AssignFF 68                    -- 04 44
+      , Message 136                    -- 02 88                -- "Behúzol neki egyet, mire összeesik... "
+      , MoveTo 74                      -- 0c 4a
+      , SpriteOff 1                    -- 13 01
+      , Chime 10                       -- 14 0a
+      ]
+  ]
+, -- ROOM 75
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 74                      -- 0c 4a
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 72                      -- 0c 48
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 73                      -- 0c 49
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 73                      -- 0c 49
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 76                      -- 0c 4c
+      ]
+  , InputDispatch [0x0a] -- "le"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x33] -- "úszik"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x33, 0xc7] -- "úszik tó"
+      [ CopyProtection 116 3 192 133   -- 18 74 03 c0 85
+      , MoveTo 91                      -- 0c 5b
+      ]
+  ]
+, -- ROOM 76
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 77                      -- 0c 4d
+      , Assign 70 254                  -- 01 46 fe
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ MoveTo 74                      -- 0c 4a
+      , Assign 70 254                  -- 01 46 fe
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 75                      -- 0c 4b
+      , Assign 70 254                  -- 01 46 fe
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 73                      -- 0c 49
+      , Assign 70 254                  -- 01 46 fe
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 75                      -- 0c 4b
+      , Assign 70 254                  -- 01 46 fe
+      ]
+  , InputDispatch [0x1e, 0x88] -- "haszn macsk"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x0f, 0x88] -- "rak macsk"
+      [ AssertHere 136 6               -- 08 88 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 136                   -- 04 88
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 69                    -- 04 45
+      , Message 138                    -- 02 8a                -- "Elengeded a macskát... Őrülten rohanni kezd... a kutyák meg utána... "
+      , Assign00 71                    -- 03 47
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  , InputDispatch [0x2c, 0xc8] -- "öl kutya"
+      [ Assert00 69 2                  -- 06 45 02             -- "Nem teheted meg. "
+      , Assign 70 254                  -- 01 46 fe
+      ]
+  ]
+, -- ROOM 77
+  [ InputDispatch [0x02] -- "ék"
+      [ MoveTo 71                      -- 0c 47
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 74                      -- 0c 4a
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 76                      -- 0c 4c
+      ]
+  , InputDispatch [0x36, 0x96] -- "önt hordó"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x36, 0xc9] -- "önt puska"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x0f, 0x96] -- "rak hordó"
+      [ AssertHere 150 6               -- 08 96 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 150                   -- 04 96
+      , AssignFF 72                    -- 04 48
+      , Message 137                    -- 02 89                -- "Kiöntesz egy kis puskaport és ráhelyezed a hordót. "
+      , Chime 11                       -- 14 0b
+      ]
+  , InputDispatch [0x49, 0x96] -- "gyújt hordó"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x49, 0xc9] -- "gyújt puska"
+      [ When00 72
+          [ AssertHere 150 6               -- 08 96 06             -- "Nincs nálad az a tárgy. "
+          ]
+      , Assert00 148 2                 -- 06 94 02             -- "Nem teheted meg. "
+      , AssertFF 62 2                  -- 07 3e 02             -- "Nem teheted meg. "
+      , SetPlayerStatus 255            -- 0d ff
+      , Message 177                    -- 02 b1                -- "Booooommmmmm!!! "
+      ]
+  ]
+, -- ROOM 78
+  [ InputDispatch [0x05] -- "d"
+      [ AssertFF 75 178                -- 07 4b b2             -- "Csukva van az ajtó. "
+      , MoveTo 79                      -- 0c 4f
+      ]
+  , InputDispatch [0x43, 0xa0] -- "nyit ajtó"
+      [ Message 133                    -- 02 85                -- "Ez egy tolóajtó. "
+      ]
+  , InputDispatch [0x2f, 0xa0] -- "tol ajtó"
+      [ AssertFF 75 2                  -- 07 4b 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , Assign00 75                    -- 03 4b
+      ]
+  , InputDispatch [0x30, 0xa0] -- "húz ajtó"
+      [ Assert00 75 2                  -- 06 4b 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 75                    -- 04 4b
+      ]
+  ]
+, -- ROOM 79
+  [ InputDispatch [0x43, 0xa0] -- "nyit ajtó"
+      [ Message 133                    -- 02 85                -- "Ez egy tolóajtó. "
+      ]
+  , InputDispatch [0x2f, 0xa0] -- "tol ajtó"
+      [ AssertFF 75 2                  -- 07 4b 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , Assign00 75                    -- 03 4b
+      , MoveTo 79                      -- 0c 4f
+      ]
+  , InputDispatch [0x30, 0xa0] -- "húz ajtó"
+      [ CopyProtection 132 3 192 177   -- 18 84 03 c0 b1
+      , Assert00 75 2                  -- 06 4b 02             -- "Nem teheted meg. "
+      , Message 4                      -- 02 04                -- "OK. "
+      , AssignFF 75                    -- 04 4b
+      , MoveTo 79                      -- 0c 4f
+      , SpriteOff 1                    -- 13 01
+      , SpriteOff 2                    -- 13 02
+      , Chime 10                       -- 14 0a
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ AssertFF 75 178                -- 07 4b b2             -- "Csukva van az ajtó. "
+      , MoveTo 78                      -- 0c 4e
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 80                      -- 0c 50
+      ]
+  ]
+, -- ROOM 80
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 81                      -- 0c 51
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 79                      -- 0c 4f
+      ]
+  , InputDispatch [0x0a] -- "le"
+      [ MoveTo 69                      -- 0c 45
+      ]
+  , InputDispatch [0x15, 0xb6] -- "v ablak"
+      [ Assert00 65 139                -- 06 41 8b             -- "A kertet látod. "
+      , Message 140                    -- 02 8c                -- "Nusumu, az osonó yakuza áll az ablak alatt. "
+      ]
+  , InputDispatch [0x36, 0x98, 0xb6] -- "önt illat ablak"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x36, 0x98, 0x32, 0xb6] -- "önt illat dob ablak"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x32, 0x98, 0xb6] -- "dob illat ablak"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x32, 0x98, 0x32, 0xb6] -- "dob illat dob ablak"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x32, 0x0c, 0x98] -- "dob ki illat"
+      [ AssertHere 152 6               -- 08 98 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 152                   -- 04 98
+      , Message 4                      -- 02 04                -- "OK. "
+      , Message 141                    -- 02 8d                -- "Káromkodást hallasz lentről. "
+      , AssignFF 64                    -- 04 40
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  ]
+, -- ROOM 81
+  [ InputDispatch [0x03] -- "k"
+      [ MoveTo 84                      -- 0c 54
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 80                      -- 0c 50
+      ]
+  , InputDispatch [0x15, 0xb6] -- "v ablak"
+      [ Assert00 73 168                -- 06 49 a8             -- "A felrobbant kaput látod. "
+      , Message 142                    -- 02 8e                -- "A kaput látod. "
+      ]
+  , InputDispatch [0x32, 0x94, 0x66, 0xaf] -- "dob fákly |66| kapu"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x32, 0x94, 0x32, 0xb6] -- "dob fákly dob ablak"
+      [ Skip 7                         -- 09 07
+      ]
+  , InputDispatch [0x32, 0x94, 0xb6] -- "dob fákly ablak"
+      [ Assert00 148 6                 -- 06 94 06             -- "Nincs nálad az a tárgy. "
+      , AssignFF 148                   -- 04 94
+      , Message 143                    -- 02 8f                -- "Odadobod a fáklyát a kapuhoz... "
+      , WhenFF 62
+          [ WhenFF 72
+              [ Message 144                    -- 02 90                -- "A puskapor begyullad... Majd egy óriási robbanást hallasz a kapu felől. "
+              , AssignFF 73                    -- 04 49
+              , AddScore 2                     -- 10 02
+              , Chime 4                        -- 14 04
+              , Ret                            -- 00
+              ]
+          ]
+      , MachineCode 23 [169,77,160,148,153,0,32,96] -- 17 a9 4d a0 94 99 00 20 60
+      ]
+  ]
+, -- ROOM 82
+  [ InputDispatch [0x05] -- "d"
+      [ MoveTo 84                      -- 0c 54
+      ]
+  , InputDispatch [0x2d, 0x09, 0xca] -- "mászi fel botho"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x2d, 0xca] -- "mászi botho"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x09] -- "fel"
+      [ MoveTo 83                      -- 0c 53
+      ]
+  , InputDispatch [0x0a] -- "le"
+      [ MoveTo 67                      -- 0c 43
+      ]
+  ]
+, -- ROOM 83
+  [ InputDispatch [0x0a] -- "le"
+      [ MoveTo 82                      -- 0c 52
+      ]
+  , InputDispatch [0x15, 0xc7] -- "v tó"
+      [ CopyProtection 180 3 192 195   -- 18 b4 03 c0 c3
+      , Assert00 86 9                  -- 06 56 09             -- "Nem látsz semmi érdekeset. "
+      , AssignFF 86                    -- 04 56
+      , Message 149                    -- 02 95                -- "Látsz valamit a tóban. "
+      , Chime 13                       -- 14 0d
+      , AddScore 1                     -- 10 01
+      , MachineCode 17 [169,91,160,153,153,0,32,96] -- 17 a9 5b a0 99 99 00 20 60
+      ]
+  ]
+, -- ROOM 84
+  [ InputDispatch [0x01] -- "é"
+      [ IfFF 87 7                      -- 0b 57 07
+      , MoveTo 82                      -- 0c 52
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ IfFF 87 7                      -- 0b 57 07
+      , MoveTo 85                      -- 0c 55
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ IfFF 87 7                      -- 0b 57 07
+      , MoveTo 86                      -- 0c 56
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ WhenFF 87
+          [ MoveTo 81                      -- 0c 51
+          , Ret                            -- 00
+          ]
+      , SetPlayerStatus 255            -- 0d ff
+      , Message 179                    -- 02 b3                -- "Valaki egy lándzsát dob a hátadba. "
+      ]
+  , InputDispatch [0x15, 0xcb] -- "v folyo"
+      [ Assert00 87 9                  -- 06 57 09             -- "Nem látsz semmi érdekeset. "
+      , SetPlayerStatus 255            -- 0d ff
+      , Message 146                    -- 02 92                -- "Amint kinézel a keresztfolyosóra, egy őr észrevesz és belevágja a lándzsáját a fejedbe. "
+      ]
+  , InputDispatch [0x15, 0xcb, 0x6a, 0x97] -- "v folyo |6a| tükör"
+      [ Assert00 151 6                 -- 06 97 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 87 9                  -- 06 57 09             -- "Nem látsz semmi érdekeset. "
+      , Message 145                    -- 02 91                -- "Egy őrt látsz a keresztfolyosón. Épp háttal áll neked... "
+      , AssignFF 88                    -- 04 58
+      , Chime 1                        -- 14 01
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Assert00 87 2                  -- 06 57 02             -- "Nem teheted meg. "
+      , AssertFF 88 2                  -- 07 58 02             -- "Nem teheted meg. "
+      , AssignFF 87                    -- 04 57
+      , Message 147                    -- 02 93                -- "Agyonrúgtad. "
+      , AddScore 2                     -- 10 02
+      , Chime 5                        -- 14 05
+      ]
+  ]
+, -- ROOM 85
+  [ InputDispatch [0x07] -- "ny"
+      [ MoveTo 84                      -- 0c 54
+      ]
+  ]
+, -- ROOM 86
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 84                      -- 0c 54
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ AssertFF 73 148                -- 07 49 94             -- "Megállítanak. "
+      , MoveTo 88                      -- 0c 58
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Assert00 73 2                  -- 06 49 02             -- "Nem teheted meg. "
+      , Message 180                    -- 02 b4                -- "Az őrök megöltek. "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  ]
+, -- ROOM 87
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 85                      -- 0c 55
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 89                      -- 0c 59
+      ]
+  , InputDispatch [0x15, 0xcc] -- "v szekr"
+      [ Message 151                    -- 02 97                -- "Egy hatszögletű mélyedést látsz rajta. "
+      , Chime 11                       -- 14 0b
+      ]
+  , InputDispatch [0x43, 0xcc, 0x6a, 0x92] -- "nyit szekr |6a| hatsz"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x51, 0x92] -- "berak hatsz"
+      [ Skip 8                         -- 09 08
+      ]
+  , InputDispatch [0x51, 0x92, 0x67, 0xcd] -- "berak hatsz |67| rés"
+      [ CopyProtection 90 3 192 83     -- 18 5a 03 c0 53
+      , AssertHere 146 6               -- 08 92 06             -- "Nincs nálad az a tárgy. "
+      , Message 181                    -- 02 b5                -- "Oh! Ez egy titkos forgóajtó! "
+      , MoveTo 93                      -- 0c 5d
+      , Chime 4                        -- 14 04
+      ]
+  ]
+, -- ROOM 88
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 86                      -- 0c 56
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ AssertFF 76 38                 -- 07 4c 26             -- "Az őr megállít. "
+      , MoveTo 89                      -- 0c 59
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 90                      -- 0c 5a
+      ]
+  , InputDispatch [0x2c, 0xae] -- "öl őr"
+      [ Assert00 76 2                  -- 06 4c 02             -- "Nem teheted meg. "
+      , Message 35                     -- 02 23                -- "Ő sokkal gyakorlottabb a fegyveres harcban... "
+      , Sleep 5                        -- 15 05
+      , Hurt 7                         -- 0f 07
+      , Message 37                     -- 02 25                -- "Megsebzett téged. "
+      ]
+  ]
+, -- ROOM 89
+  [ InputDispatch [0x01] -- "é"
+      [ IfFF 19 7                      -- 0b 13 07
+      , MoveTo 87                      -- 0c 57
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ WhenFF 19
+          [ MoveTo 88                      -- 0c 58
+          , Ret                            -- 00
+          ]
+      , Message 182                    -- 02 b6                -- "Őrök jelennek meg és megölnek... "
+      , AssignFF 7                     -- 04 07
+      , Sleep 5                        -- 15 05
+      , Message 183                    -- 02 b7                -- "... vagy mégsem? "
+      , Sleep 5                        -- 15 05
+      , MoveTo 22                      -- 0c 16
+      ]
+  , InputDispatch [0x15, 0xce] -- "v falis"
+      [ CopyProtection 166 3 192 1     -- 18 a6 03 c0 01
+      , Assert00 89 9                  -- 06 59 09             -- "Nem látsz semmi érdekeset. "
+      , Message 169                    -- 02 a9                -- "Egy gyűrűt találtál. "
+      , Assign00 125                   -- 03 7d
+      , AssignFF 89                    -- 04 59
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x65, 0xb6] -- "megy ablak"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x03] -- "k"
+      [ MoveTo 21                      -- 0c 15
+      , Assign00 9                     -- 03 09
+      ]
+  ]
+, -- ROOM 90
+  [ InputDispatch [0x01] -- "é"
+      [ MoveTo 88                      -- 0c 58
+      ]
+  , InputDispatch [0x0b] -- "be"
+      [ MoveTo 88                      -- 0c 58
+      ]
+  , InputDispatch [0x15, 0xae] -- "v őr"
+      [ CopyProtection 76 3 192 44     -- 18 4c 03 c0 2c
+      , Assert00 90 9                  -- 06 5a 09             -- "Nem látsz semmi érdekeset. "
+      , AssignFF 90                    -- 04 5a
+      , AssignLoc 154                  -- 05 9a
+      , Message 150                    -- 02 96                -- "Találtál valamit! "
+      , AddScore 2                     -- 10 02
+      , Chime 10                       -- 14 0a
+      ]
+  ]
+, -- ROOM 91
+  [ InputDispatch [0x09] -- "fel"
+      [ MoveTo 75                      -- 0c 4b
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ MoveTo 75                      -- 0c 4b
+      ]
+  ]
+, -- ROOM 92
+  [ InputDispatch [0x07] -- "ny"
+      [ MoveTo 61                      -- 0c 3d
+      ]
+  , InputDispatch [0x2c, 0xcf] -- "öl rab"
+      [ Assert00 91 2                  -- 06 5b 02             -- "Nem teheted meg. "
+      , Assert00 78 2                  -- 06 4e 02             -- "Nem teheted meg. "
+      , AssignFF 91                    -- 04 5b
+      , Message 132                    -- 02 84                -- "Még védekezni sem tud... "
+      ]
+  , InputDispatch [0x34, 0xd0] -- "tör lánc"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x50, 0xd0] -- "feszí lánc"
+      [ Message 193                    -- 02 c1                -- "Túl erős. "
+      ]
+  , InputDispatch [0x43, 0xd0] -- "nyit lánc"
+      [ Assert00 91 2                  -- 06 5b 02             -- "Nem teheted meg. "
+      , Assert00 78 2                  -- 06 4e 02             -- "Nem teheted meg. "
+      , AssertHere 149 190             -- 08 95 be             -- "Nincs kulcsod. "
+      , AssignFF 78                    -- 04 4e
+      , Message 4                      -- 02 04                -- "OK. "
+      , Message 131                    -- 02 83                -- "A rab megköszöni, hogy kiszabadítottad, majd elszalad. "
+      , AddScore 1                     -- 10 01
+      , Chime 13                       -- 14 0d
+      ]
+  ]
+, -- ROOM 93
+  [ InputDispatch [0x03] -- "k"
+      [ CopyProtection 93 3 192 86     -- 18 5d 03 c0 56
+      , MoveTo 94                      -- 0c 5e
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 87                      -- 0c 57
+      ]
+  ]
+, -- ROOM 94
+  [ InputDispatch [0x0b] -- "be"
+      [ MoveTo 93                      -- 0c 5d
+      ]
+  , InputDispatch [0x2c, 0xd1] -- "öl hakai"
+      [ Message 152                    -- 02 98                -- "Előránt egy kardot és rádtámad. "
+      , When00 154
+          [ Chime 10                       -- 14 0a
+          , Message 184                    -- 02 b8                -- "Harcolsz vele... "
+          , Sleep 10                       -- 15 0a
+          , Message 154                    -- 02 9a                -- "Kiüti a kardot a kezedből és nekedszögezi a kardját. "
+          , IfFF 56 32                     -- 0b 38 20
+          , IfFF 78 29                     -- 0b 4e 1d
+          , Chime 11                       -- 14 0b
+          , Message 155                    -- 02 9b                -- "Hirtelen Hao Sin és a rab ugrik ki a csapóajtón. Segítenek neked megölni Hakait, a város zsarnokát... "
+          , Sleep 10                       -- 15 0a
+          , Message 156                    -- 02 9c                -- "Megölöd, majd levágod a fejét... "
+          , Sleep 10                       -- 15 0a
+          , Message 157                    -- 02 9d                -- "Megbosszultad végre apád halálát! "
+          , SetPlayerStatus 254            -- 0d fe
+          , SetScreen 2 10 53              -- 11 02 0a 35
+          , AddScore 2                     -- 10 02
+          , Chime 3                        -- 14 03
+          , Ret                            -- 00
+          ]
+      , Message 153                    -- 02 99                -- "Nincs megfelelő fegyvered, így pillanatok alatt végez veled... "
+      , SetPlayerStatus 255            -- 0d ff
+      , Ret                            -- 00
+      , Sleep 5                        -- 15 05
+      , Message 185                    -- 02 b9                -- "A szívedbe mártja a kardját. "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  ]
+, -- ROOM 95
+  [ InputDispatch [0x3b, 0x68, 0xa0] -- "kopog |68| ajtó"
+      [ Assert00 79 2                  -- 06 4f 02             -- "Nem teheted meg. "
+      , Message 219                    -- 02 db                -- "Keményebben! "
+      ]
+  , InputDispatch [0x34, 0xa0] -- "tör ajtó"
+      [ Assert00 79 2                  -- 06 4f 02             -- "Nem teheted meg. "
+      , Message 164                    -- 02 a4                -- "Túl erős. "
+      ]
+  , InputDispatch [0x52, 0xa0] -- "rúg ajtó"
+      [ Assert00 79 82                 -- 06 4f 52             -- "Már megtetted. "
+      , AssertFF 51 164                -- 07 33 a4             -- "Túl erős. "
+      , AssignFF 79                    -- 04 4f
+      , Message 165                    -- 02 a5                -- "A lábadba irányítod az összes erődet, majd egy irtózatos rúgással ripityára töröd az ajtót. "
+      , AddScore 2                     -- 10 02
+      , Chime 10                       -- 14 0a
+      , SpriteOff 1                    -- 13 01
+      , SpriteOff 2                    -- 13 02
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ Skip 5                         -- 09 05
+      ]
+  , InputDispatch [0x0c] -- "ki"
+      [ AssertFF 79 2                  -- 07 4f 02             -- "Nem teheted meg. "
+      , MoveTo 61                      -- 0c 3d
+      ]
+  ]
+, -- ROOM 96
+  [ InputDispatch [0x03] -- "k"
+      [ IncIfNot0 82                   -- 16 52
+      , WhenFF 82
+          [ AssignFF 81                    -- 04 51
+          , MoveTo 96                      -- 0c 60
+          , When00 80
+              [ SetPlayerStatus 255            -- 0d ff
+              , Message 160                    -- 02 a0                -- "A cápa rádtámad és leharapja a fejed... "
+              ]
+          , Ret                            -- 00
+          ]
+      , MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x02] -- "ék"
+      [ WhenFF 81
+          [ MoveTo 35                      -- 0c 23
+          , Message 163                    -- 02 a3                -- "Egy ismerős kikötőben érsz partot. "
+          , Ret                            -- 00
+          ]
+      , MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x01] -- "é"
+      [ MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x04] -- "dk"
+      [ MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x05] -- "d"
+      [ MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x06] -- "dny"
+      [ MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x07] -- "ny"
+      [ MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x08] -- "ény"
+      [ MoveTo 96                      -- 0c 60
+      ]
+  , InputDispatch [0x2c, 0xd2] -- "öl cápa"
+      [ Assert00 80 2                  -- 06 50 02             -- "Nem teheted meg. "
+      , Message 162                    -- 02 a2                -- "Puszta kézzel? "
+      ]
+  , InputDispatch [0x2c, 0xd2, 0x6a, 0x79] -- "öl cápa |6a| kés"
+      [ AssertHere 121 6               -- 08 79 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 80 2                  -- 06 50 02             -- "Nem teheted meg. "
+      , Message 160                    -- 02 a0                -- "A cápa rádtámad és leharapja a fejed... "
+      , SetPlayerStatus 255            -- 0d ff
+      ]
+  , InputDispatch [0x2c, 0xd2, 0x6a, 0x91] -- "öl cápa |6a| szigo"
+      [ AssertHere 145 6               -- 08 91 06             -- "Nincs nálad az a tárgy. "
+      , Assert00 80 82                 -- 06 50 52             -- "Már megtetted. "
+      , AssignFF 80                    -- 04 50
+      , Message 161                    -- 02 a1                -- "Megölted a cápát a szigonnyal. "
+      , Assign00 93                    -- 03 5d
+      , AddScore 2                     -- 10 02
+      , Chime 4                        -- 14 04
+      ]
+  ]
+, -- ROOM 97
+  [ InputDispatch [0x2d, 0x09, 0xd3] -- "mászi fel árbóc"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x2d, 0xd3] -- "mászi árbóc"
+      [ Skip 6                         -- 09 06
+      ]
+  , InputDispatch [0x53, 0xd3] -- "kapas árbóc"
+      [ Message 4                      -- 02 04                -- "OK. "
+      , MoveTo 96                      -- 0c 60
+      , Chime 12                       -- 14 0c
+      , Sleep 5                        -- 15 05
+      , Message 187                    -- 02 bb                -- "Elvonult a vihar... "
+      , Assign 82 251                  -- 01 52 fb
+      , Assign00 83                    -- 03 53
+      , Assign 93 252                  -- 01 5d fc
+      , AddScore 1                     -- 10 01
+      ]
+  ]
+]
