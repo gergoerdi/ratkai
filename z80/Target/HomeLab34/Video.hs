@@ -13,6 +13,12 @@ printCharA_ = mdo
     pageIO
     push HL
 
+    push AF
+    ld A [ptr + 1]
+    cp $ snd $ wordBytes $ videoStart
+    call C scrollUp
+    pop AF
+
     cp $ encodeChar '\r'
     jp Z clearScreen
 
@@ -68,6 +74,27 @@ printCharA_ = mdo
         ld [ptr] HL
         ld [HL] 0x00
     jp finish
+
+    scrollUp <- labelled do
+        push BC
+        push DE
+        ld HL $ videoStart + rowstride
+        ld DE videoStart
+        ld BC $ videoSize - rowstride
+        ldir
+
+        ld HL $ videoStart + videoSize - rowstride
+        decLoopB rowstride do
+            ld [HL] 0x00
+            inc HL
+
+        ld DE $ negate rowstride
+        ld HL [ptr]
+        add HL DE
+        ld [ptr] HL
+        pop DE
+        pop BC
+        ret
 
     ptr <- labelled $ dw [videoStart + 2]
     pure ()
