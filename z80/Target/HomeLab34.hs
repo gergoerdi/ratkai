@@ -26,13 +26,13 @@ import Data.Word
 import Data.Char (ord, toUpper, isLower)
 
 release :: Bool
-release = False
+release = True
 
 supportUndo :: Bool
-supportUndo = False
+supportUndo = True
 
 supportQSave :: Bool
-supportQSave = False
+supportQSave = True
 
 game :: Game Identity -> Z80ASM
 game assets@Game{ minItem, maxItem, startRoom } = mdo
@@ -240,10 +240,12 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         cr
         ret
 
+    printByteNo0 <- labelled $ printByteNo0_ printCharA
+
     printBCDPercentLn <- labelled $ when supportScore do -- XXX
-        call 0x01a5
+        call printByteNo0
         ld A $ fromIntegral . ord $ '%'
-        rst 0x28
+        printCharA
         cr
         ret
 
@@ -331,3 +333,38 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         rst 0x18
         cp 0x0d
         jp NZ loop
+
+printByteNo0_ :: Z80ASM -> Z80ASM
+printByteNo0_ printCharA = mdo
+    push BC
+
+    push AF
+    Z80.and 0xf0
+    replicateM_ 4 $ srl A
+    call toHexNo0
+
+    printCharA
+
+    pop AF
+    Z80.and 0x0f
+    call toHex
+
+    printCharA
+
+    pop BC
+    ret
+
+    toHexNo0 <- labelled do
+        cp 0
+        jp NZ toHex
+        ld A $ encodeChar ' '
+        ret
+    toHex <- labelled mdo
+        cp 10
+        jp NC hex
+        add A $ encodeChar '0'
+        ret
+        hex <- label
+        add A $ encodeChar 'a' - 10
+        ret
+    pure ()
