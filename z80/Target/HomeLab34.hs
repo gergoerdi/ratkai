@@ -74,6 +74,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         printA
         flushOut
 
+        ld B 38
         ld IX lastChar
         withLabel \loop -> mdo
             ld [HL] 0xff
