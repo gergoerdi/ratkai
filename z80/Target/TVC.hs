@@ -96,6 +96,8 @@ game assets@Game{ minItem, maxItem, startRoom, deathPicture } text1 text2 pics =
             moveIsFinal = False
             runMachineCode = True
 
+            sleep = halt
+
             printString s = skippable \end -> mdo
                 ld IY lbl
                 decLoopB (fromIntegral $ length s) do

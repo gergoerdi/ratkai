@@ -24,5 +24,5 @@ encodeChar = \case
     'ú' -> encodeChar 'u'
     'ü' -> 0x7d
     'ű' -> encodeChar 'ü'
-    '_' -> 0x6f
+    '_' -> 0x86
     c -> fromIntegral . ord $ c

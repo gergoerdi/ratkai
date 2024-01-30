@@ -64,6 +64,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     -- Input one line of text (up to 38 characters), store result in [HL]
     -- Mangles `HL`, `A` and `B`
     inputLine <- labelled $ mdo
+        push IX
         push IY
         ld IY 0x4000
 
@@ -73,23 +74,82 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         printA
         flushOut
 
-        push HL
-        call 0x0546
-        cr
-        pop HL
+        ld IX lastChar
+        withLabel \loop -> mdo
+            ld [HL] 0xff
 
-        skippable \end -> decLoopB 38 do
-            rst 0x10
-            Z80.or A
-            jp Z end
+            -- Draw cursor
+            ld A $ encodeChar '_'
+            printA
+            flushOut
+
+            withLabel \waitKey -> do
+                rst 0x18
+                cp [IX]
+                jp Z waitKey
+                ld [IX] A
+                Z80.or A
+                jp Z waitKey
+
+            -- Delete cursor
+            push AF
+            ld A 0x07
+            printA
+            pop AF
+
+            cp 0x0d -- End of line
+            jr Z enter
+            cp 0x07 -- Backspace
+            jr Z backspace
+
+            -- Normal character: print and record
+            dec B
+            jr Z noMoreRoom
+            printA
             ld [HL] A
             inc HL
-        ld [HL] $ encodeChar ' '
-        inc HL
-        ld [HL] 0xff
+            jr loop
 
-        pop IY
-        ret
+            noMoreRoom <- labelled do
+                inc B -- So that next `dec B` will trigger `Z` again
+                dec HL
+                ld [HL] A
+                ld A 0x07 -- Erase previous last character
+                printA
+                ld A [HL] -- Print new last character
+                inc HL
+                printA
+                flushOut
+                jr loop
+
+            backspace <- labelled do
+                -- Try to increase B
+                inc B
+                skippable \inRange -> do
+                    ld A B
+                    cp 39
+                    jr NZ inRange
+                    dec B
+                    jr loop
+
+                ld A 0x07
+                printA
+                flushOut
+                ld [HL] 0x00
+                dec HL
+                jr loop
+
+            enter <- labelled do
+                ld [HL] 0x20
+                inc HL
+                ld [HL] 0xff
+                pop IY
+                pop IX
+                ret
+            pure ()
+
+        lastChar <- labelled $ db [0]
+        pure ()
 
     readLine <- labelled do
         ld HL $ inputBuf vars
@@ -231,6 +291,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 ld IY 0x4000
                 cr
                 pop IY
+            sleep = call 0x0f6
             setScreen = Nothing
             setTextColors = Nothing
             spriteOn = Nothing

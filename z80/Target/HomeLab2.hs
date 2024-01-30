@@ -280,6 +280,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             spriteOff = Nothing
             loadSaveGameVars = Nothing
             deathCallback = pure ()
+            sleep = pure ()
 
     assetLocs <- do
         let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages 40 . preprocessGame $ assets

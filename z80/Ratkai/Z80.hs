@@ -52,6 +52,7 @@ data Platform = Platform
     , runMachineCode :: Bool
     , loadSaveGameVars :: Maybe (Location, Location)
     , deathCallback :: Z80ASM
+    , sleep :: Z80ASM
     }
 
 data Vars = Vars
@@ -228,7 +229,7 @@ runRatScript_ Platform{..} Vars{..} Routines{..} = mdo
             when supportSleep do
                 withLabel \loop -> do
                     exx
-                    decLoopB 8 halt
+                    decLoopB 8 sleep
                     exx
                     djnz loop
             jp runRatScript
