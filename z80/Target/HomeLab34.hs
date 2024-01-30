@@ -10,10 +10,11 @@ import RatBC.HomeLab34.Binary
 import RatBC.HomeLab34.Text
 
 import Ratkai.Z80
+import Target.HomeLab34.Video
 
 import Z80
 import Z80.Utils
-import Z80.Machine.HomeLab.HL34
+import Z80.Machine.HomeLab.HL34 hiding (printA)
 import qualified Data.ByteString as BS
 import qualified Data.ByteString.Lazy as BL
 import Data.Bifunctor
@@ -55,9 +56,9 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         push IY
         ld IY 0x4000
         ld A 0x0c
-        printA
+        printCharA
         ld A 0x0d
-        printA
+        printCharA
         pop IY
         ret
 
@@ -69,10 +70,9 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         ld IY 0x4000
 
         ld A $ encodeChar '>'
-        printA
+        printCharA
         ld A $ encodeChar ' '
-        printA
-        flushOut
+        printCharA
 
         ld B 38
         ld IX lastChar
@@ -81,8 +81,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
             -- Draw cursor
             ld A $ encodeChar '_'
-            printA
-            flushOut
+            printCharA
 
             withLabel \waitKey -> do
                 rst 0x18
@@ -94,8 +93,8 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
 
             -- Delete cursor
             push AF
-            ld A 0x07
-            printA
+            ld A $ encodeChar '\b'
+            printCharA
             pop AF
 
             cp 0x0d -- End of line
@@ -106,7 +105,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             -- Normal character: print and record
             dec B
             jr Z noMoreRoom
-            printA
+            printCharA
             ld [HL] A
             inc HL
             jr loop
@@ -116,11 +115,10 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 dec HL
                 ld [HL] A
                 ld A 0x07 -- Erase previous last character
-                printA
+                printCharA
                 ld A [HL] -- Print new last character
                 inc HL
-                printA
-                flushOut
+                printCharA
                 jr loop
 
             backspace <- labelled do
@@ -133,9 +131,8 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                     dec B
                     jr loop
 
-                ld A 0x07
-                printA
-                flushOut
+                ld A $ encodeChar '\b'
+                printCharA
                 ld [HL] 0x00
                 dec HL
                 jr loop
@@ -216,17 +213,11 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     printMessageLn <- labelled do
         call printMessage
     paragraph <- labelled do
-        push IY
-        ld IY 0x4000
         cr
-        pop IY
         ret
 
     -- Input: IX contains the message bank, B is the message ID
     printMessage <- labelled $ mdo
-        push IY
-        ld IY 0x4000
-
         ld D 0
         withLabel \next -> do
             -- Is this the message we want?
@@ -238,33 +229,15 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             jp next
 
         start <- labelled do
-            ld E [IX]
+            ld B [IX]
+            dec B
+
+        withLabel \loop -> mdo
             inc IX
-            dec E
-
-        push IX
-        pop HL
-        call 0x1538
-
-        -- start <- labelled $ do
-        --     ld B [IX]
-        --     dec B
-
-        -- withLabel \loop -> mdo
-        --     inc IX
-        --     ld A [IX]
-        --     cp (encodeChar '\n')
-        --     jp Z isNewLine
-        --     printA
-        --     jr next
-
-        --     isNewLine <- labelled cr
-
-        --     next <- label
-        --     djnz loop
+            ld A [IX]
+            printCharA
+            djnz loop
         cr
-
-        pop IY
         ret
 
     printBCDPercentLn <- labelled $ when supportScore do -- XXX
@@ -274,12 +247,21 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         cr
         ret
 
+    printChar <- labelled printCharA_
+    let printCharA = call printChar
+    let printString s = skippable \end -> mdo
+            ld IY lbl
+            decLoopB (fromIntegral $ length s) do
+                ld A [IY]
+                inc IY
+                printCharA
+            jr end
+            lbl <- labelled $ db $ map encodeChar s
+            pure ()
+
     let cr = do
-            ld A $ fromIntegral . ord $ '\r'
-            printA
-        flushOut = do
-            Z80.xor A
-            printA
+            ld A $ fromIntegral . ord $ '\n'
+            printCharA
 
     let platform = Platform{ clearScreen = call clearScreen, .. }
           where
@@ -287,11 +269,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             runMachineCode = False -- TODO
             printMessageListItem = printMessage
             space = 0x20
-            newline = do
-                push IY
-                ld IY 0x4000
-                cr
-                pop IY
+            newline = cr
             sleep = call 0x0f6
             setScreen = Nothing
             setTextColors = Nothing
@@ -349,30 +327,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unless release nop -- To see real memory usage instead of just image size
     pure ()
   where
-    printCharA = rst 0x28
-    printString s = skippable \end -> mdo
-        ld IY lbl
-        decLoopB (fromIntegral $ length s) do
-            ld A [IY]
-            inc IY
-            printCharA
-        jr end
-        lbl <- labelled $ db $ map toHL2 s
-        pure ()
-      where
-        toHL2 c
-          | isLower c = toHL2 (toUpper c)
-          | c == 'Á' = toHL2 'A'
-          | c == 'É' = toHL2 'E'
-          | c == 'Í' = toHL2 'I'
-          | c == 'Ó' = toHL2 'O'
-          | c == 'Ú' = toHL2 'U'
-          | c == 'Ö' = toHL2 'O'
-          | c == 'Ő' = toHL2 'O'
-          | c == 'Ü' = toHL2 'U'
-          | c == 'Ű' = toHL2 'U'
-          | otherwise = fromIntegral . ord $ c
-
     waitEnter = withLabel \loop -> do
         rst 0x18
         cp 0x0d
