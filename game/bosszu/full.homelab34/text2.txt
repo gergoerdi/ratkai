@@ -1,5 +1,5 @@
 -- -*- haskell -*-
-[ (1   ,"Egy barátságos kis szobában vagy. Egy fiatal srác ül egy TVC előtt. Hirtelen hátrafordul és beszélni kezd: ")
+[ (1   ,"Egy barátságos kis szobában vagy. Egy fiatal srác ül egy HomeLab-3 előtt. Hirtelen hátrafordul és beszélni kezd: ")
 , (2   ,"Egy széles lassúfolyású folyó északi partján állsz. Egy ösvény vezet északkeletre, egy domb felé. ")
 , (3   ,"A 'Bambusz szigeten' vagy. Magas, erős bambuszrudak vesznek körül. ")
 , (4   ,"A dombtetőn állsz egy fa mellett. Egy kis falut látsz észak felé. A faluból ösvény indul feléd és dél felé folytatódik. ")
