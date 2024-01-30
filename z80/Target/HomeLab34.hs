@@ -69,10 +69,9 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
         push IY
         ld IY 0x4000
 
-        ld A $ encodeChar '>'
-        printCharA
-        ld A $ encodeChar ' '
-        printCharA
+        forM_ "\b\b> " \c -> do
+            ld A $ encodeChar c
+            printCharA
 
         ld B 38
         ld IX lastChar
@@ -141,6 +140,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
                 ld [HL] 0x20
                 inc HL
                 ld [HL] 0xff
+                cr
                 pop IY
                 pop IX
                 ret
@@ -280,7 +280,7 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             beforeParseError = pure ()
 
     assetLocs <- do
-        let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages True 62 . preprocessGame $ assets
+        let assets' = mapGameF (first BL.toStrict) . assemble . reflowMessages True 60 . preprocessGame $ assets
         let asset sel = labelled $ db $ getConst . sel $ assets'
         text1 <- asset msgs1
         text2 <- asset msgs2

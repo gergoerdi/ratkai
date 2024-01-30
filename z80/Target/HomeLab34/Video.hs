@@ -40,13 +40,17 @@ printCharA_ = mdo
         pop DE
         ld A L
         Z80.and 0b1100_0000
+        inc A
+        inc A
         ld L A
         ld [ptr] HL
     jp finish
 
     clearScreen <- labelled do
-        ld HL videoStart
+        ld HL (videoStart + 2)
         ld [ptr] HL
+        dec HL
+        dec HL
         ld A 0x00
         push BC
         decLoopB 8 do
@@ -65,5 +69,5 @@ printCharA_ = mdo
         ld [HL] 0x00
     jp finish
 
-    ptr <- labelled $ dw [videoStart]
+    ptr <- labelled $ dw [videoStart + 2]
     pure ()
