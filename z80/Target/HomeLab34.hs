@@ -272,7 +272,6 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
             printMessageListItem = printMessage
             space = 0x20
             newline = cr
-            sleep = call 0x0f6
             setScreen = Nothing
             setTextColors = Nothing
             spriteOn = Nothing
@@ -329,10 +328,18 @@ game assets@Game{ minItem, maxItem, startRoom } = mdo
     unless release nop -- To see real memory usage instead of just image size
     pure ()
   where
-    waitEnter = withLabel \loop -> do
-        rst 0x18
-        cp 0x0d
-        jp NZ loop
+    waitEnter = do
+        withLabel \waitRelease -> do
+            sleep
+            rst 0x18
+            cp 0x0d
+            jp Z waitRelease
+        withLabel \waitPress -> do
+            sleep
+            rst 0x18
+            cp 0x0d
+            jp NZ waitPress
+    sleep = call 0x0f6
 
 printByteNo0_ :: Z80ASM -> Z80ASM
 printByteNo0_ printCharA = mdo
