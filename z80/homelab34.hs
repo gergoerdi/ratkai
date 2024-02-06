@@ -29,7 +29,7 @@ emit name block = do
     BS.writeFile (name <.> "htp") $ htpWithAutoStart (fromString $ takeBaseName name) block
 
 htpWithAutoStart :: BS.ByteString -> ASMBlock -> BS.ByteString
-htpWithAutoStart label mainBlock = htp 200 label
+htpWithAutoStart label mainBlock = htp label
     [ mainBlock
     , org 0x4002 $ dw [asmOrg mainBlock, asmOrg mainBlock]
     ]
