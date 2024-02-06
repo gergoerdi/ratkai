@@ -16,9 +16,8 @@ import Text.Printf
 
 main :: IO ()
 main = do
-    let inputPath = "game/bosszu/full.homelab34"
+    let inputPath = "game/bosszu/full.nogfx"
     assets <- loadTextFiles inputPath
-    -- assets <- pure $ mapStmts (\_ -> restoreBlocks) assets
     emit "_build/homelab34/ratkai" . org 16700 $ Ratkai.game assets
 
 emit :: String -> ASMBlock -> IO ()
